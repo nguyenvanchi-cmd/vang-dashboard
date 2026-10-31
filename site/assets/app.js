@@ -416,7 +416,7 @@
     const q = state.d.quant;
     if (!q) { $('#insights').innerHTML = '<div class="notice">Chưa có dữ liệu.</div>'; return; }
     const s = state.d.summary || {};
-    $('#q-range').textContent = `${dmy(s.first_date)} – ${dmy(s.date)} · ${fmt(s.rows, 0)} phiên`;
+    $('#q-range').textContent = `${dmy(s.stats_from || s.first_date)} – ${dmy(s.date)} · ${fmt(s.stats_rows || s.rows, 0)} phiên`;
     const tone = { 'mạnh': 'gold', 'khá': 'gold', 'vừa': '', 'yếu': 'flat' };
     $('#insights').innerHTML = q.insights.map((x) => `<div class="insight ${x.active ? 'active' : ''}"><div class="insight-head"><b>${esc(x.title)}</b>
       <span class="pill ${tone[x.strength] || ''}">Độ tin cậy: ${esc(x.strength)}</span></div><p>${esc(x.text)}</p></div>`).join('');

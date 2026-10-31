@@ -601,13 +601,20 @@ def main():
     summ = summary(df)
     dump("summary.json", summ)
 
-    ev = event_study(df)
-    bt = backtests(df)
-    acc10 = accumulation(df, 10)
-    acc20 = accumulation(df, 20)
-    seas = {"all": seasonality(df), "y10": seasonality(df, str(int(df["date"].iloc[-1][:4]) - 10) + "-01-01")}
+    # Thống kê dùng dữ liệu từ năm 2000 (dữ liệu ngày đầy đủ, liên tục); biểu đồ vẫn hiện toàn bộ lịch sử.
+    dq = df[df["date"] >= "2000-01-01"].reset_index(drop=True)
+    if len(dq) < 2000:
+        dq = df
+    ev = event_study(dq)
+    bt = backtests(dq)
+    acc10 = accumulation(dq, 10)
+    acc20 = accumulation(dq, 20)
+    seas = {"all": seasonality(dq), "y10": seasonality(dq, str(int(dq["date"].iloc[-1][:4]) - 10) + "-01-01")}
+    summ["stats_from"] = dq["date"].iloc[0]
+    summ["stats_rows"] = int(len(dq))
+    dump("summary.json", summ)
     try:
-        ml = machine_learning(df)
+        ml = machine_learning(dq)
     except Exception as exc:  # noqa: BLE001
         print("ML lỗi:", exc)
         ml = None
