@@ -1,15 +1,15 @@
 {
- "run_at": "2026-10-31T09:38:25+07:00",
+ "run_at": "2026-10-31T09:47:07+07:00",
  "steps": [
   {
-   "step": "Giá XAU/USD (Stooq)",
+   "step": "Giá XAU/USD (Dukascopy)",
    "ok": false,
-   "msg": "Stooq trả về định dạng lạ: <!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>T"
+   "msg": "Dukascopy 2013/BID_candles_day_1.bi5: HTTP 503 (16 yêu cầu)"
   },
   {
    "step": "Giá XAU/USD (Yahoo dự phòng)",
-   "ok": false,
-   "msg": "HTTP Error 429: Too Many Requests"
+   "ok": true,
+   "msg": "269 dòng, ngày cuối 2026-10-30"
   },
   {
    "step": "Tỷ giá USD/VND (Vietcombank)",
@@ -19,12 +19,12 @@
   {
    "step": "Giá trong nước (SJC)",
    "ok": false,
-   "msg": "HTTP Error 403: Forbidden"
+   "msg": "HTTP 403"
   },
   {
    "step": "Giá trong nước (PNJ)",
-   "ok": false,
-   "msg": "giá lạ 13600"
+   "ok": true,
+   "msg": "2 dòng"
   }
  ]
 }
