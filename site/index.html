@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Vàng hôm nay — Nghiên cứu vàng hằng ngày</title>
+  <meta name="description" content="Giá vàng thế giới và trong nước, phân tích kỹ thuật đa khung, nghiên cứu định lượng và học máy trên lịch sử giá vàng. Cập nhật mỗi sáng.">
+  <meta property="og:title" content="Vàng hôm nay — Nghiên cứu vàng hằng ngày">
+  <meta property="og:description" content="Giá vàng, xu hướng trong ngày, quy luật lịch sử và mô hình học máy. Cập nhật mỗi sáng.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0a0e15">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f8dc8b'/%3E%3Cstop offset='.55' stop-color='%23d9a033'/%3E%3Cstop offset='1' stop-color='%23a8741a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='42' font-family='Arial' font-weight='800' font-size='26' text-anchor='middle' fill='%231a1205'%3EAu%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>
+    try { var t = localStorage.getItem('vang-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">Au</div>
+      <div>
+        <h1>Vàng hôm nay</h1>
+        <p>Nghiên cứu vàng hằng ngày · Digital cho kênh đầu tư vàng</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="updated" id="updated"><span class="dot" id="updated-dot"></span><span class="txt" id="updated-txt">Đang tải dữ liệu…</span></span>
+      <button class="btn" id="share-btn" type="button" title="Chia sẻ trang này">Chia sẻ</button>
+      <button class="btn icon" id="theme-btn" type="button" aria-label="Đổi giao diện sáng hoặc tối" title="Sáng / tối"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Các mục">
+    <button class="tab-btn" role="tab" data-tab="tong-quan" aria-selected="true">Tổng quan</button>
+    <button class="tab-btn" role="tab" data-tab="bieu-do" aria-selected="false">Biểu đồ &amp; lịch sử</button>
+    <button class="tab-btn" role="tab" data-tab="dinh-luong" aria-selected="false">Định lượng &amp; học máy</button>
+    <button class="tab-btn" role="tab" data-tab="trong-nuoc" aria-selected="false">Thị trường trong nước</button>
+    <button class="tab-btn" role="tab" data-tab="phuong-phap" aria-selected="false">Phương pháp</button>
+  </nav>
+
+  <main>
+    <div id="global-notice"></div>
+
+    <!-- ================= TỔNG QUAN ================= -->
+    <section class="tab active" id="tab-tong-quan" role="tabpanel">
+      <div class="hero">
+        <div class="card hero-price">
+          <div class="eyebrow">XAU/USD · đóng cửa <span id="h-date">—</span></div>
+          <div class="big" id="h-close"><span class="skeleton">0.000,00</span></div>
+          <div class="chg-row" id="h-chg"></div>
+          <div class="period-stats" id="h-periods"></div>
+          <div class="spark" id="h-spark" aria-hidden="true"></div>
+        </div>
+        <div class="card view-card" id="claude-card">
+          <div class="eyebrow">Nhận định trong ngày · <span id="c-date">—</span></div>
+          <div class="trend-line">
+            <span class="trend-badge" id="c-trend">—</span>
+            <span class="pill" id="c-conf">Mức tin cậy: —</span>
+          </div>
+          <p class="view-summary" id="c-summary">Đang tải nhận định…</p>
+          <div class="tiers" id="c-tiers"></div>
+        </div>
+      </div>
+
+      <div class="kpis" id="kpis"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><h3>Trạng thái kỹ thuật (khung ngày)</h3><span class="sub" id="tech-date"></span></div>
+          <div class="state-list" id="tech-state"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Quy luật lịch sử đang xảy ra hôm nay</h3><span class="sub">20 phiên sau, so với bình thường</span></div>
+          <div id="active-patterns"></div>
+        </div>
+      </div>
+
+      <div class="card" id="mtf-card">
+        <div class="card-head"><h3>Phân tích 5 khung thời gian</h3><span class="sub">Xu hướng ngày lấy theo khung 15m</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Khung</th><th>Xu hướng</th><th>Giá so với EMA</th><th class="num">EMA</th><th class="num">MACD</th><th>Hỗ trợ</th><th>Kháng cự</th><th>Ghi chú</th></tr></thead>
+            <tbody id="mtf-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><h3>Lịch tin sắp tới</h3><span class="sub">Giờ Việt Nam</span></div>
+          <div class="list" id="calendar"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Tin chọn lọc</h3><span class="sub">Tầng · Mầm/Chín · tác động</span></div>
+          <div class="list" id="news"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= BIỂU ĐỒ & LỊCH SỬ ================= -->
+    <section class="tab" id="tab-bieu-do" role="tabpanel">
+      <div class="section-head">
+        <div>
+          <h2>Biểu đồ giá và lịch sử theo ngày</h2>
+          <p>Nến ngày XAU/USD với đường EMA 20, 50, 200. Kéo để dịch chuyển, cuộn để phóng to; chọn khoảng thời gian ở thanh công cụ.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="chart-toolbar">
+          <div class="seg" id="range-seg">
+            <button data-range="1M" aria-pressed="false">1T</button>
+            <button data-range="3M" aria-pressed="false">3T</button>
+            <button data-range="6M" aria-pressed="true">6T</button>
+            <button data-range="1Y" aria-pressed="false">1N</button>
+            <button data-range="3Y" aria-pressed="false">3N</button>
+            <button data-range="5Y" aria-pressed="false">5N</button>
+            <button data-range="ALL" aria-pressed="false">Tất cả</button>
+          </div>
+          <div class="table-tools">
+            <label class="chip"><input type="checkbox" data-ema="20" checked><span class="sw" style="background:#60a5fa"></span>EMA20</label>
+            <label class="chip"><input type="checkbox" data-ema="50" checked><span class="sw" style="background:#a78bfa"></span>EMA50</label>
+            <label class="chip"><input type="checkbox" data-ema="200" checked><span class="sw" style="background:#e6b84a"></span>EMA200</label>
+            <label class="chip"><input type="checkbox" id="log-scale">Thang log</label>
+            <div class="seg" id="ind-seg">
+              <button data-ind="rsi" aria-pressed="true">RSI</button>
+              <button data-ind="macd" aria-pressed="false">MACD</button>
+            </div>
+          </div>
+        </div>
+        <div class="chart-lg" id="price-chart"></div>
+        <div class="chart-sm" id="ind-chart"></div>
+        <div class="legend-line" id="legend"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>Lịch sử theo ngày</h3>
+          <div class="table-tools">
+            <input class="input" type="search" id="hist-search" placeholder="Tìm ngày: 2026-10 hoặc 30/10/2026" aria-label="Tìm ngày">
+            <select class="input" id="hist-filter" aria-label="Lọc">
+              <option value="all">Tất cả phiên</option>
+              <option value="drop2">Giảm từ 2%</option>
+              <option value="rise2">Tăng từ 2%</option>
+              <option value="rsi30">RSI dưới 30</option>
+              <option value="rsi70">RSI trên 70</option>
+              <option value="below200">Dưới EMA200</option>
+            </select>
+            <a class="btn" id="csv-link" href="data/xauusd_daily.csv" download="xauusd_daily.csv">Tải CSV</a>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Ngày</th><th class="num">Mở</th><th class="num">Cao</th><th class="num">Thấp</th><th class="num">Đóng</th><th class="num">Thay đổi</th><th class="num">RSI(14)</th><th class="num">So với EMA200</th></tr></thead>
+            <tbody id="hist-body"></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <button class="btn" id="pg-prev" type="button">‹ Mới hơn</button>
+          <span id="pg-info">—</span>
+          <button class="btn" id="pg-next" type="button">Cũ hơn ›</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ĐỊNH LƯỢNG & HỌC MÁY ================= -->
+    <section class="tab" id="tab-dinh-luong" role="tabpanel">
+      <div class="section-head">
+        <div>
+          <h2>Định lượng &amp; học máy</h2>
+          <p>Thống kê trên toàn bộ lịch sử giá theo ngày, tính lại mỗi sáng. Mọi con số là kết quả quá khứ, không bảo đảm lặp lại.</p>
+        </div>
+        <span class="pill gold" id="q-range">—</span>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Các quy luật tìm thấy</h3><span class="sub">Độ tin cậy dựa trên số lần xảy ra và độ lệch thống kê</span></div>
+        <div class="insights" id="insights"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>Học máy: xác suất giá cao hơn sau 5 phiên</h3>
+          <span class="sub" id="ml-sub">—</span>
+        </div>
+        <div class="ml-top">
+          <div>
+            <div class="eyebrow">Mô hình hôm nay</div>
+            <div class="prob" id="ml-prob">—</div>
+            <div class="prob-meter"><span class="mid"></span><i id="ml-marker" style="left:50%"></i></div>
+            <div class="prob-scale"><span>Giảm</span><span>50%</span><span>Tăng</span></div>
+            <div class="verdict" id="ml-verdict">—</div>
+          </div>
+          <div>
+            <div class="metric-grid" id="ml-metrics"></div>
+            <div class="grid-2" style="margin-top:14px">
+              <div>
+                <div class="eyebrow" style="margin-bottom:8px">Độ chính xác theo năm</div>
+                <div class="bars" id="ml-years"></div>
+              </div>
+              <div>
+                <div class="eyebrow" style="margin-bottom:8px">Biến quan trọng nhất</div>
+                <div class="bars" id="ml-imp"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Sau các sự kiện đặc biệt, giá đi tiếp ra sao?</h3><span class="sub">Thay đổi trung bình · tỷ lệ phiên tăng</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Điều kiện</th><th class="num">Số lần</th><th class="num">1 phiên</th><th class="num">5 phiên</th><th class="num">20 phiên</th><th class="num">60 phiên</th><th>Hôm nay</th></tr></thead>
+            <tbody id="event-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <h3>Theo thứ trong tuần</h3>
+            <div class="seg season-seg"><button data-s="y10" aria-pressed="true">10 năm</button><button data-s="all" aria-pressed="false">Toàn bộ</button></div>
+          </div>
+          <div class="bars" id="season-wd"></div>
+          <p class="small faint" style="margin-top:10px">Thay đổi trung bình mỗi phiên (%), kèm tỷ lệ phiên tăng.</p>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <h3>Theo tháng</h3>
+            <div class="seg season-seg"><button data-s="y10" aria-pressed="true">10 năm</button><button data-s="all" aria-pressed="false">Toàn bộ</button></div>
+          </div>
+          <div class="bars" id="season-mo"></div>
+          <p class="small faint" style="margin-top:10px">Thay đổi trung bình cả tháng (%), kèm tỷ lệ năm tăng.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Kiểm định chiến lược</h3><span class="sub" id="bt-sub">—</span></div>
+        <div class="chart-md" id="bt-chart"></div>
+        <div class="legend-line" id="bt-legend"></div>
+        <div class="table-wrap" style="margin-top:12px">
+          <table>
+            <thead><tr><th>Chiến lược</th><th class="num">Lợi nhuận/năm</th><th class="num">Sụt giảm sâu nhất</th><th class="num">Biến động/năm</th><th class="num">Sharpe</th><th class="num">Thời gian giữ vàng</th><th class="num">Lợi nhuận/năm nếu phí 1,5%</th></tr></thead>
+            <tbody id="bt-body"></tbody>
+          </table>
+        </div>
+        <p class="small faint" style="margin-top:8px" id="bt-note"></p>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Mua nền đều so với chiến dịch 70–20–10</h3><span class="sub">Mỗi tháng 1.000 USD, cùng tổng số tiền</span></div>
+        <div id="acc"></div>
+        <p class="small faint" style="margin-top:8px">Chiến dịch 70–20–10: 70% mua ngay đầu tháng (Mua nền); 20% để dành và chỉ mua khi giá trên EMA50 và EMA50 trên EMA200 (Mua xác nhận); 10% là quỹ chờ, chỉ dùng khi giá thấp hơn đỉnh 52 tuần từ 15% trở lên.</p>
+      </div>
+    </section>
+
+    <!-- ================= TRONG NƯỚC ================= -->
+    <section class="tab" id="tab-trong-nuoc" role="tabpanel">
+      <div class="section-head">
+        <div>
+          <h2>Thị trường trong nước</h2>
+          <p>Giá vàng miếng và vàng nhẫn theo thương hiệu, tỷ giá, và mức chênh so với giá thế giới quy đổi.</p>
+        </div>
+      </div>
+      <div class="kpis" id="dom-kpis"></div>
+      <div class="card">
+        <div class="card-head"><h3>Giá theo thương hiệu (triệu đồng/lượng)</h3><span class="sub" id="dom-src">—</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Thương hiệu</th><th>Loại</th><th class="num">Mua vào</th><th class="num">Bán ra</th><th class="num">Chênh mua–bán</th><th class="num">Mức tăng cần để hòa vốn</th><th>Thời điểm</th></tr></thead>
+            <tbody id="dom-body"></tbody>
+          </table>
+        </div>
+        <p class="small faint" style="margin-top:8px">Dòng tô màu là nơi trả giá mua vào cao nhất trong cùng loại vàng, tức nơi bán lại có lợi nhất.</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Chênh lệch giá SJC so với giá thế giới quy đổi</h3><span class="sub">Triệu đồng/lượng, theo giá bán ra</span></div>
+        <div class="chart-md" id="prem-chart"></div>
+      </div>
+    </section>
+
+    <!-- ================= PHƯƠNG PHÁP ================= -->
+    <section class="tab" id="tab-phuong-phap" role="tabpanel">
+      <div class="section-head"><div><h2>Phương pháp và nguồn dữ liệu</h2></div></div>
+      <div class="card prose">
+        <h4>Nguồn dữ liệu</h4>
+        <ul>
+          <li>Giá XAU/USD theo ngày: Stooq (giá giao ngay), dự phòng Yahoo Finance; lưu lại toàn bộ lịch sử trong kho mã nguồn.</li>
+          <li>Tỷ giá USD/VND: Vietcombank (giá bán), dự phòng open.er-api.com.</li>
+          <li>Giá vàng trong nước: website SJC và PNJ khi lấy được, cùng bảng giá Claude tổng hợp mỗi sáng từ các báo.</li>
+          <li>Phân tích 5 khung, 3 tầng và tin chọn lọc: Claude đọc biểu đồ TradingView và tin tức trong, ngoài nước lúc 6h42 mỗi sáng (thứ Hai đến thứ Bảy).</li>
+        </ul>
+        <h4>Định lượng</h4>
+        <ul>
+          <li>Nghiên cứu sự kiện: với mỗi điều kiện (ví dụ phiên giảm từ 3%), đo thay đổi giá 1, 5, 20, 60 phiên sau và so với mức bình thường của mọi ngày. Các sự kiện cách nhau dưới 5 phiên được gộp làm một để không đếm trùng.</li>
+          <li>Kiểm định chiến lược: quyết định ở phiên trước, áp dụng cho phiên sau (không nhìn trước tương lai). Có hai mức phí: 0,05% mỗi lần đổi trạng thái như thị trường thế giới, và 1,5% như chênh mua–bán ở tiệm vàng.</li>
+          <li>Học máy: hai mô hình (hồi quy logistic và gradient boosting) học từ 17 dữ kiện kỹ thuật để đoán giá sau 5 phiên cao hay thấp hơn hôm nay. Kiểm tra theo kiểu trượt: mỗi năm chỉ dùng dữ liệu các năm trước để huấn luyện, bỏ 5 phiên giáp ranh để tránh rò rỉ thông tin. So sánh với cách đoán đơn giản là luôn chọn hướng phổ biến hơn.</li>
+        </ul>
+        <h4>Thuật ngữ của kênh</h4>
+        <div class="glossary">
+          <div><b>Gốc · Thân · Ngọn</b>Xu hướng nhiều năm · pha vài tháng đến một năm · nhịp vài ngày đến vài tuần.</div>
+          <div><b>Mầm · Chín</b>Tin mới hé lộ, chưa xác nhận · tin đã có dữ kiện xác nhận.</div>
+          <div><b>Hết hơi</b>Đà yếu dần nhưng chưa đảo chiều; thường thấy khi giá tạo đáy mới mà MACD không xác nhận.</div>
+          <div><b>Vạch an toàn</b>Mức giá mà tiệm mua lại vàng của bạn đúng bằng số tiền bạn đã trả.</div>
+          <div><b>Mua nền · Mua xác nhận · Mua tiếp sức</b>Mua đều theo lịch · mua khi tầng Thân Chín theo hướng tăng · mua thêm tối đa 20% tiền lãi khi đã qua Vạch an toàn.</div>
+          <div><b>Quy tắc 70–20–10</b>70% cho Gốc, 20% cho Thân, 10% làm quỹ chờ.</div>
+        </div>
+        <h4>Lưu ý</h4>
+        <p>Đây là nghiên cứu tham khảo, không phải khuyến nghị mua bán. Kết quả quá khứ không bảo đảm cho tương lai. Giá trong nước có thể khác giữa các cửa hàng và thay đổi trong ngày.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div>Dữ liệu: Stooq, Vietcombank, SJC, PNJ, các báo trong nước và quốc tế. Phân tích hằng ngày bởi Claude. Biểu đồ: <a href="https://www.tradingview.com/lightweight-charts/" target="_blank" rel="noopener">TradingView Lightweight Charts™</a>.</div>
+    <div>Đây là nghiên cứu tham khảo, không phải khuyến nghị mua bán. <span id="build-info"></span></div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="vendor/lightweight-charts.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

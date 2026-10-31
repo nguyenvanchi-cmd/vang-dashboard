@@ -1,0 +1,79 @@
+name: Cập nhật dữ liệu và website
+
+on:
+  schedule:
+    - cron: "15 23 * * 0-5"   # 06:15 giờ Việt Nam, thứ Hai đến thứ Bảy (sau khi phiên Mỹ đóng cửa)
+    - cron: "30 9 * * 1-6"    # 16:30 giờ Việt Nam, cập nhật giá trong nước buổi chiều
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "data/claude_daily.json"
+      - "site/**"
+      - "scripts/**"
+      - ".github/workflows/**"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: vang-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cài thư viện
+        run: pip install --quiet pandas numpy scikit-learn
+
+      - name: Lấy dữ liệu giá, tỷ giá, giá trong nước
+        run: python scripts/fetch_data.py
+        continue-on-error: true
+
+      - name: Phân tích định lượng và học máy
+        run: python scripts/analyze.py
+
+      - name: Tải thư viện biểu đồ
+        run: |
+          mkdir -p site/vendor
+          curl -fsSL --retry 3 \
+            https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js \
+            -o site/vendor/lightweight-charts.js || echo "Không tải được, trang sẽ dùng CDN dự phòng"
+
+      - name: Lưu dữ liệu vào kho
+        run: |
+          git config user.name "vang-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data site/data
+          if git diff --cached --quiet; then
+            echo "Không có thay đổi dữ liệu"
+          else
+            git commit -m "Cập nhật dữ liệu $(TZ=Asia/Ho_Chi_Minh date '+%Y-%m-%d %H:%M')"
+            git pull --rebase --autostash origin main || true
+            git push || echo "Đẩy dữ liệu thất bại, lần chạy sau sẽ thử lại"
+          fi
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

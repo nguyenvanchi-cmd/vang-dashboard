@@ -1,0 +1,326 @@
+{
+ "ngay": "2026-10-31",
+ "cap_nhat": "08:45 thứ Bảy 31/10/2026",
+ "xu_huong": "Giảm",
+ "tin_cay": "Trung bình",
+ "tom_tat": "Vàng đóng tuần ở 3.875 USD, thấp nhất khoảng 12 tháng. Khung 15m vẫn giảm nhưng đã hết hơi nên đầu tuần dễ có nhịp hồi; SJC chưa giảm theo, chênh với thế giới lên gần 20 triệu/lượng: giữ lịch Mua nền, chưa dùng quỹ chờ.",
+ "xau_usd": 3875.65,
+ "usd_vnd": 26020,
+ "sjc_mua": 138.4,
+ "sjc_ban": 141.4,
+ "da_khung": [
+  {
+   "khung": "D",
+   "thu_tu": 1,
+   "xu_huong": "Giảm",
+   "gia_vs_ema": "Dưới xa",
+   "ema": 4272.4,
+   "macd": -70.1,
+   "macd_mo_ta": "Dưới 0, đang mở rộng xuống",
+   "ho_tro": "3.800; 3.750",
+   "khang_cu": "3.886–3.900; 4.000",
+   "ghi_chu": "Đóng cửa thấp nhất khoảng 12 tháng, thủng đáy 3.886 của năm ngoái"
+  },
+  {
+   "khung": "4h",
+   "thu_tu": 2,
+   "xu_huong": "Giảm",
+   "gia_vs_ema": "Dưới xa",
+   "ema": 4150.5,
+   "macd": -31.5,
+   "macd_mo_ta": "Dưới 0, histogram mở rộng",
+   "ho_tro": "3.850; 3.800",
+   "khang_cu": "3.900; 4.000",
+   "ghi_chu": "Đỉnh thấp dần từ đầu tháng 9; nhịp hồi 28–29/10 thất bại dưới EMA"
+  },
+  {
+   "khung": "1h",
+   "thu_tu": 3,
+   "xu_huong": "Giảm",
+   "gia_vs_ema": "Dưới xa",
+   "ema": 4039.8,
+   "macd": -35.9,
+   "macd_mo_ta": "Âm sâu, chưa cắt lên",
+   "ho_tro": "3.865–3.870",
+   "khang_cu": "3.920; 3.960",
+   "ghi_chu": "Rơi một mạch từ ~4.080 (29/10) xuống ~3.870"
+  },
+  {
+   "khung": "15m",
+   "thu_tu": 4,
+   "xu_huong": "Giảm, đang hết hơi",
+   "gia_vs_ema": "Dưới xa",
+   "ema": 3981.4,
+   "macd": -13.1,
+   "macd_mo_ta": "Cắt lên dưới mức 0, histogram chuyển dương",
+   "ho_tro": "3.865–3.870",
+   "khang_cu": "3.900; 3.940",
+   "ghi_chu": "Giá đi ngang sát đáy trong khi MACD đáy cao dần: dấu hiệu hết hơi"
+  },
+  {
+   "khung": "1m",
+   "thu_tu": 5,
+   "xu_huong": "Đi ngang",
+   "gia_vs_ema": "Quanh",
+   "ema": 3881.9,
+   "macd": -0.3,
+   "macd_mo_ta": "Quanh 0, vừa cắt lên",
+   "ho_tro": "3.868",
+   "khang_cu": "3.882; 3.888",
+   "ghi_chu": "Đi ngang 3.868–3.888 trong giờ cuối trước khi nghỉ cuối tuần"
+  }
+ ],
+ "ba_tang": [
+  {
+   "ma": "goc",
+   "tang": "Gốc",
+   "huong": "Lên, đang bị thử thách",
+   "trang_thai": "Chín",
+   "ly_do": "Ngân hàng trung ương vẫn mua ròng (289 tấn quý 2/2026). Nhưng giá đã giảm khoảng 31% từ đỉnh tháng 1 và về đáy 12 tháng, nên xu hướng nhiều năm đang bị thử thách thật sự."
+  },
+  {
+   "ma": "than",
+   "tang": "Thân",
+   "huong": "Xuống",
+   "trang_thai": "Chín",
+   "ly_do": "PCE tháng 9 lên 3,6%, GDP quý 3 tăng 3,4%, một số quan chức Fed ủng hộ tăng lãi suất thêm. Xác suất Fed tăng lãi suất tháng 12 đã giảm về khoảng 70% nhưng vẫn cao."
+  },
+  {
+   "ma": "ngon",
+   "tang": "Ngọn",
+   "huong": "Xuống, đang hết hơi",
+   "trang_thai": "Chín",
+   "ly_do": "Ba phiên giảm liên tiếp, phiên thứ Sáu mất 3,6%. Giá đã vào vùng quá bán và khung 15m có dấu hiệu hết hơi, nên khả năng hồi kỹ thuật đầu tuần mới chỉ ở dạng Mầm."
+  }
+ ],
+ "gia_trong_nuoc": [
+  {
+   "ma": "sjc_mieng",
+   "thuong_hieu": "SJC",
+   "loai": "Miếng SJC",
+   "mua": 138.4,
+   "ban": 141.4,
+   "thoi_diem": "Sáng 31/10"
+  },
+  {
+   "ma": "doji_mieng",
+   "thuong_hieu": "DOJI",
+   "loai": "Miếng SJC",
+   "mua": 138.4,
+   "ban": 141.4,
+   "thoi_diem": "Sáng 31/10"
+  },
+  {
+   "ma": "pnj_mieng",
+   "thuong_hieu": "PNJ",
+   "loai": "Miếng SJC",
+   "mua": 138.4,
+   "ban": 141.4,
+   "thoi_diem": "Sáng 31/10"
+  },
+  {
+   "ma": "btmh_mieng",
+   "thuong_hieu": "Bảo Tín Mạnh Hải",
+   "loai": "Miếng SJC",
+   "mua": 138.4,
+   "ban": 141.4,
+   "thoi_diem": "Sáng 31/10"
+  },
+  {
+   "ma": "phuquy_mieng",
+   "thuong_hieu": "Phú Quý",
+   "loai": "Miếng SJC",
+   "mua": 137.0,
+   "ban": 141.4,
+   "thoi_diem": "Sáng 31/10"
+  },
+  {
+   "ma": "sjc_nhan",
+   "thuong_hieu": "SJC",
+   "loai": "Nhẫn 9999",
+   "mua": 134.3,
+   "ban": 138.3,
+   "thoi_diem": "Sáng 31/10"
+  },
+  {
+   "ma": "doji_nhan",
+   "thuong_hieu": "DOJI",
+   "loai": "Nhẫn 9999",
+   "mua": 136.0,
+   "ban": 140.0,
+   "thoi_diem": "Sáng 31/10"
+  },
+  {
+   "ma": "pnj_nhan",
+   "thuong_hieu": "PNJ",
+   "loai": "Nhẫn 9999",
+   "mua": 136.0,
+   "ban": 140.0,
+   "thoi_diem": "Sáng 31/10"
+  },
+  {
+   "ma": "phuquy_nhan",
+   "thuong_hieu": "Phú Quý",
+   "loai": "Nhẫn 9999",
+   "mua": 137.0,
+   "ban": 140.0,
+   "thoi_diem": "Sáng 31/10"
+  }
+ ],
+ "lich_tin": [
+  {
+   "ma": "ism_sx",
+   "ngay": "2026-11-02",
+   "thu": "Thứ Hai 2/11",
+   "gio_vn": "22:00",
+   "su_kien": "ISM sản xuất Mỹ (tháng 10)",
+   "muc_do": 2,
+   "ghi_chu": "Từ 2/11 Mỹ bỏ giờ mùa hè: tin 8:30 sáng giờ Mỹ ra lúc 20:30 giờ VN"
+  },
+  {
+   "ma": "bau_cu",
+   "ngay": "2026-11-03",
+   "thu": "Thứ Ba 3/11",
+   "gio_vn": "Cả ngày",
+   "su_kien": "Bầu cử giữa kỳ Mỹ",
+   "muc_do": 3,
+   "ghi_chu": "Kết quả có thể ra từ sáng 4/11 giờ VN; dễ làm USD và lợi suất biến động"
+  },
+  {
+   "ma": "jolts",
+   "ngay": "2026-11-03",
+   "thu": "Thứ Ba 3/11",
+   "gio_vn": "22:00",
+   "su_kien": "JOLTS – số việc làm trống Mỹ",
+   "muc_do": 2,
+   "ghi_chu": ""
+  },
+  {
+   "ma": "adp",
+   "ngay": "2026-11-04",
+   "thu": "Thứ Tư 4/11",
+   "gio_vn": "20:15",
+   "su_kien": "ADP – việc làm khu vực tư nhân Mỹ",
+   "muc_do": 2,
+   "ghi_chu": "Gợi ý sớm cho bảng lương thứ Sáu"
+  },
+  {
+   "ma": "ism_dv",
+   "ngay": "2026-11-04",
+   "thu": "Thứ Tư 4/11",
+   "gio_vn": "22:00",
+   "su_kien": "ISM dịch vụ Mỹ (tháng 10)",
+   "muc_do": 2,
+   "ghi_chu": ""
+  },
+  {
+   "ma": "nfp",
+   "ngay": "2026-11-06",
+   "thu": "Thứ Sáu 6/11",
+   "gio_vn": "20:30",
+   "su_kien": "Bảng lương phi nông nghiệp Mỹ (tháng 10)",
+   "muc_do": 3,
+   "ghi_chu": "Sự kiện chính của tuần: việc làm mạnh củng cố khả năng Fed tăng lãi suất"
+  },
+  {
+   "ma": "cpi",
+   "ngay": "2026-11-10",
+   "thu": "Thứ Ba 10/11",
+   "gio_vn": "20:30",
+   "su_kien": "Lạm phát CPI Mỹ (tháng 10)",
+   "muc_do": 3,
+   "ghi_chu": "Cùng với kỳ họp Fed tháng 12 là hai mốc quyết định hướng đi của vàng"
+  },
+  {
+   "ma": "fed_12",
+   "ngay": "2026-12-10",
+   "thu": "Thứ Năm 10/12",
+   "gio_vn": "02:00",
+   "su_kien": "Fed công bố lãi suất (kèm biểu đồ dot plot)",
+   "muc_do": 3,
+   "ghi_chu": ""
+  }
+ ],
+ "tin_chon_loc": [
+  {
+   "ma": "day_1_nam",
+   "thu_tu": 1,
+   "tieu_de": "Vàng giảm khoảng 3,6% phiên thứ Sáu, đóng tuần quanh 3.875 USD, thấp nhất khoảng 12 tháng và thủng đáy 3.886 USD của năm ngoái.",
+   "tang": "Ngọn",
+   "trang_thai": "Chín",
+   "tac_dong": "Tiêu cực",
+   "nguon": "FXStreet",
+   "url": "https://www.fxstreet.com/news/gold-breaks-3-886-floor-to-new-ytd-low-as-fed-hawks-press-on-202610302009"
+  },
+  {
+   "ma": "fed_odds",
+   "thu_tu": 2,
+   "tieu_de": "Xác suất Fed tăng lãi suất tháng 12 theo CME FedWatch giảm về khoảng 70%, từ mức khoảng 84% hôm thứ Tư, dù một số quan chức Fed vẫn ủng hộ thắt chặt thêm.",
+   "tang": "Thân",
+   "trang_thai": "Mầm",
+   "tac_dong": "Tích cực",
+   "nguon": "FXStreet",
+   "url": "https://www.fxstreet.com/news/gold-breaks-3-886-floor-to-new-ytd-low-as-fed-hawks-press-on-202610302009"
+  },
+  {
+   "ma": "pce_gdp",
+   "thu_tu": 3,
+   "tieu_de": "PCE tháng 9 tăng lên 3,6% so với cùng kỳ, lõi 3,1%; GDP quý 3 tăng 3,4%. Lạm phát cao cùng tăng trưởng mạnh củng cố lập luận tăng lãi suất.",
+   "tang": "Thân",
+   "trang_thai": "Chín",
+   "tac_dong": "Tiêu cực",
+   "nguon": "FXEmpire",
+   "url": "https://www.fxempire.com/forecasts/article/gold-xauusd-silver-price-forecast-hot-pce-lifts-hike-odds-can-gold-hold-3975-1641469"
+  },
+  {
+   "ma": "ban_thanh_ly",
+   "thu_tu": 4,
+   "tieu_de": "Vàng bị bán cùng lúc cổ phiếu công nghệ lao dốc, dù USD và lợi suất giảm: dấu hiệu bán thanh lý để lấy tiền mặt; bạc mất mốc 50 USD.",
+   "tang": "Ngọn",
+   "trang_thai": "Chín",
+   "tac_dong": "Tiêu cực",
+   "nguon": "USAGOLD",
+   "url": "https://www.usagold.com/daily-precious-metals-market-report-october-30-2026/"
+  },
+  {
+   "ma": "qua_ban",
+   "thu_tu": 5,
+   "tieu_de": "Các chỉ báo động lượng cho thấy vàng đã vào vùng quá bán; nhịp hồi mạnh thường xuất hiện từ vùng này nhưng cần chất xúc tác như chứng khoán ổn định lại hoặc lạm phát hạ nhiệt.",
+   "tang": "Ngọn",
+   "trang_thai": "Mầm",
+   "tac_dong": "Tích cực",
+   "nguon": "Golden State Mint",
+   "url": "https://www.goldenstatemint.com/blog/on-the-spot-with-gsm-precious-metals-market-report-for-10-30-2026/"
+  },
+  {
+   "ma": "sjc_dung",
+   "thu_tu": 6,
+   "tieu_de": "Sáng 31/10, vàng miếng SJC giữ 138,4–141,4 triệu dù giá thế giới giảm thêm; mức điều chỉnh trong nước nhỏ hơn nhiều so với thế giới, chênh lệch nới lên gần 20 triệu/lượng.",
+   "tang": "Ngọn",
+   "trang_thai": "Chín",
+   "tac_dong": "Tiêu cực",
+   "nguon": "Báo Lào Cai",
+   "url": "https://baolaocai.vn/gia-vang-hom-nay-3110-vang-the-gioi-xuong-thap-nhat-trong-khoang-mot-nam-post913196.html"
+  },
+  {
+   "ma": "tuan_toi",
+   "thu_tu": 7,
+   "tieu_de": "Tuần tới, bầu cử giữa kỳ Mỹ (3/11) và bảng lương phi nông nghiệp (6/11) là hai sự kiện chính; số liệu việc làm mạnh sẽ gây thêm áp lực lên vàng, số liệu yếu có thể giúp vàng hồi.",
+   "tang": "Thân",
+   "trang_thai": "Mầm",
+   "tac_dong": "Trung tính",
+   "nguon": "RoboForex",
+   "url": "https://roboforex.com/beginners/analytics/forex-forecast/gold/xau-usd-gold-weekly-forecast-2026-10-30/"
+  },
+  {
+   "ma": "nhtw_mua",
+   "thu_tu": 8,
+   "tieu_de": "Ngân hàng trung ương mua ròng 289 tấn vàng trong quý 2/2026, tăng 62% so với cùng kỳ.",
+   "tang": "Gốc",
+   "trang_thai": "Chín",
+   "tac_dong": "Tích cực",
+   "nguon": "EWN (dữ liệu WGC)",
+   "url": "https://www.ewn.co.za/gold-demand-steadies-as-prices-cool-but-buying-by-central-banks-picks-up/"
+  }
+ ]
+}
