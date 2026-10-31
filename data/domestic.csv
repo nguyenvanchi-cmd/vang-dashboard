@@ -1,7 +1,12 @@
 date,time,brand,product,buy,sell,source
 2026-10-29,10:47,SJC,Miếng SJC,139.7,142.7,Báo Đà Nẵng
 2026-10-30,16:47,SJC,Miếng SJC,138.4,141.4,Báo Hà Tĩnh
-2026-10-31,09:47,PNJ,Miếng SJC,136.0,139.0,pnj.com.vn
-2026-10-31,09:47,PNJ,Nhẫn 9999,133.6,137.6,pnj.com.vn
+2026-10-31,08:45,Bảo Tín Mạnh Hải,Miếng SJC,138.4,141.4,Claude (Sáng 31/10)
+2026-10-31,08:45,DOJI,Miếng SJC,138.4,141.4,Claude (Sáng 31/10)
+2026-10-31,08:45,DOJI,Nhẫn 9999,136.0,140.0,Claude (Sáng 31/10)
+2026-10-31,10:29,PNJ,Miếng SJC,136.0,139.0,pnj.com.vn
+2026-10-31,10:29,PNJ,Nhẫn 9999,133.6,137.6,pnj.com.vn
+2026-10-31,08:45,Phú Quý,Miếng SJC,137.0,141.4,Claude (Sáng 31/10)
+2026-10-31,08:45,Phú Quý,Nhẫn 9999,137.0,140.0,Claude (Sáng 31/10)
 2026-10-31,06:30,SJC,Miếng SJC,138.4,141.4,Việt Báo
 2026-10-31,06:30,SJC,Nhẫn 9999,134.3,138.3,Việt Báo
