@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Lấy dữ liệu cho website Vàng hôm nay.
 
-- Giá XAU/USD theo ngày (nguồn chính: Stooq; dự phòng: Yahoo GC=F, được hiệu chỉnh về mặt bằng giá giao ngay).
+- Giá XAU/USD theo ngày. Nguồn chính: Dukascopy (giá giao ngay, giá chào mua, nến ngày theo giờ UTC),
+  lấy từ các tệp dữ liệu công khai datafeed.dukascopy.com. Dự phòng: Yahoo GC=F (hiệu chỉnh về mặt bằng
+  giá giao ngay), Stooq.
 - Tỷ giá USD/VND (Vietcombank; dự phòng: open.er-api.com).
 - Giá vàng trong nước (SJC, PNJ) nếu lấy được.
 
@@ -9,12 +11,16 @@ Mỗi nguồn lỗi chỉ được ghi lại, không làm dừng cả quy trình
 """
 import io
 import json
+import lzma
 import os
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 import datetime as dt
 
+import numpy as np
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,14 +28,15 @@ DATA_DIR = os.path.join(ROOT, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 VN = dt.timezone(dt.timedelta(hours=7))
 NOW = dt.datetime.now(VN)
+NOW_UTC = NOW.astimezone(dt.timezone.utc)
 TODAY = NOW.strftime("%Y-%m-%d")
-UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
-      "Chrome/126.0 Safari/537.36")
+UA = "vang-dashboard/1.0 (+https://github.com/nguyenvanchi-cmd/vang-dashboard)"
 
 PRICE_FILE = os.path.join(DATA_DIR, "xauusd_daily.csv")
 FX_FILE = os.path.join(DATA_DIR, "usd_vnd.csv")
 DOM_FILE = os.path.join(DATA_DIR, "domestic.csv")
 STATUS_FILE = os.path.join(DATA_DIR, "fetch_status.json")
+CLAUDE_FILE = os.path.join(DATA_DIR, "claude_daily.json")
 
 status = {"run_at": NOW.isoformat(timespec="seconds"), "steps": []}
 
@@ -39,52 +46,256 @@ def note(step, ok, msg=""):
     print(("OK   " if ok else "FAIL ") + step + ": " + str(msg)[:300], flush=True)
 
 
+class HTTPStatus(Exception):
+    def __init__(self, code, url):
+        super().__init__(f"HTTP {code}")
+        self.code = code
+        self.url = url
+
+
 def get(url, data=None, headers=None, timeout=40):
     h = {"User-Agent": UA, "Accept": "*/*", "Accept-Language": "vi,en;q=0.8"}
     h.update(headers or {})
     req = urllib.request.Request(url, data=data, headers=h)
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return resp.read()
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.read()
+    except urllib.error.HTTPError as exc:
+        raise HTTPStatus(exc.code, url) from exc
 
 
-# ---------------------------------------------------------------- giá thế giới
+# ---------------------------------------------------------------- giá thế giới: Dukascopy
+DUKA = "https://datafeed.dukascopy.com/datafeed/XAUUSD"
+DUKA_SCALE = 1000.0          # XAU/USD: giá lưu dạng số nguyên, chia 1000
+DUKA_START_YEAR = 2003
+duka_stats = {"req": 0, "miss": 0}
+
+
+def duka_raw(path):
+    """Tải và giải nén một tệp .bi5; tệp không tồn tại hoặc rỗng trả về b''."""
+    url = f"{DUKA}/{path}"
+    last = None
+    for attempt in range(3):
+        try:
+            duka_stats["req"] += 1
+            raw = get(url, timeout=30)
+            time.sleep(0.15)
+            return lzma.decompress(raw) if raw else b""
+        except HTTPStatus as exc:
+            if exc.code == 404:
+                duka_stats["miss"] += 1
+                return b""
+            last = exc
+        except lzma.LZMAError:
+            return b""
+        except Exception as exc:  # noqa: BLE001
+            last = exc
+        time.sleep(1.5 * (attempt + 1))
+    raise RuntimeError(f"Dukascopy {path}: {last}")
+
+
+def _order(px):
+    """Xác định vị trí cột cao nhất/thấp nhất; hai cột còn lại theo thứ tự là mở cửa, đóng cửa."""
+    if len(px) == 0:
+        return 0, 1, 2, 3
+    mx = px.max(axis=1, keepdims=True)
+    mn = px.min(axis=1, keepdims=True)
+    hi = int(np.argmax((px == mx).sum(axis=0)))
+    lo = int(np.argmax((px == mn).sum(axis=0)))
+    if hi == lo:
+        return 0, 1, 2, 3
+    rest = [i for i in range(4) if i not in (hi, lo)]
+    return rest[0], hi, lo, rest[1]
+
+
+def duka_candles(buf, base):
+    """Nến Dukascopy: mỗi bản ghi 24 byte (thời điểm, 4 giá, khối lượng), big-endian."""
+    n = len(buf) // 24
+    if n == 0:
+        return pd.DataFrame(columns=["ts", "open", "high", "low", "close", "volume"])
+    arr = np.frombuffer(buf[: n * 24], dtype=np.dtype([("t", ">i4"), ("p", ">i4", (4,)), ("v", ">f4")]))
+    t = arr["t"].astype("int64")
+    if t.max() > 400 * 86400:   # mili giây
+        t = t // 1000
+    px = arr["p"].astype("float64") / DUKA_SCALE
+    o, h, l, c = _order(px)
+    df = pd.DataFrame({"ts": pd.Timestamp(base) + pd.to_timedelta(t, unit="s"),
+                       "open": px[:, o], "high": px[:, h], "low": px[:, l], "close": px[:, c],
+                       "volume": arr["v"].astype("float64")})
+    # Bỏ nến lấp chỗ trống (giá đứng yên, không có khối lượng) của ngày nghỉ.
+    return df[(df["volume"] > 0) | (df["high"] > df["low"])]
+
+
+def duka_ticks(buf, base):
+    """Tick Dukascopy: mỗi bản ghi 20 byte (mili giây, giá bán, giá mua, khối lượng bán, khối lượng mua)."""
+    n = len(buf) // 20
+    if n == 0:
+        return pd.DataFrame(columns=["ts", "open", "high", "low", "close", "volume"])
+    arr = np.frombuffer(buf[: n * 20], dtype=np.dtype([("t", ">i4"), ("ask", ">i4"), ("bid", ">i4"),
+                                                       ("av", ">f4"), ("bv", ">f4")]))
+    bid = arr["bid"].astype("float64") / DUKA_SCALE
+    ts = pd.Timestamp(base) + pd.to_timedelta(arr["t"].astype("int64"), unit="ms")
+    return pd.DataFrame({"ts": ts, "open": bid, "high": bid, "low": bid, "close": bid,
+                         "volume": arr["bv"].astype("float64")})
+
+
+def to_daily(df):
+    if df is None or len(df) == 0:
+        return pd.DataFrame(columns=["date", "open", "high", "low", "close"])
+    df = df.sort_values("ts")
+    g = df.groupby(df["ts"].dt.strftime("%Y-%m-%d"))
+    out = pd.DataFrame({"open": g["open"].first(), "high": g["high"].max(),
+                        "low": g["low"].min(), "close": g["close"].last()})
+    out.index.name = "date"
+    return out.reset_index()
+
+
+def duka_day(day):
+    """Một ngày UTC: tệp nến phút; nếu chưa có (ngày gần nhất) thì gộp tick từng giờ đã kết thúc."""
+    base = dt.datetime(day.year, day.month, day.day)
+    buf = duka_raw(f"{day.year}/{day.month - 1:02d}/{day.day:02d}/BID_candles_min_1.bi5")
+    if buf:
+        return to_daily(duka_candles(buf, base))
+    if (NOW_UTC.date() - day).days > 3:
+        return to_daily(None)
+    parts = []
+    for hr in range(24):
+        hb = base + dt.timedelta(hours=hr)
+        if hb + dt.timedelta(hours=1) > NOW_UTC.replace(tzinfo=None):
+            break
+        tb = duka_raw(f"{day.year}/{day.month - 1:02d}/{day.day:02d}/{hr:02d}h_ticks.bi5")
+        if tb:
+            parts.append(duka_ticks(tb, hb))
+    return to_daily(pd.concat(parts) if parts else None)
+
+
+def duka_month(y, m, since):
+    base = dt.datetime(y, m, 1)
+    is_current = (y, m) == (NOW_UTC.year, NOW_UTC.month)
+    if not is_current:
+        buf = duka_raw(f"{y}/{m - 1:02d}/BID_candles_hour_1.bi5")
+        if buf:
+            return to_daily(duka_candles(buf, base))
+        # Tháng vừa kết thúc có thể chưa có tệp gộp: đi từng ngày.
+        if (NOW_UTC.year * 12 + NOW_UTC.month) - (y * 12 + m) > 1:
+            return to_daily(None)
+    frames = []
+    d = max(dt.date(y, m, 1), since)
+    while d.month == m and d <= NOW_UTC.date():
+        if d == NOW_UTC.date() and NOW_UTC.hour < 21:
+            break
+        if d.weekday() < 5:
+            frames.append(duka_day(d))
+        d += dt.timedelta(days=1)
+    return pd.concat(frames) if frames else to_daily(None)
+
+
+def duka_year(y, since):
+    if y < NOW_UTC.year:
+        buf = duka_raw(f"{y}/BID_candles_day_1.bi5")
+        if buf:
+            return to_daily(duka_candles(buf, dt.datetime(y, 1, 1)))
+        if y < NOW_UTC.year - 1:
+            return to_daily(None)
+    last_m = 12 if y < NOW_UTC.year else NOW_UTC.month
+    first_m = since.month if since.year == y else 1
+    frames = [duka_month(y, m, since) for m in range(first_m, last_m + 1)]
+    return pd.concat(frames) if frames else to_daily(None)
+
+
+def from_dukascopy(since=None):
+    since = since or dt.date(DUKA_START_YEAR, 1, 1)
+    frames = [duka_year(y, since) for y in range(since.year, NOW_UTC.year + 1)]
+    df = pd.concat(frames, ignore_index=True)
+    if len(df) == 0:
+        raise ValueError(f"không có dữ liệu ({duka_stats['req']} yêu cầu, {duka_stats['miss']} tệp không tồn tại)")
+    df["wd"] = pd.to_datetime(df["date"]).dt.weekday
+    df = df[(df["wd"] < 5) & (df["date"] >= since.strftime("%Y-%m-%d"))].drop(columns="wd")
+    # Ngày UTC hiện tại chỉ lấy khi phiên New York đã gần kết thúc.
+    if NOW_UTC.hour < 21:
+        df = df[df["date"] < NOW_UTC.strftime("%Y-%m-%d")]
+    df = df.drop_duplicates("date", keep="last").sort_values("date").reset_index(drop=True)
+    # Kiểm tra hệ số quy đổi giá: giá gần nhất phải khớp mặt bằng giá vàng hiện tại.
+    anchor = claude_anchor()
+    med = float(df["close"].tail(5).median())
+    for k in (1.0, 0.1, 10.0, 0.01, 100.0):
+        v = med * k
+        if (anchor and 0.7 * anchor < v < 1.3 * anchor) or (not anchor and 1000 < v < 10000):
+            break
+    else:
+        k = 1.0
+    if k != 1.0:
+        for c in ["open", "high", "low", "close"]:
+            df[c] = df[c] * k
+    df["source"] = "Dukascopy XAU/USD (giá mua, ngày UTC)"
+    return df
+
+
+# ---------------------------------------------------------------- giá thế giới: dự phòng
+def from_yahoo(symbol="GC=F"):
+    last = None
+    for host in ("query2", "query1"):
+        url = (f"https://{host}.finance.yahoo.com/v8/finance/chart/"
+               + urllib.parse.quote(symbol) + "?range=max&interval=1d")
+        for attempt in range(2):
+            try:
+                js = json.loads(get(url, headers={"Accept": "application/json"}))
+                res = js["chart"]["result"][0]
+                q = res["indicators"]["quote"][0]
+                df = pd.DataFrame({"ts": res["timestamp"], "open": q["open"], "high": q["high"],
+                                   "low": q["low"], "close": q["close"]}).dropna()
+                df["date"] = (pd.to_datetime(df["ts"], unit="s", utc=True)
+                              .dt.tz_convert("America/New_York").dt.strftime("%Y-%m-%d"))
+                df = df.drop(columns="ts").drop_duplicates("date", keep="last")
+                df["source"] = "Yahoo " + symbol
+                return df[["date", "open", "high", "low", "close", "source"]]
+            except Exception as exc:  # noqa: BLE001
+                last = exc
+                time.sleep(4 * (attempt + 1))
+    raise RuntimeError(last)
+
+
 def from_stooq():
     raw = get("https://stooq.com/q/d/l/?s=xauusd&i=d").decode("utf-8", "replace")
     df = pd.read_csv(io.StringIO(raw))
     cols = {c.strip().lower(): c for c in df.columns}
     need = ["date", "open", "high", "low", "close"]
     if not all(k in cols for k in need):
-        raise ValueError("Stooq trả về định dạng lạ: " + raw[:120].replace("\n", " "))
+        raise ValueError("Stooq không trả về dữ liệu CSV (trang kiểm tra truy cập tự động)")
     df = df.rename(columns={cols[k]: k for k in need})[need]
     df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
     df["source"] = "Stooq XAUUSD"
     return df
 
 
-def from_yahoo(symbol="GC=F"):
-    url = ("https://query1.finance.yahoo.com/v8/finance/chart/"
-           + urllib.parse.quote(symbol) + "?range=max&interval=1d")
-    js = json.loads(get(url))
-    res = js["chart"]["result"][0]
-    q = res["indicators"]["quote"][0]
-    df = pd.DataFrame({"ts": res["timestamp"], "open": q["open"], "high": q["high"],
-                       "low": q["low"], "close": q["close"]}).dropna()
-    df["date"] = (pd.to_datetime(df["ts"], unit="s", utc=True)
-                  .dt.tz_convert("America/New_York").dt.strftime("%Y-%m-%d"))
-    df = df.drop(columns="ts").drop_duplicates("date", keep="last")
-    df["source"] = "Yahoo " + symbol
-    return df[["date", "open", "high", "low", "close", "source"]]
+def claude_anchor():
+    """Giá XAU/USD Claude ghi nhận trong báo cáo sáng (để kiểm tra chéo)."""
+    try:
+        with open(CLAUDE_FILE, encoding="utf-8") as f:
+            js = json.load(f)
+        v = float(js.get("xau_usd"))
+        age = (pd.Timestamp(TODAY) - pd.Timestamp(str(js.get("ngay"))[:10])).days
+        return v if 200 < v < 20000 and age <= 7 else None
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def check_prices(df, name):
     if df is None or len(df) < 200:
-        raise ValueError(f"{name}: quá ít dòng")
-    last = df.sort_values("date").iloc[-1]
+        raise ValueError(f"{name}: quá ít dòng ({0 if df is None else len(df)})")
+    df = df.sort_values("date")
+    last = df.iloc[-1]
     if not (200 < float(last["close"]) < 20000):
         raise ValueError(f"{name}: giá cuối bất thường {last['close']}")
     age = (pd.Timestamp(TODAY) - pd.Timestamp(last["date"])).days
     if age > 10:
         raise ValueError(f"{name}: dữ liệu cũ, ngày cuối {last['date']}")
+    jump = df["close"].astype(float).pct_change().abs().max()
+    if jump > 0.25:
+        raise ValueError(f"{name}: có bước nhảy giá bất thường {jump:.0%}")
+    anchor = claude_anchor()
+    if anchor and abs(float(last["close"]) / anchor - 1) > 0.15:
+        raise ValueError(f"{name}: giá cuối {last['close']} lệch xa giá Claude ghi nhận {anchor}")
     return df
 
 
@@ -96,26 +307,30 @@ def load_existing_prices():
 
 def update_prices():
     old = load_existing_prices()
+    has_old = old is not None and len(old) > 200
+    duka_old = has_old and old["source"].astype(str).str.startswith("Dukascopy").mean() > 0.9
+
+    # 1) Dukascopy: lần đầu lấy toàn bộ lịch sử; các lần sau chỉ làm mới 10 ngày gần nhất.
     try:
-        df = check_prices(from_stooq(), "Stooq")
-        if old is not None and len(old):
-            # Stooq trả về toàn bộ lịch sử: lấy bản mới, giữ thêm những ngày cũ mà bản mới không có.
-            df = pd.concat([old, df]).drop_duplicates("date", keep="last")
-        note("Giá XAU/USD (Stooq)", True, f"{len(df)} dòng, ngày cuối {df['date'].max()}")
+        if duka_old:
+            since = (pd.Timestamp(old["date"].max()) - pd.Timedelta(days=10)).date()
+            new = from_dukascopy(since)
+            df = pd.concat([old, new]).drop_duplicates("date", keep="last")
+        else:
+            df = from_dukascopy()
+        df = check_prices(df, "Dukascopy")
+        note("Giá XAU/USD (Dukascopy)", True,
+             f"{len(df)} dòng, {df['date'].min()} → {df['date'].max()}, {duka_stats['req']} yêu cầu")
         return df
     except Exception as exc:  # noqa: BLE001
-        note("Giá XAU/USD (Stooq)", False, exc)
+        note("Giá XAU/USD (Dukascopy)", False, f"{exc} ({duka_stats['req']} yêu cầu)")
 
+    # 2) Yahoo GC=F: hợp đồng tương lai, hiệu chỉnh về mặt bằng giá giao ngay nếu đã có lịch sử.
     try:
-        yf = check_prices(from_yahoo("GC=F"), "Yahoo GC=F")
-        if old is not None and len(old) > 200:
-            # Hiệu chỉnh giá hợp đồng tương lai về mặt bằng giá giao ngay bằng tỷ lệ trung vị
-            # trên 20 ngày trùng nhau gần nhất, rồi chỉ thêm những ngày còn thiếu.
+        yf = from_yahoo("GC=F")
+        if has_old:
             both = old.merge(yf, on="date", suffixes=("_s", "_f"))
-            if len(both) >= 5:
-                ratio = (both["close_s"] / both["close_f"]).tail(20).median()
-            else:
-                ratio = 1.0
+            ratio = (both["close_s"] / both["close_f"]).tail(20).median() if len(both) >= 5 else 1.0
             add = yf[~yf["date"].isin(old["date"])].copy()
             for c in ["open", "high", "low", "close"]:
                 add[c] = add[c] * ratio
@@ -123,10 +338,22 @@ def update_prices():
             df = pd.concat([old, add]).drop_duplicates("date", keep="last")
         else:
             df = yf
+        df = check_prices(df, "Yahoo GC=F")
         note("Giá XAU/USD (Yahoo dự phòng)", True, f"{len(df)} dòng, ngày cuối {df['date'].max()}")
         return df
     except Exception as exc:  # noqa: BLE001
         note("Giá XAU/USD (Yahoo dự phòng)", False, exc)
+
+    # 3) Stooq.
+    try:
+        df = from_stooq()
+        if has_old:
+            df = pd.concat([old, df]).drop_duplicates("date", keep="last")
+        df = check_prices(df, "Stooq")
+        note("Giá XAU/USD (Stooq dự phòng)", True, f"{len(df)} dòng, ngày cuối {df['date'].max()}")
+        return df
+    except Exception as exc:  # noqa: BLE001
+        note("Giá XAU/USD (Stooq dự phòng)", False, exc)
     return old
 
 
@@ -168,12 +395,14 @@ def save_fx(row):
 # ---------------------------------------------------------------- giá trong nước
 def to_trieu(v):
     x = float(str(v).replace(",", "").strip())
-    for div in (1e6, 1e3, 1.0):
+    for div in (1e6, 1e3, 1.0):          # theo lượng: đồng, nghìn đồng, triệu đồng
         y = x / div
         if 50 <= y <= 600:
             return round(y, 2)
-    if 5e6 <= x <= 6e7:  # giá theo chỉ, đơn vị đồng
-        return round(x * 10 / 1e6, 2)
+    for div in (1e5, 1e2):               # theo chỉ (1 lượng = 10 chỉ): đồng, nghìn đồng
+        y = x / div
+        if 50 <= y <= 600:
+            return round(y, 2)
     raise ValueError(f"giá lạ {v}")
 
 

@@ -21,7 +21,7 @@ Có thể chạy tay: tab **Actions → Cập nhật dữ liệu và website →
 
 ## Cấu trúc
 
-- `scripts/fetch_data.py`: lấy dữ liệu (Stooq, Yahoo dự phòng, Vietcombank, SJC, PNJ).
+- `scripts/fetch_data.py`: lấy dữ liệu (Dukascopy, Yahoo/Stooq dự phòng, Vietcombank, SJC, PNJ).
 - `scripts/analyze.py`: chỉ báo, thống kê, kiểm định, học máy; xuất `site/data/*.json`.
 - `data/`: lịch sử giá theo ngày, tỷ giá, giá trong nước, nhận định của Claude.
 - `site/`: website tĩnh (HTML, CSS, JS thuần + TradingView Lightweight Charts).
