@@ -63,6 +63,12 @@ jobs:
             git push || echo "Đẩy dữ liệu thất bại, lần chạy sau sẽ thử lại"
           fi
 
+      - name: Gắn mã phiên bản cho CSS/JS (trình duyệt luôn tải bản mới)
+        run: |
+          V=$(date +%Y%m%d%H%M)
+          sed -i "s#assets/style.css\"#assets/style.css?v=$V\"#; s#assets/app.js\"#assets/app.js?v=$V\"#" site/index.html
+          grep -n "?v=" site/index.html
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
