@@ -38,6 +38,7 @@ jobs:
       - name: Lấy dữ liệu giá, tỷ giá, giá trong nước
         run: python scripts/fetch_data.py
         continue-on-error: true
+        timeout-minutes: 30
 
       - name: Phân tích định lượng và học máy
         run: python scripts/analyze.py

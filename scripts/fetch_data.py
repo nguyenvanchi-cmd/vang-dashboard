@@ -69,6 +69,8 @@ DUKA = "https://datafeed.dukascopy.com/datafeed/XAUUSD"
 DUKA_SCALE = 1000.0          # XAU/USD: giá lưu dạng số nguyên, chia 1000
 DUKA_START_YEAR = 2003
 duka_stats = {"req": 0, "miss": 0}
+DUKA_BUDGET = 14 * 60        # giây; quá thời gian thì bỏ nguồn này để chuyển sang nguồn dự phòng
+T0 = time.time()
 
 
 def duka_raw(path):
@@ -77,6 +79,8 @@ def duka_raw(path):
     last = None
     waits = (5, 10, 20, 30, 45, 60)
     for attempt in range(len(waits) + 1):
+        if time.time() - T0 > DUKA_BUDGET:
+            raise RuntimeError(f"Dukascopy quá {DUKA_BUDGET // 60} phút, dừng ở {path}")
         try:
             duka_stats["req"] += 1
             raw = get(url, timeout=40)
@@ -479,6 +483,47 @@ def update_domestic():
     out.to_csv(DOM_FILE, index=False)
 
 
+def merge_claude():
+    """Đưa giá trong nước và tỷ giá trong báo cáo sáng của Claude vào lịch sử CSV."""
+    try:
+        with open(CLAUDE_FILE, encoding="utf-8") as f:
+            js = json.load(f)
+        day = str(js.get("ngay", ""))[:10]
+        pd.Timestamp(day)
+    except Exception:  # noqa: BLE001
+        return
+    stamp = str(js.get("cap_nhat", ""))[:5] or "07:00"
+    rows = []
+    for x in js.get("gia_trong_nuoc") or []:
+        if x.get("loai") in ("Miếng SJC", "Nhẫn 9999") and x.get("mua") and x.get("ban"):
+            try:
+                rows.append({"date": day, "time": stamp, "brand": str(x.get("thuong_hieu")),
+                             "product": x["loai"], "buy": to_trieu(x["mua"]), "sell": to_trieu(x["ban"]),
+                             "source": f"Claude ({x.get('thoi_diem') or 'sáng'})"})
+            except Exception:  # noqa: BLE001
+                pass
+    if rows:
+        old = pd.read_csv(DOM_FILE, dtype={"date": str, "time": str}) if os.path.exists(DOM_FILE) else pd.DataFrame()
+        new = pd.DataFrame(rows)
+        if len(old):
+            key = old["date"] + "|" + old["brand"] + "|" + old["product"]
+            # Không đè giá đã lấy tự động trong ngày; chỉ thêm dòng còn thiếu hoặc thay dòng cũ của Claude.
+            auto = old[~old["source"].astype(str).str.startswith("Claude")]
+            auto_keys = set(auto["date"] + "|" + auto["brand"] + "|" + auto["product"])
+            new = new[~(new["date"] + "|" + new["brand"] + "|" + new["product"]).isin(auto_keys)]
+            old = old[~key.isin(set(new["date"] + "|" + new["brand"] + "|" + new["product"]))]
+        out = pd.concat([old, new]).sort_values(["date", "brand", "product"])
+        out.to_csv(DOM_FILE, index=False)
+        note("Giá trong nước (báo cáo Claude)", True, f"{len(new)} dòng ngày {day}")
+    fx = js.get("usd_vnd")
+    if fx and 15000 < float(fx) < 40000:
+        old = pd.read_csv(FX_FILE, dtype={"date": str}) if os.path.exists(FX_FILE) else pd.DataFrame()
+        if not len(old) or day not in set(old["date"]):
+            new = pd.DataFrame([{"date": day, "buy": None, "transfer": None, "sell": float(fx),
+                                 "source": "Vietcombank (Claude)"}])
+            pd.concat([old, new]).sort_values("date").to_csv(FX_FILE, index=False)
+
+
 def main():
     prices = update_prices()
     if prices is not None and len(prices):
@@ -488,6 +533,7 @@ def main():
         prices.to_csv(PRICE_FILE, index=False)
     save_fx(usd_vnd())
     update_domestic()
+    merge_claude()
     with open(STATUS_FILE, "w", encoding="utf-8") as f:
         json.dump(status, f, ensure_ascii=False, indent=1)
 
