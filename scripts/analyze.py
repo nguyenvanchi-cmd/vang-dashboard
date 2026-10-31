@@ -529,8 +529,12 @@ def domestic(df):
         sub = dom[dom["date"] == latest_date]
         latest_rows = [{"brand": x["brand"], "product": x["product"], "buy": r(x["buy"]), "sell": r(x["sell"]),
                         "time": f"{x['time']} {latest_date[8:10]}/{latest_date[5:7]}"} for _, x in sub.iterrows()]
-        src = "Tự động từ website doanh nghiệp"
-    if claude and claude.get("gia_trong_nuoc") and (latest_date is None or claude.get("ngay", "") >= latest_date):
+        srcs = set(sub["source"].astype(str))
+        has_claude = any(x.startswith("Claude") for x in srcs)
+        has_auto = any(not x.startswith("Claude") for x in srcs)
+        src = ("Báo cáo sáng của Claude và website doanh nghiệp (giá mới nhất của từng nơi)" if has_claude and has_auto
+               else "Báo cáo sáng của Claude" if has_claude else "Tự động từ website doanh nghiệp")
+    if claude and claude.get("gia_trong_nuoc") and (latest_date is None or claude.get("ngay", "") > latest_date):
         latest_rows = [{"brand": x.get("thuong_hieu"), "product": x.get("loai"), "buy": x.get("mua"),
                         "sell": x.get("ban"), "time": x.get("thoi_diem")} for x in claude["gia_trong_nuoc"]]
         src = "Nhận định hằng ngày của Claude"

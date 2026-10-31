@@ -179,6 +179,9 @@
     const s = state.d.summary;
     if (!s) return;
     $('#h-date').textContent = dmy(s.date);
+    const src = (state.d.meta || {}).price_source || '';
+    const lbl = $('#h-label');
+    if (lbl) lbl.textContent = /GC=F/.test(src) ? 'Vàng thế giới (COMEX GC=F)' : 'XAU/USD';
     $('#h-close').innerHTML = `${fmt(s.close, 2)}<small>USD/oz</small>`;
     $('#h-chg').innerHTML = `<span class="pill ${cls(s.chg1d)}">${sgn(s.chg1d_abs, 2)} · ${pct(s.chg1d)}</span>
       <span class="pill">${esc(s.regime)}</span><span class="pill">Cao ${fmt(s.high, 2)} · Thấp ${fmt(s.low, 2)}</span>`;
@@ -233,8 +236,11 @@
     out.push(kpi('Biến động 20 phiên', `${fmt(s.vol20, 1)}<small>%/năm</small>`, `Biên độ ngày trung bình ${fmt(s.atr14, 0)} USD`));
     if (ml.now) {
       const best = (ml.models || {})[ml.best] || {};
-      out.push(kpi('Học máy: khả năng tăng sau 5 phiên', `${fmt(ml.now.p_up, 0)}<small>%</small>`,
-        `Độ chính xác lịch sử ${fmt(best.accuracy, 1)}% (cách đơn giản ${fmt(ml.baseline_acc, 1)}%)`,
+      const weak = !(best.accuracy > ml.baseline_acc + 1);
+      out.push(kpi(weak ? 'Học máy: xác suất tăng 5 phiên (chỉ tham khảo)' : 'Học máy: khả năng tăng sau 5 phiên',
+        `<span class="${weak ? 'muted' : ''}">${fmt(ml.now.p_up, 0)}</span><small>%</small>`,
+        weak ? `Chưa hơn cách đoán đơn giản: ${fmt(best.accuracy, 1)}% so với ${fmt(ml.baseline_acc, 1)}%`
+             : `Độ chính xác lịch sử ${fmt(best.accuracy, 1)}% (cách đơn giản ${fmt(ml.baseline_acc, 1)}%)`,
         `<div class="meter"><span class="mid"></span><i style="width:${Math.max(0, Math.min(100, ml.now.p_up))}%"></i></div>`));
     }
     $('#kpis').innerHTML = out.join('');
@@ -608,6 +614,7 @@
     state.loaded = true;
     const start = (location.hash || '#tong-quan').slice(1);
     await showTab(start, false);
+    window.addEventListener('hashchange', () => showTab((location.hash || '#tong-quan').slice(1), false));
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', main);
