@@ -1,0 +1,30 @@
+{
+ "run_at": "2026-10-31T09:38:25+07:00",
+ "steps": [
+  {
+   "step": "Giá XAU/USD (Stooq)",
+   "ok": false,
+   "msg": "Stooq trả về định dạng lạ: <!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>T"
+  },
+  {
+   "step": "Giá XAU/USD (Yahoo dự phòng)",
+   "ok": false,
+   "msg": "HTTP Error 429: Too Many Requests"
+  },
+  {
+   "step": "Tỷ giá USD/VND (Vietcombank)",
+   "ok": true,
+   "msg": "25990.0"
+  },
+  {
+   "step": "Giá trong nước (SJC)",
+   "ok": false,
+   "msg": "HTTP Error 403: Forbidden"
+  },
+  {
+   "step": "Giá trong nước (PNJ)",
+   "ok": false,
+   "msg": "giá lạ 13600"
+  }
+ ]
+}
