@@ -75,11 +75,12 @@ def duka_raw(path):
     """Tải và giải nén một tệp .bi5; tệp không tồn tại hoặc rỗng trả về b''."""
     url = f"{DUKA}/{path}"
     last = None
-    for attempt in range(3):
+    waits = (5, 10, 20, 30, 45, 60)
+    for attempt in range(len(waits) + 1):
         try:
             duka_stats["req"] += 1
-            raw = get(url, timeout=30)
-            time.sleep(0.15)
+            raw = get(url, timeout=40)
+            time.sleep(0.4)
             return lzma.decompress(raw) if raw else b""
         except HTTPStatus as exc:
             if exc.code == 404:
@@ -90,7 +91,8 @@ def duka_raw(path):
             return b""
         except Exception as exc:  # noqa: BLE001
             last = exc
-        time.sleep(1.5 * (attempt + 1))
+        if attempt < len(waits):
+            time.sleep(waits[attempt])   # máy chủ bận (503): chờ lâu dần rồi thử lại
     raise RuntimeError(f"Dukascopy {path}: {last}")
 
 
@@ -235,8 +237,9 @@ def from_dukascopy(since=None):
 def from_yahoo(symbol="GC=F"):
     last = None
     for host in ("query2", "query1"):
-        url = (f"https://{host}.finance.yahoo.com/v8/finance/chart/"
-               + urllib.parse.quote(symbol) + "?range=max&interval=1d")
+        # range=max tự hạ xuống nến tháng; phải ghi rõ khoảng thời gian để nhận nến ngày.
+        url = (f"https://{host}.finance.yahoo.com/v8/finance/chart/" + urllib.parse.quote(symbol)
+               + f"?period1=946684800&period2={int(time.time())}&interval=1d&events=history")
         for attempt in range(2):
             try:
                 js = json.loads(get(url, headers={"Accept": "application/json"}))
@@ -251,7 +254,7 @@ def from_yahoo(symbol="GC=F"):
                 return df[["date", "open", "high", "low", "close", "source"]]
             except Exception as exc:  # noqa: BLE001
                 last = exc
-                time.sleep(4 * (attempt + 1))
+                time.sleep(10 * (attempt + 1))
     raise RuntimeError(last)
 
 
@@ -290,6 +293,9 @@ def check_prices(df, name):
     age = (pd.Timestamp(TODAY) - pd.Timestamp(last["date"])).days
     if age > 10:
         raise ValueError(f"{name}: dữ liệu cũ, ngày cuối {last['date']}")
+    gap = pd.to_datetime(df["date"]).diff().dt.days.tail(250).median()
+    if gap > 3:
+        raise ValueError(f"{name}: không phải dữ liệu ngày (khoảng cách trung vị {gap:.0f} ngày)")
     jump = df["close"].astype(float).pct_change().abs().max()
     if jump > 0.25:
         raise ValueError(f"{name}: có bước nhảy giá bất thường {jump:.0%}")
