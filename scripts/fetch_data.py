@@ -69,22 +69,36 @@ DUKA = "https://datafeed.dukascopy.com/datafeed/XAUUSD"
 DUKA_SCALE = 1000.0          # XAU/USD: giá lưu dạng số nguyên, chia 1000
 DUKA_START_YEAR = 2003
 duka_stats = {"req": 0, "miss": 0}
-DUKA_BUDGET = 14 * 60        # giây; quá thời gian thì bỏ nguồn này để chuyển sang nguồn dự phòng
+DUKA_BUDGET = 12 * 60        # giây; quá thời gian thì dừng, lần chạy sau làm tiếp nhờ bộ nhớ đệm
+DUKA_CACHE = os.path.join(DATA_DIR, "duka_cache")   # nến ngày của các năm/tháng đã trọn, không đổi nữa
 T0 = time.time()
+
+
+def cache_get(key):
+    fp = os.path.join(DUKA_CACHE, key + ".csv")
+    if os.path.exists(fp):
+        return pd.read_csv(fp, dtype={"date": str})
+    return None
+
+
+def cache_put(key, df):
+    os.makedirs(DUKA_CACHE, exist_ok=True)
+    df[["date", "open", "high", "low", "close"]].round(3).to_csv(os.path.join(DUKA_CACHE, key + ".csv"), index=False)
+    return df
 
 
 def duka_raw(path):
     """Tải và giải nén một tệp .bi5; tệp không tồn tại hoặc rỗng trả về b''."""
     url = f"{DUKA}/{path}"
     last = None
-    waits = (5, 10, 20, 30, 45, 60)
+    waits = (10, 30, 60)
     for attempt in range(len(waits) + 1):
         if time.time() - T0 > DUKA_BUDGET:
             raise RuntimeError(f"Dukascopy quá {DUKA_BUDGET // 60} phút, dừng ở {path}")
         try:
             duka_stats["req"] += 1
             raw = get(url, timeout=40)
-            time.sleep(0.4)
+            time.sleep(1.0)
             return lzma.decompress(raw) if raw else b""
         except HTTPStatus as exc:
             if exc.code == 404:
@@ -179,9 +193,12 @@ def duka_month(y, m, since):
     base = dt.datetime(y, m, 1)
     is_current = (y, m) == (NOW_UTC.year, NOW_UTC.month)
     if not is_current:
+        hit = cache_get(f"{y}-{m:02d}")
+        if hit is not None:
+            return hit
         buf = duka_raw(f"{y}/{m - 1:02d}/BID_candles_hour_1.bi5")
         if buf:
-            return to_daily(duka_candles(buf, base))
+            return cache_put(f"{y}-{m:02d}", to_daily(duka_candles(buf, base)))
         # Tháng vừa kết thúc có thể chưa có tệp gộp: đi từng ngày.
         if (NOW_UTC.year * 12 + NOW_UTC.month) - (y * 12 + m) > 1:
             return to_daily(None)
@@ -198,11 +215,14 @@ def duka_month(y, m, since):
 
 def duka_year(y, since):
     if y < NOW_UTC.year:
+        hit = cache_get(str(y))
+        if hit is not None:
+            return hit
         buf = duka_raw(f"{y}/BID_candles_day_1.bi5")
         if buf:
-            return to_daily(duka_candles(buf, dt.datetime(y, 1, 1)))
+            return cache_put(str(y), to_daily(duka_candles(buf, dt.datetime(y, 1, 1))))
         if y < NOW_UTC.year - 1:
-            return to_daily(None)
+            return cache_put(str(y), to_daily(None))   # năm không có dữ liệu (tệp không tồn tại)
     last_m = 12 if y < NOW_UTC.year else NOW_UTC.month
     first_m = since.month if since.year == y else 1
     frames = [duka_month(y, m, since) for m in range(first_m, last_m + 1)]
