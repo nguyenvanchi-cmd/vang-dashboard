@@ -514,7 +514,7 @@
     const k = [];
     if (p) {
       k.push(kpi('SJC bán ra', `${fmt(p.sjc_sell, 1)}<small>tr/lượng</small>`, `Mua vào ${fmt(p.sjc_buy, 1)}`));
-      k.push(kpi('Thế giới quy đổi', `${fmt(p.world_vnd, 1)}<small>tr/lượng</small>`, `Theo giá đóng cửa ${dmy(p.world_date)}`));
+      k.push(kpi('Thế giới quy đổi', `${fmt(p.world_vnd, 1)}<small>tr/lượng</small>`, esc(p.world_note || `Theo giá đóng cửa ${dmy(p.world_date)}`)));
       k.push(kpi('Chênh lệch SJC – thế giới', `<span class="${p.prem_sell > 15 ? 'down' : ''}">${fmt(p.prem_sell, 1)}</span><small>tr/lượng</small>`, `Theo giá mua vào: ${fmt(p.prem_buy, 1)}`));
     }
     if (fx) k.push(kpi('Tỷ giá USD/VND, bán ra', `${fmt(fx.sell, 0)}`, `${esc(fx.source || '')} · ${dmy(fx.date)}`));

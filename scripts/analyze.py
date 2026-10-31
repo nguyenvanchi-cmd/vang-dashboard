@@ -541,11 +541,20 @@ def domestic(df):
     last_close = float(df["close"].iloc[-1])
     sjc = next((x for x in latest_rows if x["product"] == "Miếng SJC" and x["brand"] == "SJC"), None) \
         or next((x for x in latest_rows if x["product"] == "Miếng SJC"), None)
+    world_px, world_date = last_close, str(df["date"].iloc[-1])
+    world_note = f"Theo giá đóng cửa {world_date[8:10]}/{world_date[5:7]} ({df['source'].iloc[-1]})"
+    try:
+        cx = float((claude or {}).get("xau_usd") or 0)
+        if 200 < cx < 20000 and str(claude.get("ngay", "")) >= world_date:
+            world_px, world_date = cx, str(claude["ngay"])
+            world_note = f"Theo giá giao ngay {vn(cx, 2)} USD/oz Claude ghi nhận sáng {world_date[8:10]}/{world_date[5:7]}"
+    except Exception:  # noqa: BLE001
+        pass
     if out["usd_vnd"] and out["usd_vnd"]["sell"] and sjc:
-        world = last_close * out["usd_vnd"]["sell"] * OZ_PER_LUONG / 1e6
+        world = world_px * out["usd_vnd"]["sell"] * OZ_PER_LUONG / 1e6
         out["premium"] = {"world_vnd": r(world), "sjc_sell": sjc["sell"], "sjc_buy": sjc["buy"],
                           "prem_sell": r(sjc["sell"] - world), "prem_buy": r(sjc["buy"] - world),
-                          "world_date": str(df["date"].iloc[-1])}
+                          "world_date": world_date, "world_usd": r(world_px), "world_note": world_note}
     # lịch sử chênh lệch: ghép giá SJC hằng ngày với giá thế giới và tỷ giá
     if dom is not None and fx is not None and len(dom):
         try:

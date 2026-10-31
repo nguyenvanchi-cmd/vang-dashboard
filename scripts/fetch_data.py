@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Lấy dữ liệu cho website Vàng hôm nay.
 
-- Giá XAU/USD theo ngày. Nguồn chính: Dukascopy (giá giao ngay, giá chào mua, nến ngày theo giờ UTC),
-  lấy từ các tệp dữ liệu công khai datafeed.dukascopy.com. Dự phòng: Yahoo GC=F (hiệu chỉnh về mặt bằng
-  giá giao ngay), Stooq.
+- Giá vàng theo ngày. Nguồn chính: Yahoo Finance GC=F (vàng tương lai COMEX, hợp đồng gần nhất), lịch sử
+  từ năm 2000. Khi nguồn này lỗi: bổ sung vài ngày gần nhất từ Dukascopy (giá giao ngay XAU/USD, tệp dữ liệu
+  công khai datafeed.dukascopy.com), quy về cùng mặt bằng giá; sau đó thử Stooq.
 - Tỷ giá USD/VND (Vietcombank; dự phòng: open.er-api.com).
 - Giá vàng trong nước (SJC, PNJ) nếu lấy được.
 
@@ -91,7 +91,7 @@ def duka_raw(path):
     """Tải và giải nén một tệp .bi5; tệp không tồn tại hoặc rỗng trả về b''."""
     url = f"{DUKA}/{path}"
     last = None
-    waits = (10, 30, 60)
+    waits = (15,)   # máy chủ báo bận thì chỉ thử lại một lần, không dồn yêu cầu
     for attempt in range(len(waits) + 1):
         if time.time() - T0 > DUKA_BUDGET:
             raise RuntimeError(f"Dukascopy quá {DUKA_BUDGET // 60} phút, dừng ở {path}")
@@ -170,13 +170,16 @@ def to_daily(df):
     return out.reset_index()
 
 
+DUKA_TICKS = False   # gộp tick từng giờ cho ngày chưa có tệp nến phút; tắt để giữ số yêu cầu ở mức tối thiểu
+
+
 def duka_day(day):
-    """Một ngày UTC: tệp nến phút; nếu chưa có (ngày gần nhất) thì gộp tick từng giờ đã kết thúc."""
+    """Một ngày UTC: tệp nến phút; nếu chưa có (ngày gần nhất) và cho phép thì gộp tick từng giờ đã kết thúc."""
     base = dt.datetime(day.year, day.month, day.day)
     buf = duka_raw(f"{day.year}/{day.month - 1:02d}/{day.day:02d}/BID_candles_min_1.bi5")
     if buf:
         return to_daily(duka_candles(buf, base))
-    if (NOW_UTC.date() - day).days > 3:
+    if not DUKA_TICKS or (NOW_UTC.date() - day).days > 3:
         return to_daily(None)
     parts = []
     for hr in range(24):
@@ -338,41 +341,35 @@ def load_existing_prices():
 def update_prices():
     old = load_existing_prices()
     has_old = old is not None and len(old) > 200
-    duka_old = has_old and old["source"].astype(str).str.startswith("Dukascopy").mean() > 0.9
 
-    # 1) Dukascopy: lần đầu lấy toàn bộ lịch sử; các lần sau chỉ làm mới 10 ngày gần nhất.
-    try:
-        if duka_old:
-            since = (pd.Timestamp(old["date"].max()) - pd.Timedelta(days=10)).date()
-            new = from_dukascopy(since)
-            df = pd.concat([old, new]).drop_duplicates("date", keep="last")
-        else:
-            df = from_dukascopy()
-        df = check_prices(df, "Dukascopy")
-        note("Giá XAU/USD (Dukascopy)", True,
-             f"{len(df)} dòng, {df['date'].min()} → {df['date'].max()}, {duka_stats['req']} yêu cầu")
-        return df
-    except Exception as exc:  # noqa: BLE001
-        note("Giá XAU/USD (Dukascopy)", False, f"{exc} ({duka_stats['req']} yêu cầu)")
-
-    # 2) Yahoo GC=F: hợp đồng tương lai, hiệu chỉnh về mặt bằng giá giao ngay nếu đã có lịch sử.
+    # 1) Yahoo GC=F: một yêu cầu trả về toàn bộ lịch sử nến ngày.
     try:
         yf = from_yahoo("GC=F")
-        if has_old:
-            both = old.merge(yf, on="date", suffixes=("_s", "_f"))
-            ratio = (both["close_s"] / both["close_f"]).tail(20).median() if len(both) >= 5 else 1.0
-            add = yf[~yf["date"].isin(old["date"])].copy()
-            for c in ["open", "high", "low", "close"]:
-                add[c] = add[c] * ratio
-            add["source"] = f"Yahoo GC=F × {ratio:.4f}"
-            df = pd.concat([old, add]).drop_duplicates("date", keep="last")
-        else:
-            df = yf
+        df = pd.concat([old, yf]).drop_duplicates("date", keep="last") if has_old else yf
         df = check_prices(df, "Yahoo GC=F")
-        note("Giá XAU/USD (Yahoo dự phòng)", True, f"{len(df)} dòng, ngày cuối {df['date'].max()}")
+        note("Giá vàng (Yahoo GC=F)", True, f"{len(df)} dòng, {df['date'].min()} → {df['date'].max()}")
         return df
     except Exception as exc:  # noqa: BLE001
-        note("Giá XAU/USD (Yahoo dự phòng)", False, exc)
+        note("Giá vàng (Yahoo GC=F)", False, exc)
+
+    # 2) Dukascopy cho 10 ngày gần nhất, quy về mặt bằng của chuỗi đang có bằng tỷ lệ trung vị trên các ngày trùng.
+    if has_old:
+        try:
+            since = (pd.Timestamp(old["date"].max()) - pd.Timedelta(days=10)).date()
+            dk = from_dukascopy(since)
+            both = old.merge(dk, on="date", suffixes=("_o", "_d"))
+            if len(both) < 3:
+                raise ValueError(f"chỉ trùng {len(both)} ngày với dữ liệu cũ, không quy đổi được")
+            ratio = float((both["close_o"] / both["close_d"]).median())
+            add = dk[~dk["date"].isin(old["date"])].copy()
+            for c in ["open", "high", "low", "close"]:
+                add[c] = add[c] * ratio
+            add["source"] = f"Dukascopy × {ratio:.4f}"
+            df = check_prices(pd.concat([old, add]).drop_duplicates("date", keep="last"), "Dukascopy bổ sung")
+            note("Giá vàng (Dukascopy bổ sung)", True, f"thêm {len(add)} ngày, ngày cuối {df['date'].max()}")
+            return df
+        except Exception as exc:  # noqa: BLE001
+            note("Giá vàng (Dukascopy bổ sung)", False, f"{exc} ({duka_stats['req']} yêu cầu)")
 
     # 3) Stooq.
     try:
@@ -380,10 +377,10 @@ def update_prices():
         if has_old:
             df = pd.concat([old, df]).drop_duplicates("date", keep="last")
         df = check_prices(df, "Stooq")
-        note("Giá XAU/USD (Stooq dự phòng)", True, f"{len(df)} dòng, ngày cuối {df['date'].max()}")
+        note("Giá vàng (Stooq)", True, f"{len(df)} dòng, ngày cuối {df['date'].max()}")
         return df
     except Exception as exc:  # noqa: BLE001
-        note("Giá XAU/USD (Stooq dự phòng)", False, exc)
+        note("Giá vàng (Stooq)", False, exc)
     return old
 
 
