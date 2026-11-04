@@ -281,24 +281,59 @@ def complete_sessions(df, source):
     return out[["date", "open", "high", "low", "close", "source"]]
 
 
-def from_yahoo(symbol="GC=F"):
+def yahoo_chart(symbol, query):
     last = None
     for host in ("query2", "query1"):
-        # range=max tự hạ xuống nến tháng; phải ghi rõ khoảng thời gian để nhận nến ngày.
-        url = (f"https://{host}.finance.yahoo.com/v8/finance/chart/" + urllib.parse.quote(symbol)
-               + f"?period1=946684800&period2={int(time.time())}&interval=1d&events=history")
+        url = f"https://{host}.finance.yahoo.com/v8/finance/chart/" + urllib.parse.quote(symbol) + "?" + query
         for attempt in range(2):
             try:
                 js = json.loads(get(url, headers={"Accept": "application/json"}))
                 res = js["chart"]["result"][0]
                 q = res["indicators"]["quote"][0]
-                df = pd.DataFrame({"ts": res["timestamp"], "open": q["open"], "high": q["high"],
-                                   "low": q["low"], "close": q["close"]}).dropna()
-                return complete_sessions(df, "Yahoo " + symbol)
+                return pd.DataFrame({"ts": res["timestamp"], "open": q["open"], "high": q["high"],
+                                     "low": q["low"], "close": q["close"]}).dropna()
             except Exception as exc:  # noqa: BLE001
                 last = exc
                 time.sleep(10 * (attempt + 1))
     raise RuntimeError(last)
+
+
+def sessions_from_hourly(h, source):
+    """Gộp nến 1 giờ thành nến phiên 18:00–17:00 giờ New York (cách TradingView chia nến D)."""
+    ts = pd.to_datetime(h["ts"], unit="s", utc=True).dt.tz_convert("America/New_York").dt.tz_localize(None)
+    sess = ts.dt.normalize() + pd.to_timedelta((ts.dt.hour >= 17).astype(int), unit="D")
+    h = h.assign(sess=sess).sort_values("ts")
+    g = h.groupby("sess")
+    out = pd.DataFrame({"open": g["open"].first(), "high": g["high"].max(),
+                        "low": g["low"].min(), "close": g["close"].last(), "n": g.size()})
+    now_ny = pd.Timestamp.now(tz="America/New_York").tz_localize(None)
+    out = out[(out.index + pd.Timedelta(hours=17) <= now_ny) & (out.index.weekday < 5)]
+    out = out.iloc[1:]                       # phiên đầu có thể bị cắt dở ở mốc bắt đầu dữ liệu
+    out = out[out["n"] >= 12]                # bỏ phiên thiếu dữ liệu (ngày lễ, nghỉ sớm)
+    out = out.drop(columns="n").reset_index().rename(columns={"sess": "date"})
+    out["date"] = out["date"].dt.strftime("%Y-%m-%d")
+    out["source"] = source
+    return out[["date", "open", "high", "low", "close", "source"]]
+
+
+def from_yahoo(symbol="GC=F"):
+    # range=max tự hạ xuống nến tháng; phải ghi rõ khoảng thời gian để nhận nến ngày.
+    daily = complete_sessions(
+        yahoo_chart(symbol, f"period1=946684800&period2={int(time.time())}&interval=1d&events=history"),
+        "Yahoo " + symbol)
+    note_txt = daily.attrs.get("note", "")
+    # Sáng sớm (giờ VN) Yahoo thường chưa có nến ngày của phiên vừa đóng cửa: dựng các phiên gần nhất
+    # từ nến 1 giờ để luôn có nến D mới nhất đã đóng cửa.
+    try:
+        hourly = sessions_from_hourly(yahoo_chart(symbol, "range=1mo&interval=60m"), "Yahoo " + symbol + " (gộp nến 1 giờ)")
+        recent = hourly[hourly["date"] > daily["date"].max()]
+        if len(recent):
+            daily = pd.concat([daily, recent], ignore_index=True)
+            note_txt = (note_txt + "; " if note_txt else "") + "thêm " + ", ".join(recent["date"]) + " từ nến 1 giờ"
+    except Exception as exc:  # noqa: BLE001
+        note_txt = (note_txt + "; " if note_txt else "") + f"không lấy được nến 1 giờ: {exc}"
+    daily.attrs["note"] = note_txt
+    return daily
 
 
 def from_stooq():
