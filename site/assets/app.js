@@ -184,7 +184,15 @@
     if (lbl) lbl.textContent = /GC=F/.test(src) ? 'Vàng thế giới (COMEX GC=F)' : 'XAU/USD';
     $('#h-close').innerHTML = `${fmt(s.close, 2)}<small>USD/oz</small>`;
     $('#h-chg').innerHTML = `<span class="pill ${cls(s.chg1d)}">${sgn(s.chg1d_abs, 2)} · ${pct(s.chg1d)}</span>
-      <span class="pill">${esc(s.regime)}</span><span class="pill">Cao ${fmt(s.high, 2)} · Thấp ${fmt(s.low, 2)}</span>`;
+      <span class="pill">${esc(s.regime)}</span>`;
+    const ohlc = (o, h, l, c) => `<div class="ohlc"><span>Mở <b>${fmt(o, 2)}</b></span><span>Cao <b>${fmt(h, 2)}</b></span><span>Thấp <b>${fmt(l, 2)}</b></span><span>Đóng <b>${fmt(c, 2)}</b></span></div>`;
+    let html = ohlc(s.open, s.high, s.low, s.close);
+    const tv = (state.d.claude || {}).nen_d;
+    if (tv && tv.ngay === s.date && [tv.mo, tv.cao, tv.thap, tv.dong].every((v) => Number.isFinite(Number(v)))) {
+      html += `<div class="ohlc-src">Cùng nến trên TradingView (XAU/USD giao ngay, OANDA)</div>${ohlc(tv.mo, tv.cao, tv.thap, tv.dong)}`;
+    }
+    const box = $('#h-ohlc');
+    if (box) box.innerHTML = html;
     const per = [['1 tuần', s.chg1w], ['1 tháng', s.chg1m], ['Từ đầu năm', s.ytd], ['1 năm', s.chg1y]];
     $('#h-periods').innerHTML = per.map(([k, v]) => `<div><span>${k}</span><b class="${cls(v)}">${pct(v, 1)}</b></div>`).join('');
     if (state.s) sparkline($('#h-spark'), state.s.c.slice(-120));

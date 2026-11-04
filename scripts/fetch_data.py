@@ -261,6 +261,26 @@ def from_dukascopy(since=None):
 
 
 # ---------------------------------------------------------------- giá thế giới: dự phòng
+def complete_sessions(df, source):
+    """Gán mỗi nến ngày vào đúng phiên giao dịch và chỉ giữ những phiên đã đóng cửa.
+
+    Phiên vàng COMEX chạy từ 18:00 hôm trước đến 17:00 giờ New York. Nến đang chạy được Yahoo ghi
+    thời điểm 18:00 của ngày hôm trước, nên nếu lấy ngày theo dấu thời gian sẽ đè lên nến đã đóng cửa
+    của hôm đó. Ở đây: dấu thời gian từ 17:00 trở đi thuộc phiên của ngày hôm sau; phiên chỉ được giữ
+    khi đã qua 17:00 giờ New York của ngày phiên.
+    """
+    ts = pd.to_datetime(df["ts"], unit="s", utc=True).dt.tz_convert("America/New_York").dt.tz_localize(None)
+    sess = ts.dt.normalize() + pd.to_timedelta((ts.dt.hour >= 17).astype(int), unit="D")
+    now_ny = pd.Timestamp.now(tz="America/New_York").tz_localize(None)
+    done = (sess + pd.Timedelta(hours=17)) <= now_ny
+    out = df.assign(date=sess.dt.strftime("%Y-%m-%d"))[done & (sess.dt.weekday < 5)]
+    dropped = int((~done).sum())
+    out = out.drop(columns="ts").drop_duplicates("date", keep="last")
+    out["source"] = source
+    out.attrs["note"] = (f"bỏ {dropped} nến của phiên chưa đóng cửa" if dropped else "")
+    return out[["date", "open", "high", "low", "close", "source"]]
+
+
 def from_yahoo(symbol="GC=F"):
     last = None
     for host in ("query2", "query1"):
@@ -274,11 +294,7 @@ def from_yahoo(symbol="GC=F"):
                 q = res["indicators"]["quote"][0]
                 df = pd.DataFrame({"ts": res["timestamp"], "open": q["open"], "high": q["high"],
                                    "low": q["low"], "close": q["close"]}).dropna()
-                df["date"] = (pd.to_datetime(df["ts"], unit="s", utc=True)
-                              .dt.tz_convert("America/New_York").dt.strftime("%Y-%m-%d"))
-                df = df.drop(columns="ts").drop_duplicates("date", keep="last")
-                df["source"] = "Yahoo " + symbol
-                return df[["date", "open", "high", "low", "close", "source"]]
+                return complete_sessions(df, "Yahoo " + symbol)
             except Exception as exc:  # noqa: BLE001
                 last = exc
                 time.sleep(10 * (attempt + 1))
@@ -345,9 +361,14 @@ def update_prices():
     # 1) Yahoo GC=F: một yêu cầu trả về toàn bộ lịch sử nến ngày.
     try:
         yf = from_yahoo("GC=F")
-        df = pd.concat([old, yf]).drop_duplicates("date", keep="last") if has_old else yf
+        extra = yf.attrs.get("note", "")
+        # Yahoo trả về toàn bộ lịch sử: thay hẳn dữ liệu cũ (xóa luôn các dòng sai từng ghi nhầm).
+        df = pd.concat([old[old["date"] < yf["date"].min()], yf]) if has_old else yf
         df = check_prices(df, "Yahoo GC=F")
-        note("Giá vàng (Yahoo GC=F)", True, f"{len(df)} dòng, {df['date'].min()} → {df['date'].max()}")
+        last = df.iloc[-1]
+        note("Giá vàng (Yahoo GC=F)", True,
+             f"{len(df)} dòng, {df['date'].min()} → {df['date'].max()}; nến cuối O {last['open']} H {last['high']} "
+             f"L {last['low']} C {last['close']}" + (f"; {extra}" if extra else ""))
         return df
     except Exception as exc:  # noqa: BLE001
         note("Giá vàng (Yahoo GC=F)", False, exc)
