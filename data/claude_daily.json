@@ -349,5 +349,12 @@
       "nguon": "Index.vn",
       "url": "https://index.vn/tin-tuc/gia-vang-ngay-hom-nay-04-11-2026-vang-sjc-phuc-hoi-quanh-moc-140-trieu-dong"
     }
-  ]
+  ],
+  "nen_d": {
+    "ngay": "2026-11-03",
+    "mo": 3947.045,
+    "cao": 3971.355,
+    "thap": 3895.57,
+    "dong": 3930.325
+  }
 }
