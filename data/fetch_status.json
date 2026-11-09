@@ -1,5 +1,5 @@
 {
- "run_at": "2026-11-09T06:42:09+07:00",
+ "run_at": "2026-11-09T17:25:03+07:00",
  "steps": [
   {
    "step": "Giá vàng (Yahoo GC=F)",
@@ -9,7 +9,7 @@
   {
    "step": "Tỷ giá USD/VND (Vietcombank)",
    "ok": true,
-   "msg": "25780.0"
+   "msg": "25700.0"
   },
   {
    "step": "Giá trong nước (SJC)",
