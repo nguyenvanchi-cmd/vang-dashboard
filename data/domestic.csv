@@ -64,5 +64,13 @@ date,time,brand,product,buy,sell,source
 2026-11-12,17:30,PNJ,Nhẫn 9999,133.7,137.9,pnj.com.vn
 2026-11-13,17:29,PNJ,Miếng SJC,135.0,138.0,pnj.com.vn
 2026-11-13,17:29,PNJ,Nhẫn 9999,133.2,137.4,pnj.com.vn
-2026-11-14,06:46,PNJ,Miếng SJC,135.0,138.0,pnj.com.vn
-2026-11-14,06:46,PNJ,Nhẫn 9999,133.2,137.4,pnj.com.vn
+2026-11-14,06:50,Bảo Tín Minh Châu,Miếng SJC,134.0,138.0,Claude (Chốt phiên 13/11)
+2026-11-14,06:50,Bảo Tín Mạnh Hải,Miếng SJC,135.0,138.0,Claude (Chiều 13/11 (15h))
+2026-11-14,06:50,DOJI,Miếng SJC,135.0,138.0,Claude (Chốt phiên 13/11)
+2026-11-14,06:50,DOJI Hưng Thịnh Vượng,Nhẫn 9999,133.5,137.5,Claude (Chốt phiên 13/11)
+2026-11-14,07:26,PNJ,Miếng SJC,135.0,138.0,pnj.com.vn
+2026-11-14,07:26,PNJ,Nhẫn 9999,133.2,137.4,pnj.com.vn
+2026-11-14,06:50,Phú Quý,Miếng SJC,135.0,138.0,Claude (Chốt phiên 13/11)
+2026-11-14,06:50,Phú Quý,Nhẫn 9999,135.0,138.0,Claude (Chốt phiên 13/11)
+2026-11-14,06:50,SJC,Miếng SJC,135.0,138.0,Claude (Sáng 14/11 (6h30))
+2026-11-14,06:50,SJC,Nhẫn 9999,133.8,137.8,Claude (Chốt phiên 13/11)
