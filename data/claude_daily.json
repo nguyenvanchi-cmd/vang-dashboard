@@ -1,97 +1,97 @@
 {
-  "ngay": "2026-11-06",
-  "cap_nhat": "06:55 thứ Sáu 06/11/2026",
-  "xau_usd": 4088.275,
-  "xau_doi_pct": 0.69,
-  "usd_vnd": 25800,
-  "sjc_mua": 139.5,
-  "sjc_ban": 142.5,
+  "ngay": "2026-11-14",
+  "cap_nhat": "06:50 thứ Bảy 14/11/2026",
   "xu_huong": "Đi ngang",
   "tin_cay": "Trung bình",
-  "tom_tat": "Nến D 5/11 đóng 4.088,3 (+0,69%), vừa đủ vượt đỉnh 4.083 nhưng để râu trên dài 59 USD sau khi bị từ chối ở 4.147; sáng nay khung 15m đi ngang trong hộp 4.071–4.138, đỉnh thấp dần nhưng vẫn giữ trên EMA (4.066). Người tích lũy chưa mua trước NFP 20h30 tối nay: chỉ Mua xác nhận phần nhỏ khi nến 4h đóng vững trên 4.120, hoặc Mua nền từng phần ở 4.000–4.040 nếu NFP mạnh kéo giá về đó.",
+  "tom_tat": "Sau tuần mất 4,57%, vàng đi ngang 3.867–3.906 và nghiêng giảm theo khung D, 4h; đầu tuần chờ doanh số bán lẻ (20h30 thứ Ba 17/11) và biên bản Fed (2h sáng thứ Năm 19/11). Người tích lũy đứng yên, chỉ mua nền phần nhỏ nếu giá giữ 3.850–3.855 và khung 15m tạo đáy cao hơn; nến D đóng dưới 3.850 thì dừng giải ngân.",
+  "xau_usd": 3884.685,
+  "xau_doi_pct": 0.18,
+  "usd_vnd": 25880,
+  "sjc_mua": 135.0,
+  "sjc_ban": 138.0,
   "da_khung": [
     {
       "khung": "D",
       "thu_tu": 1,
-      "xu_huong": "Giảm (đang hồi)",
+      "xu_huong": "Giảm",
       "gia_vs_ema": "Dưới xa",
-      "ema": 4260.37,
-      "macd": -47.09,
-      "macd_mo_ta": "Dưới 0 nhưng đã cắt lên đường trung bình khi nến 5/11 đóng (-56,40 so với -62,83). Histogram mạnh dần: -2,10 (4/11) → +6,43 (5/11) → +12,59 nến đang chạy",
-      "ho_tro": "4.057–4.060; 4.000–4.020; 3.920–3.930",
-      "khang_cu": "4.147; 4.200–4.217; 4.260 (EMA)",
-      "ghi_chu": "Nến 5/11 đóng 4.088,3, vượt đỉnh 4.082,8 ngày 28/10 nên chuỗi đỉnh thấp dần đã bị phá và đáy 3.870 (30/10) được xác nhận. Nhưng râu trên dài 59 USD (lên 4.147 rồi bị đẩy xuống) cho thấy bên bán còn mạnh. EMA 200 dốc xuống, giá còn dưới khoảng 170 USD"
+      "ema": 4246.6,
+      "macd": -55.85,
+      "macd_mo_ta": "Dưới 0, vừa cắt xuống đường trung bình (-50,47); histogram -5,38, âm dần",
+      "ho_tro": "3.850–3.853; 3.800",
+      "khang_cu": "3.923–3.944; 3.966–4.000",
+      "ghi_chu": "Nến 13/11 thân nhỏ, râu trên dài (bị bán ở 3.923). Giá thấp hơn EMA 200 khoảng 8,5%. Phân kỳ dương tiềm năng (MACD -49 so với -70 ở đáy 30/10) chưa xác nhận"
     },
     {
       "khung": "4h",
       "thu_tu": 2,
-      "xu_huong": "Tăng (đang chỉnh)",
-      "gia_vs_ema": "Dưới",
-      "ema": 4119.28,
-      "macd": 36.18,
-      "macd_mo_ta": "Trên 0 và trên đường trung bình (26,37) nhưng histogram co lại 5 nến liền: 22,2 → 20,7 → 17,2 → 12,9 → 9,8",
-      "ho_tro": "4.071–4.076; 4.030–4.046; 3.970",
-      "khang_cu": "4.120 (EMA); 4.138–4.147; 4.200",
-      "ghi_chu": "Đỉnh và đáy cao dần (3.870 → 3.896 → 4.147). Giá vượt EMA 200 lên 4.147 rồi bị đẩy về dưới: lần thử EMA đầu tiên thất bại. Lực tăng yếu đi"
+      "xu_huong": "Giảm",
+      "gia_vs_ema": "Dưới xa",
+      "ema": 4086.0,
+      "macd": -46.14,
+      "macd_mo_ta": "Dưới 0 và dưới đường trung bình (-40,11); histogram âm co dần từ -20,3 về -6,0",
+      "ho_tro": "3.867–3.870; 3.852",
+      "khang_cu": "3.923; 3.944–3.966; 4.000",
+      "ghi_chu": "Đỉnh và đáy thấp dần (4.067,1 → 3.923,1; 3.982,7 → 3.852,6). Lực giảm chậm lại, chưa có phân kỳ"
     },
     {
       "khung": "1h",
       "thu_tu": 3,
-      "xu_huong": "Tăng (đang chỉnh)",
-      "gia_vs_ema": "Trên",
-      "ema": 4026.28,
-      "macd": 8.8,
-      "macd_mo_ta": "Trên 0 nhưng đã cắt xuống đường trung bình (16,44) từ nến 15h ngày 5/11. Histogram -7,6",
-      "ho_tro": "4.071–4.076; 4.026–4.040 (EMA); 4.000",
-      "khang_cu": "4.118; 4.128–4.138; 4.147",
-      "ghi_chu": "Phân kỳ âm: đỉnh 4.138 lúc 18h thấp hơn đỉnh 4.147 lúc 10h, MACD cũng thấp hơn (32,1 so với 37,9). Hết hơi, đang chỉnh về gần EMA"
+      "xu_huong": "Đi ngang",
+      "gia_vs_ema": "Dưới xa",
+      "ema": 3997.4,
+      "macd": -10.79,
+      "macd_mo_ta": "Dưới 0 nhưng trên đường trung bình (-12,24); histogram +1,45",
+      "ho_tro": "3.867–3.872; 3.852",
+      "khang_cu": "3.906; 3.923",
+      "ghi_chu": "Biên 3.852–3.923 từ tối 12/11. Đáy 3.867,7 cao hơn 3.852,6, MACD tại đáy -12,7 so với -34,3: lực bán hết hơi"
     },
     {
       "khung": "15m",
       "thu_tu": 4,
       "xu_huong": "Đi ngang",
-      "gia_vs_ema": "Trên",
-      "ema": 4065.71,
-      "macd": -5.11,
-      "macd_mo_ta": "Dưới 0, vừa cắt lên đường trung bình (-5,13) ở nến 6h45; histogram +0,02, rất yếu",
-      "ho_tro": "4.071–4.076; 4.065 (EMA); 4.057–4.060",
-      "khang_cu": "4.098; 4.118; 4.128–4.138",
-      "ghi_chu": "Hộp 4.071–4.138 từ tối 5/11, đỉnh thấp dần 4.138 → 4.128 → 4.118. Lúc 6h15 giá quét xuống 4.071, thủng đáy 4.076 rồi rút chân ngay về 4.097: bên mua còn giữ vùng trên EMA"
+      "gia_vs_ema": "Dưới",
+      "ema": 3922.5,
+      "macd": -2.0,
+      "macd_mo_ta": "Dưới 0 nhưng vừa cắt lên đường trung bình (-2,76); histogram +0,75",
+      "ho_tro": "3.867–3.870; 3.852",
+      "khang_cu": "3.895–3.906; 3.923",
+      "ghi_chu": "Nghiêng giảm: đỉnh thấp dần từ 10h (3.923 → 3.906 → 3.891 → 3.880), đáy nằm ngang 3.867,7/3.869,5, phân kỳ dương nhẹ (MACD -4,2 → -3,2)"
     },
     {
       "khung": "1m",
       "thu_tu": 5,
-      "xu_huong": "Đi ngang",
-      "gia_vs_ema": "Quanh",
-      "ema": 4094.7,
-      "macd": 1.71,
-      "macd_mo_ta": "Trên 0, vừa cắt lên đường trung bình (1,66) lúc 6h43, histogram rất mỏng",
-      "ho_tro": "4.088; 4.081; 4.071",
-      "khang_cu": "4.098; 4.105",
-      "ghi_chu": "Vọt từ 4.071 lên 4.097,7 trong khoảng 12 phút sau mở cửa phiên Á, nay đi ngang quanh EMA phẳng"
+      "xu_huong": "Tăng",
+      "gia_vs_ema": "Trên",
+      "ema": 3877.7,
+      "macd": 2.09,
+      "macd_mo_ta": "Trên 0 và trên đường trung bình (1,63)",
+      "ho_tro": "3.878–3.879; 3.872",
+      "khang_cu": "3.885; 3.891",
+      "ghi_chu": "Kéo lên trong 20 phút cuối phiên (3.878,6 → 3.884,7); thị trường đóng cửa đến khoảng 6h sáng thứ Hai 16/11"
     }
   ],
   "ba_tang": [
     {
       "ma": "goc",
       "tang": "Gốc",
-      "huong": "Lên (dài hạn), đang điều chỉnh",
+      "huong": "Lên (đang điều chỉnh sâu)",
       "trang_thai": "Chín",
-      "ly_do": "Ngân hàng trung ương mua ròng 321 tấn trong quý 3; thâm hụt ngân sách Mỹ trên 6% GDP và nợ công gần 100% GDP. Lực đỡ dài hạn còn nguyên, giá đã điều chỉnh từ đỉnh tháng 8 về vùng 3.870–4.150."
+      "ly_do": "Ngân hàng trung ương mua ròng 321 tấn trong quý 3/2026 (+42% so với cùng kỳ); Goldman dù hạ dự báo vẫn lạc quan dài hạn nhờ lực mua chính thức."
     },
     {
       "ma": "than",
       "tang": "Thân",
-      "huong": "Xuống (lực giảm đang yếu dần)",
+      "huong": "Xuống",
       "trang_thai": "Chín",
-      "ly_do": "Fed vẫn trong chu kỳ tăng lãi, quỹ ETF vàng lớn nhất (GLD) bị rút 17 tấn trong 2 tuần, giá còn dưới xa EMA 200 khung D (4.260). Mầm đổi chiều: khả năng Fed tăng lãi 9/12 giảm từ khoảng 83% còn 66–69%, lợi suất 10 năm thấp nhất từ đầu tháng 9, MACD khung D đã cắt lên."
+      "ly_do": "Fed đang tăng lãi (85–88% khả năng tăng tiếp ngày 9/12), lợi suất 10 năm 5,13% và USD cao nhất từ 4/2025; giá dưới EMA 200 khung D khoảng 8,5%, Goldman hạ dự báo cuối 2026 xuống 4.150."
     },
     {
       "ma": "ngon",
       "tang": "Ngọn",
-      "huong": "Đi ngang sau nhịp hồi mạnh",
-      "trang_thai": "Chín",
-      "ly_do": "Hai phiên 4–5/11 tăng từ 3.920 lên 4.147 rồi bị từ chối ở EMA 200 khung 4h; sáng 6/11 giá đi ngang 4.071–4.138 chờ NFP 20h30 tối nay. Vàng giữ được mức tăng khi chứng khoán Mỹ bán tháo, cho thấy vai trò trú ẩn đang được dùng lại."
+      "huong": "Đi ngang, nghiêng giảm",
+      "trang_thai": "Mầm",
+      "ly_do": "Sau tuần mất 4,57%, giá đi ngang 3.852–3.923; lực bán chậm lại ở khung 4h và 1h nhưng MACD khung D vừa cắt xuống, chưa có xác nhận đảo chiều."
     }
   ],
   "gia_trong_nuoc": [
@@ -99,254 +99,246 @@
       "ma": "sjc_mieng",
       "thuong_hieu": "SJC",
       "loai": "Miếng SJC",
-      "mua": 139.5,
-      "ban": 142.5,
-      "thoi_diem": "Sáng 6/11"
+      "mua": 135.0,
+      "ban": 138.0,
+      "thoi_diem": "Sáng 14/11 (6h30)"
     },
     {
       "ma": "doji_mieng",
       "thuong_hieu": "DOJI",
       "loai": "Miếng SJC",
-      "mua": 139.5,
-      "ban": 142.5,
-      "thoi_diem": "Sáng 6/11"
+      "mua": 135.0,
+      "ban": 138.0,
+      "thoi_diem": "Chốt phiên 13/11"
     },
     {
       "ma": "pnj_mieng",
       "thuong_hieu": "PNJ",
       "loai": "Miếng SJC",
-      "mua": 139.5,
-      "ban": 142.5,
-      "thoi_diem": "Sáng 6/11"
+      "mua": 135.0,
+      "ban": 138.0,
+      "thoi_diem": "Chốt phiên 13/11"
     },
     {
-      "ma": "btmc_mieng",
-      "thuong_hieu": "Bảo Tín Minh Châu",
+      "ma": "btmh_mieng",
+      "thuong_hieu": "Bảo Tín Mạnh Hải",
       "loai": "Miếng SJC",
-      "mua": 138.4,
-      "ban": 142.5,
-      "thoi_diem": "Sáng 6/11"
+      "mua": 135.0,
+      "ban": 138.0,
+      "thoi_diem": "Chiều 13/11 (15h)"
     },
     {
       "ma": "phuquy_mieng",
       "thuong_hieu": "Phú Quý",
       "loai": "Miếng SJC",
-      "mua": 139.0,
-      "ban": 142.5,
-      "thoi_diem": "Sáng 6/11"
+      "mua": 135.0,
+      "ban": 138.0,
+      "thoi_diem": "Chốt phiên 13/11"
+    },
+    {
+      "ma": "btmc_mieng",
+      "thuong_hieu": "Bảo Tín Minh Châu",
+      "loai": "Miếng SJC",
+      "mua": 134.0,
+      "ban": 138.0,
+      "thoi_diem": "Chốt phiên 13/11"
     },
     {
       "ma": "sjc_nhan",
       "thuong_hieu": "SJC",
       "loai": "Nhẫn 9999",
-      "mua": 138.0,
-      "ban": 142.0,
-      "thoi_diem": "Sáng 6/11"
+      "mua": 133.8,
+      "ban": 137.8,
+      "thoi_diem": "Chốt phiên 13/11"
     },
     {
       "ma": "doji_nhan",
-      "thuong_hieu": "DOJI",
+      "thuong_hieu": "DOJI Hưng Thịnh Vượng",
       "loai": "Nhẫn 9999",
-      "mua": 138.5,
-      "ban": 142.5,
-      "thoi_diem": "Sáng 6/11"
+      "mua": 133.5,
+      "ban": 137.5,
+      "thoi_diem": "Chốt phiên 13/11"
     },
     {
       "ma": "pnj_nhan",
       "thuong_hieu": "PNJ",
       "loai": "Nhẫn 9999",
-      "mua": 138.0,
-      "ban": 142.0,
-      "thoi_diem": "Sáng 6/11"
-    },
-    {
-      "ma": "btmc_nhan",
-      "thuong_hieu": "Bảo Tín Minh Châu",
-      "loai": "Nhẫn 9999",
-      "mua": 138.4,
-      "ban": 142.4,
-      "thoi_diem": "Sáng 6/11"
+      "mua": 133.2,
+      "ban": 137.4,
+      "thoi_diem": "Sáng 14/11 (6h30)"
     },
     {
       "ma": "phuquy_nhan",
       "thuong_hieu": "Phú Quý",
       "loai": "Nhẫn 9999",
-      "mua": 139.0,
-      "ban": 142.0,
-      "thoi_diem": "Sáng 6/11"
+      "mua": 135.0,
+      "ban": 138.0,
+      "thoi_diem": "Chốt phiên 13/11"
     }
   ],
   "lich_tin": [
     {
-      "ma": "nfp_0611",
-      "ngay": "2026-11-06",
-      "thu": "Thứ Sáu 6/11",
+      "ma": "mo_cua_thu_hai",
+      "ngay": "2026-11-16",
+      "thu": "Thứ Hai 16/11",
+      "gio_vn": "06:00",
+      "su_kien": "Thị trường vàng thế giới mở cửa lại sau cuối tuần",
+      "muc_do": 1,
+      "ghi_chu": "Có thể có khoảng trống giá nếu có tin lớn cuối tuần"
+    },
+    {
+      "ma": "ban_le_my_t10",
+      "ngay": "2026-11-17",
+      "thu": "Thứ Ba 17/11",
       "gio_vn": "20:30",
-      "su_kien": "Mỹ: báo cáo việc làm phi nông nghiệp (NFP) tháng 10",
+      "su_kien": "Doanh số bán lẻ Mỹ tháng 10",
       "muc_do": 3,
-      "ghi_chu": "Dự báo +65 nghìn việc làm (tháng 9: +29 nghìn), thất nghiệp 4,2%, lương giờ +0,3%. Số mạnh củng cố khả năng Fed tăng lãi 9/12; số yếu mở đường cho giá vượt 4.120"
+      "ghi_chu": "Chi tiêu mạnh củng cố khả năng Fed tăng lãi, bất lợi cho vàng"
     },
     {
-      "ma": "michigan_0611",
-      "ngay": "2026-11-06",
-      "thu": "Thứ Sáu 6/11",
-      "gio_vn": "22:00",
-      "su_kien": "Mỹ: niềm tin tiêu dùng Đại học Michigan (sơ bộ tháng 11)",
+      "ma": "hammack_17_11",
+      "ngay": "2026-11-17",
+      "thu": "Thứ Ba 17/11",
+      "gio_vn": "21:30",
+      "su_kien": "Chủ tịch Fed Cleveland Hammack phát biểu",
       "muc_do": 2,
-      "ghi_chu": "Chú ý kỳ vọng lạm phát"
+      "ghi_chu": "Theo GSI Exchange"
     },
     {
-      "ma": "fed_0611",
-      "ngay": "2026-11-06",
-      "thu": "Thứ Sáu 6/11",
-      "gio_vn": "Cả ngày",
-      "su_kien": "Quan chức Fed Logan, Williams, Musalem, Bowman phát biểu",
-      "muc_do": 2,
-      "ghi_chu": "Phản ứng đầu tiên sau NFP"
-    },
-    {
-      "ma": "pboc_0711",
-      "ngay": "2026-11-07",
-      "thu": "Thứ Bảy 7/11",
-      "gio_vn": "Cả ngày",
-      "su_kien": "Trung Quốc công bố dự trữ vàng tháng 10",
-      "muc_do": 2,
-      "ghi_chu": "Xem ngân hàng trung ương Trung Quốc có mua tiếp không"
-    },
-    {
-      "ma": "cpi_tq_0911",
-      "ngay": "2026-11-09",
-      "thu": "Thứ Hai 9/11",
-      "gio_vn": "08:30",
-      "su_kien": "Trung Quốc: CPI tháng 10",
-      "muc_do": 1,
-      "ghi_chu": ""
-    },
-    {
-      "ma": "cpi_my_1011",
-      "ngay": "2026-11-10",
-      "thu": "Thứ Ba 10/11",
-      "gio_vn": "20:30",
-      "su_kien": "Mỹ: CPI tháng 10",
+      "ma": "bien_ban_fed_t10",
+      "ngay": "2026-11-19",
+      "thu": "Thứ Năm 19/11",
+      "gio_vn": "02:00",
+      "su_kien": "Biên bản họp Fed 27–28/10",
       "muc_do": 3,
-      "ghi_chu": "CPI tháng 9 ở 3,7%; dầu giảm mạnh rồi bật lại quanh 90 USD, cần xem lạm phát năng lượng"
+      "ghi_chu": "Tin quan trọng nhất tuần: mức chia rẽ trong Fed về tăng 0,25 hay 0,5 điểm tháng 12"
     },
     {
-      "ma": "abudhabi_1011",
-      "ngay": "2026-11-10",
-      "thu": "Thứ Ba 10/11",
-      "gio_vn": "Cả ngày",
-      "su_kien": "Đàm phán Nga – Ukraine – Mỹ ở Abu Dhabi (10–11/11)",
-      "muc_do": 2,
-      "ghi_chu": "Có tiến triển thì nhu cầu trú ẩn giảm"
-    },
-    {
-      "ma": "veterans_1111",
-      "ngay": "2026-11-11",
-      "thu": "Thứ Tư 11/11",
-      "gio_vn": "Cả ngày",
-      "su_kien": "Mỹ nghỉ lễ Cựu chiến binh: thị trường trái phiếu nghỉ, chứng khoán vẫn mở",
-      "muc_do": 1,
-      "ghi_chu": "Thanh khoản mỏng"
-    },
-    {
-      "ma": "gdp_anh_1211",
-      "ngay": "2026-11-12",
-      "thu": "Thứ Năm 12/11",
-      "gio_vn": "14:00",
-      "su_kien": "Anh: GDP quý 3 (sơ bộ)",
-      "muc_do": 1,
-      "ghi_chu": ""
-    },
-    {
-      "ma": "ppi_1311",
-      "ngay": "2026-11-13",
-      "thu": "Thứ Sáu 13/11",
+      "ma": "tro_cap_tn_19_11",
+      "ngay": "2026-11-19",
+      "thu": "Thứ Năm 19/11",
       "gio_vn": "20:30",
-      "su_kien": "Mỹ: PPI tháng 10",
+      "su_kien": "Đơn xin trợ cấp thất nghiệp hằng tuần",
       "muc_do": 2,
-      "ghi_chu": ""
+      "ghi_chu": "Thị trường lao động còn chặt thì Fed dễ tăng tiếp"
     },
     {
-      "ma": "fomc_1012",
+      "ma": "goolsbee_20_11",
+      "ngay": "2026-11-20",
+      "thu": "Thứ Sáu 20/11",
+      "gio_vn": "00:30",
+      "su_kien": "Chủ tịch Fed Chicago Goolsbee phát biểu",
+      "muc_do": 2,
+      "ghi_chu": "Theo GSI Exchange"
+    },
+    {
+      "ma": "paulson_20_11",
+      "ngay": "2026-11-20",
+      "thu": "Thứ Sáu 20/11",
+      "gio_vn": "05:30",
+      "su_kien": "Chủ tịch Fed Philadelphia Paulson phát biểu",
+      "muc_do": 2,
+      "ghi_chu": "Có thể nói về mức tăng lãi tháng 12"
+    },
+    {
+      "ma": "gdp_pce_25_11",
+      "ngay": "2026-11-25",
+      "thu": "Thứ Tư 25/11",
+      "gio_vn": "20:30",
+      "su_kien": "GDP quý 3 lần 2 và chỉ số giá PCE",
+      "muc_do": 3,
+      "ghi_chu": "Ngoài 7 ngày, ghi trước để theo dõi"
+    },
+    {
+      "ma": "fed_hop_12_2026",
       "ngay": "2026-12-10",
       "thu": "Thứ Năm 10/12",
       "gio_vn": "02:00",
       "su_kien": "Fed công bố quyết định lãi suất (họp 8–9/12)",
       "muc_do": 3,
-      "ghi_chu": "Thị trường đặt khoảng 66–69% khả năng tăng 0,25 điểm % (giảm từ khoảng 83% đầu tuần)"
+      "ghi_chu": "CME FedWatch: 85–88% tăng 0,25 điểm, 12–15% tăng 0,5 điểm"
     }
   ],
   "tin_chon_loc": [
     {
-      "ma": "ai_selloff_0511",
+      "ma": "vang_tuan_giam_10_12",
       "thu_tu": 1,
-      "tieu_de": "Chứng khoán Mỹ bán tháo: Nasdaq 100 giảm 6,4%, mạnh nhất từ 2020, nhóm chip giảm khoảng 12% vì lo chi tiêu AI chậm thành đơn hàng; vàng vẫn giữ mức tăng 0,7% trong khi bạc, đồng và bitcoin đều giảm",
+      "tieu_de": "Vàng mất khoảng 4,6% trong tuần, tuần giảm thứ 10 trong 12 tuần, chuỗi giảm dài nhất kể từ 1989; bạc có lúc dưới 50 USD",
       "tang": "Ngọn",
       "trang_thai": "Chín",
-      "tac_dong": "Tích cực",
-      "nguon": "investingLive",
-      "url": "https://www.louisvelazquez.com/investinglive-americas-fx-news-wrap-5-nov-nasdaq-100-plunges-6-36-as-ai-selloff-spreads/"
+      "tac_dong": "Tiêu cực",
+      "nguon": "BullionVault",
+      "url": "https://www.bullionvault.com/gold-news/gold-price-news/gold-silver-price-week-111320261"
     },
     {
-      "ma": "fed_odds_0511",
+      "ma": "ppi_my_t10",
       "thu_tu": 2,
-      "tieu_de": "Cược Fed tăng lãi tháng 12 hạ nhiệt còn khoảng 66–69% (từ khoảng 83%); lợi suất 2 năm giảm 11 điểm cơ bản, 10 năm về 4,84%, thấp nhất từ đầu tháng 9",
+      "tieu_de": "PPI Mỹ tháng 10 tăng 0,3% (dự báo 0,4%), nhưng mức theo năm 6,5% cao nhất từ 11/2022; tháng 9 điều chỉnh lên 1,4%",
+      "tang": "Ngọn",
+      "trang_thai": "Chín",
+      "tac_dong": "Trung tính",
+      "nguon": "FinanceFeeds",
+      "url": "https://financefeeds.com/gold-price-today-3888-friday-ppi-day-after-13-month-low-bull-3963-bear-3800/"
+    },
+    {
+      "ma": "fed_cung_ran",
+      "thu_tu": 3,
+      "tieu_de": "Waller, Williams, Logan đều nghiêng về tăng lãi tiếp; FedWatch: 85–88% tăng 0,25 điểm và 12–15% tăng 0,5 điểm ngày 9/12",
       "tang": "Thân",
+      "trang_thai": "Chín",
+      "tac_dong": "Tiêu cực",
+      "nguon": "GSI Exchange; Reuters qua Kitco",
+      "url": "https://gsiexchange.com/gold-lost-4-000-as-inflation-ran-hot-and-the-dollar-surged/"
+    },
+    {
+      "ma": "loi_suat_usd_tang",
+      "thu_tu": 4,
+      "tieu_de": "Lợi suất 10 năm Mỹ 5,13%, tăng 0,27 điểm trong tuần, mạnh nhất từ 4/2025; USD lên cao nhất từ 4/2025",
+      "tang": "Thân",
+      "trang_thai": "Chín",
+      "tac_dong": "Tiêu cực",
+      "nguon": "BullionVault; VOV",
+      "url": "https://www.bullionvault.com/gold-news/gold-price-news/gold-silver-price-week-111320261"
+    },
+    {
+      "ma": "goldman_ha_du_bao",
+      "thu_tu": 5,
+      "tieu_de": "Goldman Sachs hạ dự báo vàng cuối 2026 xuống 4.150 USD và cuối 2027 xuống 4.800 USD vì Fed thắt chặt",
+      "tang": "Thân",
+      "trang_thai": "Chín",
+      "tac_dong": "Tiêu cực",
+      "nguon": "ad-hoc-news",
+      "url": "https://www.ad-hoc-news.de/boerse/news/unternehmensnachrichten/goldman-trims-gold-targets-through-2027-as-official-buyers-offset-a-hawkish-fed/70503656"
+    },
+    {
+      "ma": "nvidia_ceo",
+      "thu_tu": 6,
+      "tieu_de": "CEO Nvidia Jensen Huang từ chức, cổ phiếu Nvidia giảm 3,9% hôm thứ Sáu; rủi ro bán tháo lan sang vàng để bù ký quỹ",
+      "tang": "Ngọn",
+      "trang_thai": "Chín",
+      "tac_dong": "Tiêu cực",
+      "nguon": "GSI Exchange; BullionVault",
+      "url": "https://gsiexchange.com/gold-lost-4-000-as-inflation-ran-hot-and-the-dollar-surged/"
+    },
+    {
+      "ma": "chuyen_gia_vang_re",
+      "thu_tu": 7,
+      "tieu_de": "WisdomTree cho rằng vàng đang rẻ, vùng đỡ quanh 3.850; một số chuyên gia nghi Fed khó tăng lãi tháng 12",
+      "tang": "Ngọn",
       "trang_thai": "Mầm",
       "tac_dong": "Tích cực",
-      "nguon": "Kitco",
-      "url": "http://www.kitco.com/news/article/2026-11-05/gold-holds-gains-silver-slips-wall-street-plunges-fed-hike-bets-ease-kitco"
+      "nguon": "Reuters qua Kitco; Thời báo Tài chính Việt Nam",
+      "url": "https://www.kitco.com/news/off-the-wire/2026-11-13/gold-rebounds-heads-weekly-fall-us-inflation-data"
     },
     {
-      "ma": "laodong_0511",
-      "thu_tu": 3,
-      "tieu_de": "Đơn xin trợ cấp thất nghiệp chỉ 189 nghìn, thấp nhất từ giữa tháng 7; năng suất quý 3 tăng 3,6% còn chi phí lao động đơn vị giảm 0,7%. Barkin và Hammack vẫn ủng hộ tăng lãi từ từ",
-      "tang": "Ngọn",
+      "ma": "nhtw_mua_321_tan",
+      "thu_tu": 8,
+      "tieu_de": "Ngân hàng trung ương mua ròng 321 tấn vàng trong quý 3/2026, tăng 42% so với cùng kỳ",
+      "tang": "Gốc",
       "trang_thai": "Chín",
-      "tac_dong": "Trung tính",
-      "nguon": "Kitco",
-      "url": "http://www.kitco.com/news/article/2026-11-05/gold-climbs-above-4100-falling-yields-softer-labor-costs-support-bullion"
-    },
-    {
-      "ma": "boe_0511",
-      "thu_tu": 4,
-      "tieu_de": "Ngân hàng Trung ương Anh tăng lãi 0,25 điểm lên 4% vì giá năng lượng, Thống đốc Bailey nói có thể tăng tiếp nếu chiến sự chưa dứt",
-      "tang": "Thân",
-      "trang_thai": "Chín",
-      "tac_dong": "Tiêu cực",
-      "nguon": "investingLive",
-      "url": "https://www.louisvelazquez.com/investinglive-americas-fx-news-wrap-5-nov-nasdaq-100-plunges-6-36-as-ai-selloff-spreads/"
-    },
-    {
-      "ma": "hormuz_0511",
-      "thu_tu": 5,
-      "tieu_de": "Iran nói 5 tàu chở dầu và 1 tàu kéo bị hư hại ở eo Hormuz (chưa xác nhận); Brent bật lại 3,9% lên 98,3 USD sau phiên giảm hơn 8%",
-      "tang": "Ngọn",
-      "trang_thai": "Mầm",
-      "tac_dong": "Trung tính",
-      "nguon": "Kitco",
-      "url": "http://www.kitco.com/news/article/2026-11-05/gold-holds-gains-silver-slips-wall-street-plunges-fed-hike-bets-ease-kitco"
-    },
-    {
-      "ma": "gld_0411",
-      "thu_tu": 6,
-      "tieu_de": "Quỹ GLD tiếp tục bị rút: còn 1.040,5 tấn, giảm 17,1 tấn trong 2 tuần; trong khi quỹ bạc SLV hút tiền tuần thứ hai",
-      "tang": "Thân",
-      "trang_thai": "Chín",
-      "tac_dong": "Tiêu cực",
-      "nguon": "Goldreporter",
-      "url": "https://www.goldreporter.de/gold-etf-gld-abfluesse-silber-etf-zufluesse-04-11-2026/etf/262839/"
-    },
-    {
-      "ma": "trongnuoc_0611",
-      "thu_tu": 7,
-      "tieu_de": "Trong nước: vàng nhẫn tăng 1,4–2 triệu lên 142–142,8 triệu/lượng, miếng SJC chỉ +0,1 triệu lên 142,5; giá bán USD Vietcombank xuống 25.800, thấp nhất khoảng một năm rưỡi",
-      "tang": "Ngọn",
-      "trang_thai": "Chín",
-      "tac_dong": "Trung tính",
-      "nguon": "Thời báo Tài chính Việt Nam",
-      "url": "https://thoibaotaichinhvietnam.vn/gia-vang-hom-nay-ngay-6-11-vang-the-gioi-tang-89-usd-trong-nuoc-tiep-da-di-len-206501.html"
+      "tac_dong": "Tích cực",
+      "nguon": "ad-hoc-news (số liệu Hội đồng Vàng Thế giới)",
+      "url": "https://www.ad-hoc-news.de/boerse/news/unternehmensnachrichten/goldman-trims-gold-targets-through-2027-as-official-buyers-offset-a-hawkish-fed/70503656"
     }
   ]
 }
