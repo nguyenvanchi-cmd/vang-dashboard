@@ -61,8 +61,28 @@ button{font:inherit;color:inherit}
 .countdown.upc{background:var(--up);color:#032016}
 .session-chip{position:absolute;left:8px;top:8px;pointer-events:auto;display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:4px 8px}
 .session-chip b{color:var(--accent)}
-.wait-chip{position:absolute;left:8px;top:40px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:5px 9px}
-.wait-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.plan-card{position:absolute;left:8px;top:40px;z-index:4;max-width:min(440px,calc(100% - 96px));background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line2);border-radius:10px;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.pc-head{appearance:none;border:0;background:transparent;display:flex;align-items:center;gap:8px;font-weight:700;padding:6px 10px;cursor:pointer;width:100%;text-align:left}
+.pc-head .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.pc-caret{margin-left:auto;color:var(--muted);transition:transform .15s}
+.plan-card.closed .pc-body{display:none}
+.plan-card.closed .pc-caret{transform:rotate(-90deg)}
+.pc-body{padding:0 10px 8px;display:grid;gap:5px;border-top:1px solid var(--line)}
+.pc-row{display:grid;grid-template-columns:64px auto 1fr auto;gap:8px;align-items:center;padding-top:5px}
+.pc-row>span:first-child{font-weight:700}
+.pc-plan{font-size:11.5px;line-height:1.45;padding-top:4px;border-top:1px dashed var(--line)}
+.zone.hist{opacity:.35;border-style:dashed}
+.fvg{position:absolute;border:1px dashed;border-radius:2px;font-size:9.5px;font-weight:700;padding:0 4px;line-height:12px;overflow:hidden}
+.fvg.buy{background:rgba(76,141,255,.08);border-color:rgba(76,141,255,.45);color:rgba(120,170,255,.9)}
+.fvg.sell{background:rgba(155,123,255,.08);border-color:rgba(155,123,255,.45);color:rgba(175,150,255,.9)}
+.vp-bar{position:absolute;background:rgba(139,154,179,.18);border-radius:2px 0 0 2px}
+.vp-bar.va{background:rgba(242,179,61,.22)}
+.layer-menu{position:absolute;top:40px;right:0;z-index:20;background:var(--panel);border:1px solid var(--line2);border-radius:10px;padding:6px;display:none;min-width:250px;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.layer-menu.open{display:grid;gap:2px}
+.layer-menu label{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer}
+.layer-menu label:hover{background:var(--panel2)}
+.layer-menu input{accent-color:var(--accent);width:15px;height:15px}
+@media (max-width:560px){.pc-row{grid-template-columns:60px 1fr auto}.pc-row .faint{display:none}}
 .pane{position:relative;border-top:1px solid var(--line)}
 .pane-title{position:absolute;left:8px;top:4px;z-index:3;font-size:12px;font-weight:750;background:color-mix(in srgb,var(--bg) 70%,transparent);padding:1px 6px;border-radius:5px}
 .pane-title span{font-weight:600;color:var(--muted)}
@@ -192,6 +212,10 @@ tr:last-child td{border-bottom:0}
         </div>
         <button class="ibtn on hide-sm" type="button" id="type-btn" title="Kiểu nến"><svg viewBox="0 0 24 24"><path d="M7 4v16M5 8h4v7H5zM17 4v16M15 6h4v9h-4z"/></svg></button>
         <button class="ibtn hide-sm" type="button" id="ema-btn" title="Bật/tắt EMA"><svg viewBox="0 0 24 24"><path d="M3 17c4-8 7-8 9-4s5 4 9-4"/></svg></button>
+        <div class="tf-wrap">
+          <button class="ibtn" type="button" id="layer-btn" title="Lớp hiển thị trên biểu đồ" aria-label="Lớp hiển thị"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5"/></svg></button>
+          <div class="layer-menu" id="layer-menu"></div>
+        </div>
         <span class="spacer"></span>
         <span class="price-now num" id="px-now">—</span>
         <span class="pill num" id="px-chg">—</span>
@@ -200,7 +224,10 @@ tr:last-child td{border-bottom:0}
         <div id="chart"></div>
         <div class="overlay" id="overlay"></div>
         <div class="session-chip" id="session-chip">Phiên vàng · GMT+7 <b id="session-name">—</b></div>
-        <div class="wait-chip"><span class="muted">Vùng chờ</span><span class="dot"></span><b class="num" id="wait-px">—</b></div>
+        <div class="plan-card" id="plan-card">
+          <button type="button" class="pc-head" id="plan-toggle" aria-expanded="true"><span class="muted">Vùng chờ</span><span class="dot"></span><b class="num" id="wait-px">—</b><span class="pc-caret">▾</span></button>
+          <div class="pc-body" id="plan-body"></div>
+        </div>
       </div>
       <div class="pane"><div class="pane-title">Cá mập <span id="whale-lbl">—</span></div><div class="c" id="whale"></div></div>
       <div class="pane"><div class="pane-title">Cá con <span id="retail-lbl">—</span></div><div class="c" id="retail"></div></div>
@@ -525,6 +552,128 @@ chart.timeScale().subscribeVisibleLogicalRangeChange((r) => {
 
 const state = { preset: 'bal', newsLock: false, tf: 'M5',showLine: false, showEma: true, an: {}, zones: null, priceLines: [], lastSig: {}, notis: [], unread: 0, win: 15 };
 
+// ================================================================ LỚP VẼ TRÊN BIỂU ĐỒ (giai đoạn 2)
+const LAYERS_DEF = [
+  ['ob', 'Vùng mua/bán (Order Block)'], ['obh', 'Lịch sử vùng đã bị phá'], ['fvg', 'FVG (khoảng trống giá)'],
+  ['vp', 'Volume Profile (POC/VAH/VAL)'], ['vwap', 'VWAP trong ngày'], ['day', 'Giá mở cửa và biên ngày'],
+  ['swing', 'Đỉnh/đáy HH · HL · LH · LL'], ['sig', 'Tín hiệu và kế hoạch lệnh'],
+];
+const layers = (() => {
+  const d = { ob: 1, obh: 0, fvg: 1, vp: 1, vwap: 1, day: 1, swing: 1, sig: 1 };
+  try { return Object.assign(d, JSON.parse(localStorage.getItem('tv-layers') || '{}')); } catch { return d; }
+})();
+const saveLayers = () => { try { localStorage.setItem('tv-layers', JSON.stringify(layers)); } catch {} };
+const vwapLine = chart.addLineSeries({ color: 'rgba(242,179,61,.85)', lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
+
+// Order Block: nến ngược chiều cuối cùng ngay trước một nến bứt phá (thân ≥ 0,9 ATR, đóng vượt đỉnh/đáy nến đó)
+function findOB(bars, A) {
+  const out = []; const n = bars.length;
+  for (let i = 1; i < n - 1; i++) {
+    const c = bars[i], x = bars[i + 1]; const body = Math.abs(x.c - x.o);
+    if (c.c < c.o && x.c > x.o && body >= A * 0.9 && x.c > c.h) out.push({ kind: 'buy', i, top: c.h, bot: c.l });
+    else if (c.c > c.o && x.c < x.o && body >= A * 0.9 && x.c < c.l) out.push({ kind: 'sell', i, top: c.h, bot: c.l });
+  }
+  for (const z of out) {
+    z.touches = 0; z.broken = null; let inside = false;
+    for (let j = z.i + 2; j < n; j++) {
+      const b = bars[j];
+      const hit = z.kind === 'buy' ? b.l <= z.top : b.h >= z.bot;
+      if (hit && !inside) z.touches++;
+      inside = hit;
+      if (z.kind === 'buy' ? b.c < z.bot : b.c > z.top) { z.broken = j; break; }
+    }
+  }
+  return out;
+}
+// FVG: khoảng trống giữa nến 1 và nến 3 (≥ 0,25 ATR), còn hiệu lực đến khi giá lấp kín
+function findFVG(bars, A) {
+  const out = []; const n = bars.length;
+  for (let i = 2; i < n; i++) {
+    const a = bars[i - 2], c = bars[i];
+    if (c.l - a.h >= A * 0.25) out.push({ kind: 'buy', i, top: c.l, bot: a.h });
+    else if (a.l - c.h >= A * 0.25) out.push({ kind: 'sell', i, top: a.l, bot: c.h });
+  }
+  for (const g of out) for (let j = g.i + 1; j < n; j++) { const b = bars[j]; if (g.kind === 'buy' ? b.l <= g.bot : b.h >= g.top) { g.filled = j; break; } }
+  return out.filter((g) => g.filled == null).slice(-6);
+}
+// Volume Profile 200 nến gần nhất: 40 mức giá; POC = mức nhiều khối lượng nhất; VAH/VAL bao 70% khối lượng
+function volProfile(bars) {
+  const s = bars.slice(-200); let lo = Infinity, hi = -Infinity;
+  s.forEach((b) => { lo = Math.min(lo, b.l); hi = Math.max(hi, b.h); });
+  const N = 40, step = (hi - lo) / N || 1; const bins = new Array(N).fill(0);
+  s.forEach((b) => { const i0 = Math.max(0, Math.floor((b.l - lo) / step)), i1 = Math.min(N - 1, Math.floor((b.h - lo) / step)); const per = b.v / (i1 - i0 + 1); for (let i = i0; i <= i1; i++) bins[i] += per; });
+  const tot = bins.reduce((x, y) => x + y, 0); const poc = bins.indexOf(Math.max(...bins));
+  let a = poc, b = poc, acc = bins[poc];
+  while (acc < tot * 0.7 && (a > 0 || b < N - 1)) { const up = b < N - 1 ? bins[b + 1] : -1, dn = a > 0 ? bins[a - 1] : -1; if (up >= dn) { b++; acc += bins[b]; } else { a--; acc += bins[a]; } }
+  return { lo, step, bins, max: bins[poc] || 1, poc: lo + (poc + 0.5) * step, vah: lo + (b + 1) * step, val: lo + a * step, va: [a, b] };
+}
+function vwapSeries(bars) {
+  let day = null, pv = 0, vv = 0;
+  return bars.map((b) => { const d = Math.floor(b.t / 86400); if (d !== day) { day = d; pv = 0; vv = 0; } const tp = (b.h + b.l + b.c) / 3; pv += tp * b.v; vv += b.v; return { time: b.t + VN, value: vv ? pv / vv : tp }; });
+}
+function swingLabels(bars, piv) {
+  let lh = null, ll = null; const out = [];
+  for (const p of piv) {
+    if (p.type === 'H') { if (lh != null) out.push({ time: bars[p.i].t + VN, position: 'aboveBar', color: css('--muted'), shape: 'circle', size: 0.3, text: p.p > lh ? 'HH' : 'LH' }); lh = p.p; }
+    else { if (ll != null) out.push({ time: bars[p.i].t + VN, position: 'belowBar', color: css('--muted'), shape: 'circle', size: 0.3, text: p.p > ll ? 'HL' : 'LL' }); ll = p.p; }
+  }
+  return out.slice(-8);
+}
+
+// Chạy lại đúng luật MUA/BÁN của từng khung trên các nến đã qua để có mũi tên tín hiệu lịch sử,
+// rồi dựng kế hoạch lệnh: dừng lỗ dưới/trên đáy/đỉnh 5 nến (0,8–3 ATR), chốt lời 1R và 2R.
+function ruleEval(trend, flowN, powerN, deltaN, r, dist) {
+  const sgn = (x, eps) => (Math.abs(x) < eps ? 0 : Math.sign(x));
+  const flow = sgn(flowN, 0.08), power = sgn(powerN, 0.08), delta = sgn(deltaN, 0.05);
+  const dir = trend || Math.sign(flowN + powerN);
+  const agree = [flow, power, delta].filter((x) => x !== 0 && x === dir).length;
+  const conf = Math.round(Math.min(95, 50 + agree * 7 + Math.abs(trend) * 6 + Math.min(10, Math.abs(r - 50) / 2.5)));
+  if (trend > 0 && flow > 0 && power > 0 && delta > 0 && conf >= RULE.conf && r < RULE.rsiBuy && dist >= RULE.distMin && dist < RULE.distMax) return 1;
+  if (trend < 0 && flow < 0 && power < 0 && delta < 0 && conf >= RULE.conf && r > RULE.rsiSell && -dist >= RULE.distMin && -dist < RULE.distMax) return -1;
+  return 0;
+}
+function signalHistory(bars) {
+  const n = bars.length; if (n < 40) return [];
+  const c = bars.map((b) => b.c), e8 = emaArr(c, 8), e21 = emaArr(c, 21);
+  const rs = []; let up = 0, dn = 0;
+  for (let i = 0; i < n; i++) {
+    if (!i) { rs.push(50); continue; }
+    const d = c[i] - c[i - 1], u = Math.max(d, 0), w = Math.max(-d, 0);
+    if (i <= 14) { up += u / 14; dn += w / 14; } else { up += (u - up) / 14; dn += (w - dn) / 14; }
+    rs.push(dn === 0 ? 100 : 100 - 100 / (1 + up / dn));
+  }
+  const tr = bars.map((b, i) => (i ? Math.max(b.h - b.l, Math.abs(b.h - bars[i - 1].c), Math.abs(b.l - bars[i - 1].c)) : b.h - b.l));
+  let st = 0, sd = 0, fl = 0, last = -99; const sigs = [];
+  for (let i = 0; i < n; i++) {
+    st += tr[i]; if (i >= 14) st -= tr[i - 14];
+    sd += Math.abs(bars[i].d); if (i >= 60) sd -= Math.abs(bars[i - 60].d);
+    fl += bars[i].d; if (i >= 10) fl -= bars[i - 10].d;
+    if (i < 30) continue;
+    const A = st / 14 || 1e-9, dsc = sd / Math.min(i + 1, 60) || 1;
+    const trend = e8[i] > e21[i] && e8[i] >= e8[i - 1] ? 1 : e8[i] < e21[i] && e8[i] <= e8[i - 1] ? -1 : 0;
+    const dir = ruleEval(trend, Math.tanh(fl / (dsc * 6)), Math.tanh((c[i] - c[i - 5]) / (A * 1.5)), Math.tanh((bars[i].c - bars[i].o) / (A * 0.5)), rs[i], (c[i] - e8[i]) / A);
+    if (dir && i - last >= 6) { sigs.push(planFor(bars, i, dir, A)); last = i; }
+  }
+  return sigs;
+}
+function planFor(bars, i, dir, A) {
+  const entry = bars[i].c; const win = bars.slice(Math.max(0, i - 4), i + 1);
+  let risk = dir > 0 ? entry - (Math.min(...win.map((b) => b.l)) - 0.2 * A) : (Math.max(...win.map((b) => b.h)) + 0.2 * A) - entry;
+  risk = Math.min(3 * A, Math.max(0.8 * A, risk));
+  const p = { i, t: bars[i].t, dir, entry, sl: entry - dir * risk, tp1: entry + dir * risk, tp2: entry + dir * 2 * risk, result: 'run' };
+  let tp1 = false;
+  for (let j = i + 1; j < bars.length; j++) {
+    const b = bars[j]; const hitSL = dir > 0 ? b.l <= (tp1 ? entry : p.sl) : b.h >= (tp1 ? entry : p.sl);
+    if (hitSL) { p.result = tp1 ? 'be' : 'sl'; p.end = j; break; }
+    if (dir > 0 ? b.h >= p.tp2 : b.l <= p.tp2) { p.result = 'tp2'; p.end = j; break; }
+    if (!tp1 && (dir > 0 ? b.h >= p.tp1 : b.l <= p.tp1)) { tp1 = true; p.result = 'tp1'; }
+  }
+  if (p.result === 'tp1' && p.end == null) p.result = 'tp1run';
+  return p;
+}
+const RESULT_TXT = { sl: 'Dừng lỗ ✗', be: 'Chạm TP1, về hòa vốn', tp1: 'Chạm TP1 ✓', tp1run: 'Đã chạm TP1 ✓, đang chạy', tp2: 'Chạm TP2 ✓✓', run: 'Đang chạy' };
+const hhmm = (t) => new Date((t + VN) * 1000).toISOString().slice(11, 16);
+
 function setData(fit) {
   const a = analyze(TFMIN[state.tf]);
   state.an[state.tf] = a;
@@ -533,57 +682,109 @@ function setData(fit) {
   lineSeries.setData(bars.map((b) => ({ time: b.t + VN, value: b.c })));
   emaFast.setData(bars.map((b, i) => ({ time: b.t + VN, value: a.e8[i] })));
   emaSlow.setData(bars.map((b, i) => ({ time: b.t + VN, value: a.e21[i] })));
+  vwapLine.setData(layers.vwap && TFMIN[state.tf] <= 60 ? vwapSeries(bars) : []);
   // Nến chưa có dữ liệu lệnh khớp thì để trống (không bịa số)
   whale.setData(bars.map((b) => (b.fk ? { time: b.t + VN, value: b.w, color: WCOL(b.w) } : { time: b.t + VN })));
   let cum = 0;
   retail.setData(bars.map((b) => { if (!b.fk) return { time: b.t + VN }; cum += b.r; return { time: b.t + VN, value: cum, color: RCOL(cum) }; }));
   const lb = bars[bars.length - 1]; state.retailPrev = cum - (lb.fk ? lb.r : 0);
-  const st = a.st;
-  candles.setMarkers(st.marks);
-  computeZones(a, st);
+
+  state.sigs = signalHistory(bars);
+  state.fvg = layers.fvg ? findFVG(bars, a.atr) : [];
+  state.vp = volProfile(bars);
+  computeZones(a, a.st);
+  const marks = [...a.st.marks];
+  if (layers.swing) marks.push(...swingLabels(bars, a.st.piv));
+  if (layers.sig) state.sigs.slice(-10).forEach((s) => marks.push({ time: s.t + VN, position: s.dir > 0 ? 'belowBar' : 'aboveBar', color: s.dir > 0 ? css('--up') : css('--down'), shape: s.dir > 0 ? 'arrowUp' : 'arrowDown', text: s.dir > 0 ? 'MUA' : 'BÁN' }));
+  candles.setMarkers(marks.sort((x, y) => x.time - y.time));
+  setPriceLines(a);
+  renderPlanCard(a);
   if (fit) chart.timeScale().setVisibleLogicalRange({ from: bars.length - 70, to: bars.length + 6 });
   updateHeader();
 }
 
 function computeZones(a, st) {
-  const bars = a.bars, n = bars.length;
-  const look = bars.slice(-60);
-  const hiIdx = n - 60 + look.reduce((bi, b, i) => (b.h > look[bi].h ? i : bi), 0);
-  const loIdx = n - 60 + look.reduce((bi, b, i) => (b.l < look[bi].l ? i : bi), 0);
-  const w = a.atr * 0.9;
-  state.zones = [
-    { kind: 'sell', label: 'Vùng bán', from: bars[hiIdx].t, top: bars[hiIdx].h, bot: bars[hiIdx].h - w },
-    { kind: 'buy', label: 'Vùng mua', from: bars[loIdx].t, top: bars[loIdx].l + w, bot: bars[loIdx].l },
-  ];
-  // Vùng bán phụ: đỉnh gần nhất trước đó
-  const prevH = st.piv.filter((p) => p.type === 'H' && p.i < hiIdx - 5 && p.i > n - 140).pop();
-  if (prevH) state.zones.push({ kind: 'sell', label: 'Vùng bán', from: bars[prevH.i].t, top: prevH.p, bot: prevH.p - w * 0.8 });
-  state.priceLines.forEach((pl) => candles.removePriceLine(pl));
-  const wait = (state.zones[0].bot + state.zones[1].top) / 2;
-  state.wait = wait;
-  state.priceLines = [
-    candles.createPriceLine({ price: state.zones[0].top, color: 'rgba(242,179,61,.8)', lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: 'CL' }),
-    candles.createPriceLine({ price: wait, color: 'rgba(139,154,179,.7)', lineWidth: 1, lineStyle: 0, axisLabelVisible: true, title: 'HT' }),
-  ];
-  $('#wait-px').textContent = f2(wait);
+  const bars = a.bars, n = bars.length, px = a.last.c;
+  const obs = findOB(bars, a.atr);
+  const live = obs.filter((z) => z.broken == null && z.i > n - 250);
+  const pick = (kind) => live.filter((z) => z.kind === kind && (kind === 'buy' ? z.bot < px : z.top > px))
+    .sort((x, y) => (kind === 'buy' ? (px - x.top) - (px - y.top) : (x.bot - px) - (y.bot - px))).slice(0, 2);
+  let buys = pick('buy'), sells = pick('sell');
+  // Không có Order Block phù hợp: dùng đỉnh/đáy 60 nến làm vùng dự phòng
+  const look = bars.slice(-60), w = a.atr * 0.9;
+  if (!sells.length) { const hi = n - 60 + look.reduce((bi, b, i) => (b.h > look[bi].h ? i : bi), 0); sells = [{ kind: 'sell', i: hi, top: bars[hi].h, bot: bars[hi].h - w, touches: 0, swing: true }]; }
+  if (!buys.length) { const lo = n - 60 + look.reduce((bi, b, i) => (b.l < look[bi].l ? i : bi), 0); buys = [{ kind: 'buy', i: lo, top: bars[lo].l + w, bot: bars[lo].l, touches: 0, swing: true }]; }
+  const mk = (z, hist) => ({ kind: z.kind, label: z.kind === 'buy' ? 'Vùng mua' : 'Vùng bán', from: bars[z.i].t, to: hist ? bars[z.broken].t : null, top: z.top, bot: z.bot, touches: z.touches, hist, swing: !!z.swing });
+  state.zones = layers.ob ? [...sells.map((z) => mk(z, false)), ...buys.map((z) => mk(z, false))] : [];
+  if (layers.ob && layers.obh) state.zones.push(...obs.filter((z) => z.broken != null && z.broken > n - 150).slice(-6).map((z) => mk(z, true)));
+  // Vùng tính toán dùng cho Thời điểm/Radar luôn có, kể cả khi ẩn lớp vẽ
+  state.calcZones = [...sells, ...buys].map((z) => mk(z, false));
+  state.wait = (sells[0].bot + buys[0].top) / 2;
+  state.nearSell = sells[0]; state.nearBuy = buys[0];
+  $('#wait-px').textContent = f2(state.wait);
   drawOverlay();
+}
+
+function setPriceLines(a) {
+  state.priceLines.forEach((pl) => candles.removePriceLine(pl));
+  const L = []; const add = (price, color, title, style = 2) => L.push(candles.createPriceLine({ price, color, lineWidth: 1, lineStyle: style, axisLabelVisible: true, title }));
+  add(state.wait, 'rgba(139,154,179,.7)', 'Chờ', 0);
+  if (layers.day && TFMIN[state.tf] <= 60) {
+    const d1 = DATA.D1; const adr = d1.slice(-15, -1).reduce((s, b) => s + (b.h - b.l), 0) / 14; const mc = dayOpen();
+    add(mc, 'rgba(76,141,255,.8)', 'MC', 0); add(mc + adr, 'rgba(76,141,255,.45)', 'Biên+'); add(mc - adr, 'rgba(76,141,255,.45)', 'Biên−');
+  }
+  if (layers.vp && state.vp) { add(state.vp.poc, 'rgba(242,179,61,.9)', 'POC', 0); add(state.vp.vah, 'rgba(242,179,61,.5)', 'VAH'); add(state.vp.val, 'rgba(242,179,61,.5)', 'VAL'); }
+  const s = state.sigs && state.sigs[state.sigs.length - 1];
+  if (layers.sig && s && (s.result === 'run' || s.result === 'tp1run')) {
+    add(s.entry, 'rgba(230,237,247,.6)', 'Vào', 0); add(s.sl, css('--down'), 'SL'); add(s.tp1, css('--up'), 'TP1'); add(s.tp2, css('--up'), 'TP2');
+  }
+  state.priceLines = L;
+}
+
+function renderPlanCard(a) {
+  const px = a.last.c, S = state.nearSell, B = state.nearBuy;
+  const zl = (z, k) => {
+    if (!z) return '';
+    const dist = k === 'sell' ? z.bot - px : px - z.top;
+    const st = z.swing ? 'đỉnh/đáy gần' : z.touches ? `đã chạm ${z.touches} lần` : 'chưa chạm';
+    return `<div class="pc-row"><span class="${k === 'sell' ? 'down' : 'up'}">${k === 'sell' ? 'Vùng bán' : 'Vùng mua'}</span><b class="num">${f2(z.bot)}–${f2(z.top)}</b><span class="faint">${dist <= 0 ? 'giá đang trong vùng' : `cách ${f2(dist)} giá`}</span><span class="pill ${z.touches ? 'wait' : ''}">${st}</span></div>`;
+  };
+  const s = state.sigs && state.sigs[state.sigs.length - 1];
+  const done = (state.sigs || []).filter((x) => !['run', 'tp1run'].includes(x.result));
+  const wins = done.filter((x) => ['tp1', 'tp2', 'be'].includes(x.result)).length;
+  const plan = s ? `Lệnh gần nhất: <b class="${s.dir > 0 ? 'up' : 'down'}">${s.dir > 0 ? 'MUA' : 'BÁN'} ${hhmm(s.t)}</b> tại ${f2(s.entry)} · SL ${f2(s.sl)} · TP1 ${f2(s.tp1)} · TP2 ${f2(s.tp2)} · <b>${RESULT_TXT[s.result]}</b>` : 'Chưa có tín hiệu nào đạt đủ điều kiện trên khung này.';
+  const stats = done.length ? `${done.length} lệnh đã đóng trên ${state.tf}: ${wins} lệnh chạm TP1 (${f0((wins / done.length) * 100)}%)` : '';
+  $('#plan-body').innerHTML = zl(S, 'sell') + zl(B, 'buy') + `<div class="pc-plan">${plan}</div>` + (stats ? `<div class="pc-plan faint">${stats} · tính lại trên dữ liệu đã tải, chỉ để tham khảo</div>` : '');
 }
 
 function drawOverlay() {
   const ov = $('#overlay'); if (!state.zones) return;
   const ts = chart.timeScale(); const W = ov.clientWidth - 74;
-  const html = state.zones.map((z) => {
-    const x1 = ts.timeToCoordinate(z.from + VN); const y1 = candles.priceToCoordinate(z.top), y2 = candles.priceToCoordinate(z.bot);
+  const box = (cls, x1, x2, top, bot, label) => {
+    const y1 = candles.priceToCoordinate(top), y2 = candles.priceToCoordinate(bot);
     if (x1 == null || y1 == null || y2 == null) return '';
-    const left = Math.max(0, x1), width = Math.max(0, W - left);
-    return `<div class="zone ${z.kind}" style="left:${left}px;top:${Math.min(y1, y2)}px;width:${width}px;height:${Math.max(14, Math.abs(y2 - y1))}px">${z.label}</div>`;
-  }).join('');
+    const left = Math.max(0, x1), width = Math.max(0, Math.min(W, x2) - left); if (width <= 0) return '';
+    return `<div class="${cls}" style="left:${left}px;top:${Math.min(y1, y2)}px;width:${width}px;height:${Math.max(cls.includes('fvg') ? 4 : 14, Math.abs(y2 - y1))}px">${label}</div>`;
+  };
+  let html = state.zones.map((z) => box(`zone ${z.kind}${z.hist ? ' hist' : ''}`, ts.timeToCoordinate(z.from + VN), z.to ? ts.timeToCoordinate(z.to + VN) : W, z.top, z.bot, z.hist ? '' : z.label)).join('');
+  const bars = state.an[state.tf] && state.an[state.tf].bars;
+  if (layers.fvg && bars) html += (state.fvg || []).map((g) => box(`fvg ${g.kind}`, ts.timeToCoordinate(bars[g.i - 1].t + VN), W, g.top, g.bot, 'FVG')).join('');
+  if (layers.vp && state.vp) {
+    const vp = state.vp; const maxW = Math.min(110, W * 0.22);
+    html += vp.bins.map((v, i) => {
+      const y1 = candles.priceToCoordinate(vp.lo + (i + 1) * vp.step), y2 = candles.priceToCoordinate(vp.lo + i * vp.step);
+      if (y1 == null || y2 == null) return '';
+      const inVA = i >= vp.va[0] && i <= vp.va[1];
+      return `<div class="vp-bar ${inVA ? 'va' : ''}" style="right:74px;top:${Math.min(y1, y2)}px;height:${Math.max(1, Math.abs(y2 - y1) - 1)}px;width:${(v / vp.max) * maxW}px"></div>`;
+    }).join('');
+  }
   const lb = lastBar();
   const y = candles.priceToCoordinate(lb.c);
   const cd = y == null ? '' : `<div class="countdown ${lb.c >= dayOpen() ? 'upc' : ''}" id="cd" style="top:${y + 10}px">--:--</div>`;
   ov.innerHTML = html + cd;
   tickCountdown();
 }
+
 function tickCountdown() {
   const el = $('#cd'); if (!el) return;
   const step = TFMIN[state.tf] * 60; const now = Date.now() / 1000;
@@ -633,7 +834,7 @@ function frame() {
     whale.update({ time: b.t + VN, value: b.w, color: WCOL(b.w) });
     const v = state.retailPrev + b.r; retail.update({ time: b.t + VN, value: v, color: RCOL(v) });
   }
-  updateHeader(); drawOverlay();
+  updateHeader(); drawOverlay(); renderPlanCard(a);
 }
 
 // ================================================================ ĐA KHUNG
@@ -703,7 +904,7 @@ function nextNews() {
     .sort((x, y) => x.mins - y.mins)[0];
 }
 function zoneGaps(a) {
-  const px = a.last.c, zs = state.zones || [];
+  const px = a.last.c, zs = state.calcZones || [];
   const above = zs.filter((z) => z.kind === 'sell' && z.bot > px).map((z) => (z.bot - px) / a.atr).sort((x, y) => x - y)[0];
   const below = zs.filter((z) => z.kind === 'buy' && z.top < px).map((z) => (px - z.top) / a.atr).sort((x, y) => x - y)[0];
   const inBuy = zs.some((z) => z.kind === 'buy' && px <= z.top && px >= z.bot), inSell = zs.some((z) => z.kind === 'sell' && px <= z.top && px >= z.bot);
@@ -836,7 +1037,7 @@ function checkAlerts(all) {
     state.lastSig[k] = s;
   });
   const px = lastBar().c;
-  (state.zones || []).forEach((z) => {
+  (state.calcZones || []).forEach((z) => {
     const inZ = px <= z.top && px >= z.bot; const key = `${z.kind}${Math.round(z.top)}`;
     if (inZ && !state['in' + key]) pushNoti(`Giá ${f2(px)} chạm ${z.label.toLowerCase()} ${f2(z.bot)}–${f2(z.top)}`, z.kind === 'buy' ? 'buy' : 'sell');
     state['in' + key] = inZ;
@@ -898,6 +1099,15 @@ $('#type-btn').addEventListener('click', () => { state.showLine = !state.showLin
 $('#ema-btn').addEventListener('click', () => { state.showEma = !state.showEma; emaFast.applyOptions({ visible: state.showEma }); emaSlow.applyOptions({ visible: state.showEma }); $('#ema-btn').classList.toggle('on', state.showEma); });
 $('#ema-btn').classList.add('on');
 $('#refresh').addEventListener('click', renderMulti);
+$('#layer-menu').innerHTML = LAYERS_DEF.map(([k, t]) => `<label><input type="checkbox" id="ly-${k}" data-ly="${k}" ${layers[k] ? 'checked' : ''}>${t}</label>`).join('');
+$('#layer-btn').addEventListener('click', (e) => { e.stopPropagation(); $('#layer-menu').classList.toggle('open'); });
+$('#layer-menu').addEventListener('click', (e) => e.stopPropagation());
+document.addEventListener('click', () => $('#layer-menu').classList.remove('open'));
+$$('[data-ly]').forEach((c) => c.addEventListener('change', () => { layers[c.dataset.ly] = c.checked ? 1 : 0; saveLayers(); setData(false); }));
+(() => { let closed = window.innerWidth < 760; try { const v = localStorage.getItem('tv-plan-closed'); if (v != null) closed = v === '1'; } catch {}
+  const card = $('#plan-card'); card.classList.toggle('closed', closed); $('#plan-toggle').setAttribute('aria-expanded', String(!closed));
+  $('#plan-toggle').addEventListener('click', () => { const c = card.classList.toggle('closed'); $('#plan-toggle').setAttribute('aria-expanded', String(!c)); try { localStorage.setItem('tv-plan-closed', c ? '1' : '0'); } catch {} });
+})();
 $$('#preset-seg button').forEach((b) => b.addEventListener('click', () => { state.preset = b.dataset.p; $$('#preset-seg button').forEach((x) => x.classList.toggle('on', x === b)); renderMulti(); }));
 $$('#win-seg button').forEach((b) => b.addEventListener('click', () => { state.win = Number(b.dataset.w); $$('#win-seg button').forEach((x) => x.classList.toggle('on', x === b)); renderMulti(); }));
 $('#menu-btn').addEventListener('click', () => pushNoti('Danh mục sản phẩm chưa có trong bản demo (chỉ có XAUUSD).', 'wait'));
