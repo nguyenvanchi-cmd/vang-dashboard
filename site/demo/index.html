@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Trạm Vàng Demo</title>
+<style>
+:root{
+  --bg:#0b1220;--bg2:#0e1627;--panel:#111b2e;--panel2:#0d1626;--line:#1e2a40;--line2:#2a3953;
+  --text:#e6edf7;--muted:#8b9ab3;--faint:#5c6b85;
+  --up:#16c784;--upbg:rgba(22,199,132,.14);--down:#ef4f5f;--downbg:rgba(239,79,95,.14);
+  --wait:#f2b33d;--waitbg:rgba(242,179,61,.14);--accent:#18c29c;--blue:#4c8dff;--violet:#9b7bff;
+  --r:12px;--font:"Inter","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;--mono:"JetBrains Mono",Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13.5px;line-height:1.45;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit}
+.up{color:var(--up)}.down{color:var(--down)}.wait{color:var(--wait)}.muted{color:var(--muted)}.faint{color:var(--faint)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- khung ứng dụng */
+.app{display:grid;grid-template-rows:auto 1fr auto;height:100%}
+.demo-bar{background:linear-gradient(90deg,var(--waitbg),transparent);color:var(--wait);font-size:11.5px;font-weight:650;padding:4px 12px;text-align:center;border-bottom:1px solid var(--line)}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 420px;min-height:0}
+@media (max-width:1023px){.main{grid-template-columns:1fr}}
+
+/* ---------- thanh trên */
+.top{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--bg2)}
+.ibtn{appearance:none;border:1px solid var(--line2);background:var(--panel);border-radius:10px;height:34px;min-width:34px;padding:0 9px;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-weight:700;font-size:13px}
+.ibtn:hover{border-color:var(--accent)}
+.ibtn.on{background:var(--accent);border-color:var(--accent);color:#04241d}
+.ibtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.sym{display:flex;align-items:center;gap:8px;padding:0 10px;height:34px;border:1px solid var(--line2);border-radius:10px;background:var(--panel);font-weight:800;letter-spacing:.02em}
+.sig{font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:6px;border:1px solid}
+.sig.sell{color:var(--down);border-color:var(--down);background:var(--downbg)}
+.sig.buy{color:var(--up);border-color:var(--up);background:var(--upbg)}
+.sig.wait{color:var(--wait);border-color:var(--wait);background:var(--waitbg)}
+.tf-wrap{position:relative}
+.tf-menu{position:absolute;top:40px;left:0;z-index:20;background:var(--panel);border:1px solid var(--line2);border-radius:10px;padding:5px;display:none;grid-template-columns:repeat(3,52px);gap:4px;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.tf-menu.open{display:grid}
+.tf-menu button{appearance:none;border:0;background:var(--panel2);border-radius:7px;padding:7px 0;font-weight:700;font-size:12.5px;cursor:pointer}
+.tf-menu button.on{background:var(--accent);color:#04241d}
+.spacer{flex:1}
+.price-now{font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
+
+/* ---------- vùng biểu đồ */
+.chart-col{display:grid;grid-template-rows:auto minmax(0,1fr) 92px 92px;min-height:0;border-right:1px solid var(--line)}
+.view{min-height:0}
+.chart-box{position:relative;min-height:0}
+#chart{position:absolute;inset:0}
+.overlay{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.zone{position:absolute;border:1px solid;border-radius:3px;font-size:11px;font-weight:650;padding:2px 6px}
+.zone.sell{background:rgba(239,79,95,.08);border-color:rgba(239,79,95,.35);color:rgba(239,79,95,.9)}
+.zone.buy{background:rgba(22,199,132,.08);border-color:rgba(22,199,132,.35);color:rgba(22,199,132,.9)}
+.countdown{position:absolute;right:0;width:74px;text-align:center;font-family:var(--mono);font-size:11px;font-weight:700;background:var(--down);color:#fff;padding:1px 6px;border-radius:3px 0 0 3px}
+.countdown.upc{background:var(--up);color:#032016}
+.session-chip{position:absolute;left:8px;top:8px;pointer-events:auto;display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:4px 8px}
+.session-chip b{color:var(--accent)}
+.wait-chip{position:absolute;left:8px;top:40px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:5px 9px}
+.wait-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.pane{position:relative;border-top:1px solid var(--line)}
+.pane-title{position:absolute;left:8px;top:4px;z-index:3;font-size:12px;font-weight:750;background:color-mix(in srgb,var(--bg) 70%,transparent);padding:1px 6px;border-radius:5px}
+.pane-title span{font-weight:600;color:var(--muted)}
+.pane .c{position:absolute;inset:0}
+
+/* ---------- cột phải / các màn */
+.side{display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;background:var(--bg2)}
+.side-tabs{display:flex;gap:4px;padding:8px;border-bottom:1px solid var(--line)}
+.side-tabs button{flex:1;appearance:none;border:1px solid transparent;background:transparent;color:var(--muted);border-radius:9px;padding:7px 0;font-weight:700;cursor:pointer;position:relative}
+.side-tabs button.on{color:var(--text);background:var(--panel);border-color:var(--line2)}
+.badge{position:absolute;top:-4px;right:8px;background:var(--down);color:#fff;font-size:10px;font-weight:800;border-radius:99px;padding:0 5px;line-height:16px}
+.scroll[hidden]{display:none!important}
+.scroll{overflow-y:auto;min-height:0;padding:10px;display:grid;gap:10px;align-content:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:11px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.card-h h3{margin:0;font-size:13.5px;display:flex;align-items:center;gap:6px}
+.card-h h3 i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.pill{font-size:11.5px;font-weight:750;padding:2px 8px;border-radius:7px;border:1px solid var(--line2);background:var(--panel2);white-space:nowrap}
+.pill.sell{color:var(--down);border-color:color-mix(in srgb,var(--down) 50%,transparent);background:var(--downbg)}
+.pill.buy{color:var(--up);border-color:color-mix(in srgb,var(--up) 50%,transparent);background:var(--upbg)}
+.pill.wait{color:var(--wait);border-color:color-mix(in srgb,var(--wait) 50%,transparent);background:var(--waitbg)}
+.ghost{appearance:none;border:1px solid var(--line2);background:var(--panel2);border-radius:8px;padding:3px 9px;font-size:12px;font-weight:700;cursor:pointer;color:var(--accent)}
+
+/* phiếu đồng thuận */
+.ballot{position:relative;display:grid;gap:6px;padding:6px 0}
+.ballot-head{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700}
+.brow{display:grid;grid-template-columns:34px 1fr 34px;align-items:center;gap:6px;font-size:12px;font-weight:700}
+.dots{display:grid;grid-template-columns:repeat(30,1fr);gap:2px}
+.dots i{height:5px;border-radius:2px;opacity:.85}
+.brow b{text-align:right;font-variant-numeric:tabular-nums}
+.ballot-box{position:absolute;left:50%;top:22px;bottom:2px;transform:translateX(-50%);width:96px;border-radius:12px;display:grid;place-items:center;text-align:center;backdrop-filter:blur(2px)}
+.ballot-box small{display:block;font-size:10px;font-weight:700;letter-spacing:.08em;opacity:.8}
+.ballot-box b{display:block;font-size:20px;font-weight:850;line-height:1.1}
+.ballot-box.sell{background:rgba(239,79,95,.18);border:1px solid rgba(239,79,95,.6);color:var(--down)}
+.ballot-box.buy{background:rgba(22,199,132,.18);border:1px solid rgba(22,199,132,.6);color:var(--up)}
+.ballot-box.wait{background:rgba(242,179,61,.16);border:1px solid rgba(242,179,61,.6);color:var(--wait)}
+.seg{display:inline-flex;gap:3px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:2px}
+.seg button{appearance:none;border:0;background:transparent;color:var(--muted);border-radius:7px;padding:3px 9px;font-size:12px;font-weight:700;cursor:pointer}
+.seg button.on{background:var(--accent);color:#04241d}
+.tfc{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.tfc div{text-align:center;border:1px solid var(--line2);border-radius:9px;padding:5px 2px;font-size:11.5px;font-weight:800;background:var(--panel2)}
+.tfc div span{display:block;font-size:11px;color:var(--muted);font-weight:700}
+.tfc div.sell{border-color:var(--down);color:var(--down)}.tfc div.buy{border-color:var(--up);color:var(--up)}.tfc div.wait{color:var(--wait)}
+.tfc div.cur{box-shadow:inset 0 0 0 1px var(--accent)}
+.flow-svg{width:100%;height:110px;display:block}
+.flow-legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;font-weight:700;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{color:var(--muted);font-weight:650;font-size:11px;padding:5px 3px;text-align:center;border-bottom:1px solid var(--line)}
+td{padding:6px 3px;text-align:center;border-bottom:1px solid var(--line);font-weight:750}
+td:first-child,th:first-child{text-align:left}
+tr:last-child td{border-bottom:0}
+.note{font-size:11.5px;color:var(--muted);margin-top:8px}
+.kv{display:grid;grid-template-columns:96px 1fr;gap:6px 10px;font-size:12.5px}
+.kv span{color:var(--muted)}
+.kv b{font-weight:650}
+.verdict{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding:8px 10px;border-radius:9px;background:var(--panel2);border:1px solid var(--line)}
+.verdict .big{font-size:18px;font-weight:850}
+.meter{height:7px;border-radius:99px;background:var(--bg);overflow:hidden;display:flex}
+.meter i{display:block;height:100%}
+.score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.score-grid div{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:6px 8px}
+.score-grid span{display:block;font-size:10.5px;color:var(--muted);font-weight:650}
+.score-grid b{font-size:14px}
+.comp{display:grid;grid-template-columns:72px 30px 1fr 54px;gap:6px;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.comp:last-child{border-bottom:0}
+.comp small{color:var(--faint);grid-column:3/5;font-size:11px;margin-top:-4px}
+.mbar{display:grid;grid-template-columns:42px 1fr 40px;gap:8px;align-items:center;font-size:12px;font-weight:750;margin-top:5px}
+
+/* EA */
+.ea{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center}
+.ea h4{margin:0;font-size:13.5px}
+.ea p{margin:0;font-size:12px;color:var(--muted);grid-column:1/-1}
+.switch{appearance:none;width:40px;height:22px;border-radius:99px;background:var(--line2);position:relative;cursor:pointer;border:0}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.switch:checked{background:var(--accent)}
+.switch:checked::after{left:21px}
+.ea svg{grid-column:1/-1;width:100%;height:46px}
+.ea-stats{grid-column:1/-1;display:flex;gap:14px;font-size:12px}
+.ea-stats b{font-variant-numeric:tabular-nums}
+
+/* Thông báo */
+.noti{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.noti:last-child{border-bottom:0}
+.noti time{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.empty{color:var(--muted);text-align:center;padding:30px 0}
+
+/* ---------- thanh dưới (điện thoại) */
+.bnav{display:none}
+@media (max-width:1023px){
+  .side{display:none}
+  .app.v-dakhung .chart-col,.app.v-ea .chart-col,.app.v-noti .chart-col{display:none}
+  .app.v-dakhung .side,.app.v-ea .side,.app.v-noti .side{display:grid}
+  .side-tabs{display:none}
+  .side{grid-template-rows:minmax(0,1fr)}
+  .chart-col{grid-template-rows:auto minmax(0,1fr) 80px 80px;border-right:0}
+  .bnav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--bg2);padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
+  .bnav button{appearance:none;border:0;background:transparent;color:var(--muted);display:grid;justify-items:center;gap:2px;padding:6px 0;font-size:11px;font-weight:700;cursor:pointer;position:relative}
+  .bnav button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .bnav button.on{color:var(--accent)}
+  .bnav button.on::before{content:"";position:absolute;top:-4px;left:30%;right:30%;height:2px;border-radius:2px;background:var(--accent)}
+  .bnav .badge{right:calc(50% - 22px);top:0}
+  .top .hide-sm{display:none}
+  .main{grid-template-columns:minmax(0,1fr)}
+  .chart-col,.top{min-width:0}
+}
+@media (max-width:420px){#px-chg{display:none}.top{gap:6px;padding:8px}}
+</style>
+</head>
+<body>
+<div class="app v-chart" id="app">
+  <div class="demo-bar">BẢN DEMO · Dữ liệu giá mô phỏng chạy theo thời gian thực · Không phải tín hiệu giao dịch</div>
+
+  <div class="main">
+    <!-- =============== CỘT BIỂU ĐỒ =============== -->
+    <section class="chart-col view" id="v-chart">
+      <div class="top">
+        <button class="ibtn" type="button" aria-label="Danh mục" id="menu-btn"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="sym"><span>XAUUSD</span><span class="sig wait" id="sym-sig">CHỜ</span></div>
+        <div class="tf-wrap">
+          <button class="ibtn on" type="button" id="tf-btn">M5 ▾</button>
+          <div class="tf-menu" id="tf-menu"></div>
+        </div>
+        <button class="ibtn on hide-sm" type="button" id="type-btn" title="Kiểu nến"><svg viewBox="0 0 24 24"><path d="M7 4v16M5 8h4v7H5zM17 4v16M15 6h4v9h-4z"/></svg></button>
+        <button class="ibtn hide-sm" type="button" id="ema-btn" title="Bật/tắt EMA"><svg viewBox="0 0 24 24"><path d="M3 17c4-8 7-8 9-4s5 4 9-4"/></svg></button>
+        <span class="spacer"></span>
+        <span class="price-now num" id="px-now">—</span>
+        <span class="pill num" id="px-chg">—</span>
+      </div>
+      <div class="chart-box">
+        <div id="chart"></div>
+        <div class="overlay" id="overlay"></div>
+        <div class="session-chip" id="session-chip">Phiên vàng · GMT+7 <b id="session-name">—</b></div>
+        <div class="wait-chip"><span class="muted">Vùng chờ</span><span class="dot"></span><b class="num" id="wait-px">—</b></div>
+      </div>
+      <div class="pane"><div class="pane-title">Cá mập <span id="whale-lbl">—</span></div><div class="c" id="whale"></div></div>
+      <div class="pane"><div class="pane-title">Cá con <span id="retail-lbl">—</span></div><div class="c" id="retail"></div></div>
+    </section>
+
+    <!-- =============== CỘT PHẢI: ĐA KHUNG / EA / THÔNG BÁO =============== -->
+    <aside class="side view">
+      <div class="side-tabs" role="tablist">
+        <button type="button" class="on" data-v="dakhung">Đa khung</button>
+        <button type="button" data-v="ea">EA</button>
+        <button type="button" data-v="noti">Thông báo<span class="badge" id="badge-side" hidden>0</span></button>
+      </div>
+
+      <div class="scroll" id="p-dakhung">
+        <div class="card">
+          <div class="card-h"><h3>Phân tích đa khung</h3><button class="ghost" type="button" id="refresh">↻ Làm mới</button></div>
+          <div class="ballot" id="ballot"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3><i></i>Biến động trong</h3>
+            <div class="seg" id="win-seg"><button type="button" data-w="5">5'</button><button type="button" data-w="15" class="on">15'</button><button type="button" data-w="60">1h</button></div>
+          </div>
+          <div class="tfc" id="tf-chips"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3><i></i>1. Dòng tiền</h3><span class="num" id="flow-sum" style="font-weight:800;font-size:12px"></span></div>
+          <svg class="flow-svg" id="flow-svg" viewBox="0 0 400 110" preserveAspectRatio="none"></svg>
+          <div class="flow-legend" id="flow-legend"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3><i></i>2. Đồng thuận đa khung</h3><span id="cons-sum" style="font-weight:800;font-size:12px"></span></div>
+          <table><thead><tr><th>Khung</th><th>Xu hướng</th><th>Dòng tiền</th><th>Sức mạnh</th><th>Lực nến</th><th>Kết luận</th></tr></thead><tbody id="cons-body"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3><i></i>3. Thời điểm hành động</h3><span class="pill" id="timing-tag">—</span></div>
+          <div class="kv" id="timing-kv"></div>
+          <div class="verdict"><div><div class="big" id="timing-verdict">—</div><div class="note" id="timing-note" style="margin:0"></div></div><b class="num" id="timing-score" style="font-size:20px">—</b></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3><i></i>Bảng điểm quyết định</h3><span class="pill" id="live-tag">TRỰC TIẾP</span></div>
+          <div class="score-grid" id="score-grid"></div>
+          <div id="mbars" style="margin-top:8px"></div>
+          <div id="comps" style="margin-top:8px"></div>
+          <p class="note">Bản demo: điểm số tính từ dữ liệu mô phỏng, chỉ để minh họa giao diện.</p>
+        </div>
+      </div>
+
+      <div class="scroll" id="p-ea" hidden></div>
+      <div class="scroll" id="p-noti" hidden></div>
+    </aside>
+  </div>
+
+  <nav class="bnav" id="bnav">
+    <button type="button" class="on" data-v="chart"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 4 8-9"/></svg>Biểu đồ</button>
+    <button type="button" data-v="dakhung"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5"/></svg>Đa khung</button>
+    <button type="button" data-v="ea"><svg viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01"/></svg>EA</button>
+    <button type="button" data-v="noti"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2zM10 20a2 2 0 0 0 4 0"/></svg>Thông báo<span class="badge" id="badge-nav" hidden>0</span></button>
+  </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+const nf2 = new Intl.NumberFormat('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const nf0 = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
+const f2 = (x) => nf2.format(x), f0 = (x) => nf0.format(x);
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const VN = 7 * 3600; // hiển thị giờ Việt Nam trên trục thời gian
+
+// ================================================================ MÔ PHỎNG GIÁ
+// Hạt giống cố định để mỗi lần mở trang có cùng lịch sử; phần chạy trực tiếp ngẫu nhiên.
+let seed = 20261120;
+const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+const gauss = (r = rnd) => { let u = 0, v = 0; while (!u) u = r(); while (!v) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+
+const TFS = [['M1', 1], ['M5', 5], ['M15', 15], ['H1', 60], ['H4', 240], ['D1', 1440]];
+const TFMIN = Object.fromEntries(TFS);
+const m1 = []; // {t,o,h,l,c,v,d,w} — d: dòng tiền cá con, w: cá mập
+(function genHistory() {
+  const N = 60 * 24 * 12; // 12 ngày M1
+  const now = Math.floor(Date.now() / 60000) * 60;
+  let p = 3820, drift = -0.03, regimeLeft = 0;
+  for (let i = N; i > 0; i--) {
+    if (regimeLeft-- <= 0) { drift = (rnd() - 0.6) * 0.09; regimeLeft = 300 + Math.floor(rnd() * 900); }
+    const t = now - i * 60;
+    const vol = 0.55 + 0.5 * Math.abs(Math.sin(((t + VN) / 86400) * Math.PI * 2)); // biến động theo giờ trong ngày
+    const o = p, c = o + drift + gauss() * vol;
+    const h = Math.max(o, c) + Math.abs(gauss()) * vol * 0.6, l = Math.min(o, c) - Math.abs(gauss()) * vol * 0.6;
+    const v = 200 + Math.abs(gauss()) * 400;
+    const d = (c - o) * 900 + gauss() * 260, w = (c - o) * 0.9 + drift * 6 + gauss() * 0.35;
+    m1.push({ t, o, h, l, c, v, d, w });
+    p = c;
+  }
+  // Đưa giá cuối về quanh 3.585 cho gần thị trường thật lúc làm demo
+  const shift = 3585 - p;
+  m1.forEach((b) => { b.o += shift; b.h += shift; b.l += shift; b.c += shift; });
+})();
+const dayOpen = () => { const d0 = Math.floor((m1[m1.length - 1].t + VN) / 86400) * 86400 - VN; const b = m1.find((x) => x.t >= d0); return b ? b.o : m1[0].o; };
+
+function agg(min) {
+  const out = []; const step = min * 60;
+  for (const b of m1) {
+    const k = min === 1440 ? Math.floor((b.t + VN) / 86400) * 86400 - VN : Math.floor(b.t / step) * step;
+    const last = out[out.length - 1];
+    if (!last || last.t !== k) out.push({ t: k, o: b.o, h: b.h, l: b.l, c: b.c, v: b.v, d: b.d, w: b.w });
+    else { last.h = Math.max(last.h, b.h); last.l = Math.min(last.l, b.l); last.c = b.c; last.v += b.v; last.d += b.d; last.w += b.w; }
+  }
+  return out;
+}
+const emaArr = (vals, n) => { const k = 2 / (n + 1); let e = vals[0]; return vals.map((v, i) => (e = i ? v * k + e * (1 - k) : v)); };
+function rsi(vals, n = 14) { let up = 0, dn = 0; for (let i = 1; i < vals.length; i++) { const d = vals[i] - vals[i - 1]; const u = Math.max(d, 0), w = Math.max(-d, 0); if (i === 1) { up = u; dn = w; } else { up += (u - up) / n; dn += (w - dn) / n; } } return dn === 0 ? 100 : 100 - 100 / (1 + up / dn); }
+function atr(bars, n = 14) { const s = bars.slice(-n - 1); let a = 0; for (let i = 1; i < s.length; i++) a += Math.max(s[i].h - s[i].l, Math.abs(s[i].h - s[i - 1].c), Math.abs(s[i].l - s[i - 1].c)); return a / Math.max(1, s.length - 1); }
+
+// ================================================================ PHÂN TÍCH MỖI KHUNG
+const SIGTXT = { sell: 'BÁN', buy: 'MUA', wait: 'CHỜ' };
+function analyze(min) {
+  const bars = agg(min).slice(-300);
+  const c = bars.map((b) => b.c);
+  const e20 = emaArr(c, 20), e50 = emaArr(c, 50);
+  const n = c.length - 1;
+  const last = bars[n];
+  const trend = c[n] > e20[n] && e20[n] > e50[n] ? 1 : c[n] < e20[n] && e20[n] < e50[n] ? -1 : 0;
+  const flowSum = bars.slice(-10).reduce((a, b) => a + b.d, 0);
+  const flow = Math.abs(flowSum) < 400 ? 0 : Math.sign(flowSum);
+  const r = rsi(c.slice(-120));
+  const strength = r > 55 ? 1 : r < 45 ? -1 : 0;
+  const force = bars.slice(-3).reduce((a, b) => a + (b.c - b.o), 0);
+  const candle = Math.abs(force) < atr(bars) * 0.15 ? 0 : Math.sign(force);
+  const parts = [trend, flow, strength, candle];
+  const score = parts.reduce((a, b) => a + b, 0);
+  const sig = score >= 3 ? 'buy' : score <= -3 ? 'sell' : 'wait';
+  const conf = Math.round(Math.min(92, 52 + Math.abs(score) * 7 + Math.min(10, Math.abs(r - 50) / 2)));
+  return { min, bars, e20, e50, trend, flow, strength, candle, parts, score, sig, conf, rsi: r, atr: atr(bars), last, flowSum };
+}
+
+// Đỉnh/đáy cục bộ và mốc cấu trúc BOS / CHOCH
+function structure(bars, k = 3) {
+  const piv = [];
+  for (let i = k; i < bars.length - k; i++) {
+    let hi = true, lo = true;
+    for (let j = i - k; j <= i + k; j++) { if (j === i) continue; if (bars[j].h > bars[i].h) hi = false; if (bars[j].l < bars[i].l) lo = false; }
+    if (hi) piv.push({ i, type: 'H', p: bars[i].h }); if (lo) piv.push({ i, type: 'L', p: bars[i].l });
+  }
+  const marks = []; let dir = 0, lastH = null, lastL = null, pi = 0;
+  for (let i = 0; i < bars.length; i++) {
+    while (pi < piv.length && piv[pi].i + k <= i) { if (piv[pi].type === 'H') lastH = piv[pi]; else lastL = piv[pi]; pi++; }
+    if (lastH && bars[i].c > lastH.p) { marks.push({ time: bars[i].t + VN, position: 'belowBar', color: css('--up'), shape: 'arrowUp', text: dir < 0 ? 'CHOCH' : 'BOS' }); dir = 1; lastH = null; }
+    else if (lastL && bars[i].c < lastL.p) { marks.push({ time: bars[i].t + VN, position: 'aboveBar', color: css('--down'), shape: 'arrowDown', text: dir > 0 ? 'CHOCH' : 'BOS' }); dir = -1; lastL = null; }
+  }
+  return { piv, marks: marks.slice(-8) };
+}
+
+// ================================================================ BIỂU ĐỒ
+const LW = window.LightweightCharts;
+const base = (extra) => Object.assign({
+  autoSize: true,
+  layout: { background: { type: 'solid', color: 'transparent' }, textColor: css('--muted'), fontSize: 11, fontFamily: 'Inter, Segoe UI, system-ui, sans-serif' },
+  grid: { vertLines: { color: 'rgba(255,255,255,.04)' }, horzLines: { color: 'rgba(255,255,255,.04)' } },
+  rightPriceScale: { borderColor: css('--line'), minimumWidth: 74 },
+  timeScale: { borderColor: css('--line'), timeVisible: true, secondsVisible: false, rightOffset: 8 },
+  crosshair: { mode: 0 },
+  localization: { locale: 'vi-VN', priceFormatter: (p) => f2(p) },
+}, extra);
+const chart = LW.createChart($('#chart'), base({ watermark: { visible: true, text: 'DEMO', color: 'rgba(255,255,255,.04)', fontSize: 64 } }));
+const candles = chart.addCandlestickSeries({ upColor: css('--up'), downColor: css('--down'), wickUpColor: css('--up'), wickDownColor: css('--down'), borderVisible: false });
+const lineSeries = chart.addLineSeries({ color: css('--accent'), lineWidth: 2, visible: false, priceLineVisible: false });
+const emaFast = chart.addLineSeries({ color: '#4c8dff', lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
+const emaSlow = chart.addLineSeries({ color: '#9b7bff', lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
+const paneOpts = base({ timeScale: { visible: false }, rightPriceScale: { borderColor: css('--line'), minimumWidth: 74, scaleMargins: { top: 0.25, bottom: 0.02 } }, handleScroll: false, handleScale: false });
+paneOpts.layout = Object.assign({}, paneOpts.layout, { attributionLogo: false }); // logo TradingView giữ ở biểu đồ chính
+const whaleChart = LW.createChart($('#whale'), paneOpts);
+const retailChart = LW.createChart($('#retail'), paneOpts);
+const whale = whaleChart.addHistogramSeries({ priceLineVisible: false, priceFormat: { type: 'price', precision: 2, minMove: 0.01 } });
+const retail = retailChart.addHistogramSeries({ priceLineVisible: false, priceFormat: { type: 'price', precision: 0, minMove: 1 } });
+let syncing = false;
+chart.timeScale().subscribeVisibleLogicalRangeChange((r) => {
+  if (!r || syncing) return; syncing = true;
+  whaleChart.timeScale().setVisibleLogicalRange(r); retailChart.timeScale().setVisibleLogicalRange(r);
+  syncing = false; drawOverlay();
+});
+
+const state = { tf: 'M5', showLine: false, showEma: true, an: {}, zones: null, priceLines: [], lastSig: {}, notis: [], unread: 0, win: 15 };
+
+function setData(fit) {
+  const a = analyze(TFMIN[state.tf]);
+  state.an[state.tf] = a;
+  const bars = a.bars;
+  candles.setData(bars.map((b) => ({ time: b.t + VN, open: b.o, high: b.h, low: b.l, close: b.c })));
+  lineSeries.setData(bars.map((b) => ({ time: b.t + VN, value: b.c })));
+  emaFast.setData(bars.map((b, i) => ({ time: b.t + VN, value: a.e20[i] })));
+  emaSlow.setData(bars.map((b, i) => ({ time: b.t + VN, value: a.e50[i] })));
+  whale.setData(bars.map((b) => ({ time: b.t + VN, value: b.w, color: b.w >= 0 ? 'rgba(22,199,132,.75)' : 'rgba(239,79,95,.75)' })));
+  let cum = 0; const rb = bars.map((b) => { cum += b.d; return { time: b.t + VN, value: cum }; });
+  const m0 = rb.length > 120 ? rb[rb.length - 120].value : 0;
+  retail.setData(rb.map((x) => ({ time: x.time, value: x.value - m0, color: x.value - m0 >= 0 ? 'rgba(22,199,132,.6)' : 'rgba(239,79,95,.6)' })));
+  const st = structure(bars);
+  candles.setMarkers(st.marks);
+  computeZones(a, st);
+  if (fit) chart.timeScale().setVisibleLogicalRange({ from: bars.length - 70, to: bars.length + 6 });
+  updateHeader();
+}
+
+function computeZones(a, st) {
+  const bars = a.bars, n = bars.length;
+  const look = bars.slice(-60);
+  const hiIdx = n - 60 + look.reduce((bi, b, i) => (b.h > look[bi].h ? i : bi), 0);
+  const loIdx = n - 60 + look.reduce((bi, b, i) => (b.l < look[bi].l ? i : bi), 0);
+  const w = a.atr * 0.9;
+  state.zones = [
+    { kind: 'sell', label: 'Vùng bán', from: bars[hiIdx].t, top: bars[hiIdx].h, bot: bars[hiIdx].h - w },
+    { kind: 'buy', label: 'Vùng mua', from: bars[loIdx].t, top: bars[loIdx].l + w, bot: bars[loIdx].l },
+  ];
+  // Vùng bán phụ: đỉnh gần nhất trước đó
+  const prevH = st.piv.filter((p) => p.type === 'H' && p.i < hiIdx - 5 && p.i > n - 140).pop();
+  if (prevH) state.zones.push({ kind: 'sell', label: 'Vùng bán', from: bars[prevH.i].t, top: prevH.p, bot: prevH.p - w * 0.8 });
+  state.priceLines.forEach((pl) => candles.removePriceLine(pl));
+  const wait = (state.zones[0].bot + state.zones[1].top) / 2;
+  state.wait = wait;
+  state.priceLines = [
+    candles.createPriceLine({ price: state.zones[0].top, color: 'rgba(242,179,61,.8)', lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: 'CL' }),
+    candles.createPriceLine({ price: wait, color: 'rgba(139,154,179,.7)', lineWidth: 1, lineStyle: 0, axisLabelVisible: true, title: 'HT' }),
+  ];
+  $('#wait-px').textContent = f2(wait);
+  drawOverlay();
+}
+
+function drawOverlay() {
+  const ov = $('#overlay'); if (!state.zones) return;
+  const ts = chart.timeScale(); const W = ov.clientWidth - 74;
+  const html = state.zones.map((z) => {
+    const x1 = ts.timeToCoordinate(z.from + VN); const y1 = candles.priceToCoordinate(z.top), y2 = candles.priceToCoordinate(z.bot);
+    if (x1 == null || y1 == null || y2 == null) return '';
+    const left = Math.max(0, x1), width = Math.max(0, W - left);
+    return `<div class="zone ${z.kind}" style="left:${left}px;top:${Math.min(y1, y2)}px;width:${width}px;height:${Math.max(14, Math.abs(y2 - y1))}px">${z.label}</div>`;
+  }).join('');
+  const lb = m1[m1.length - 1];
+  const y = candles.priceToCoordinate(lb.c);
+  const cd = y == null ? '' : `<div class="countdown ${lb.c >= dayOpen() ? 'upc' : ''}" id="cd" style="top:${y + 10}px">--:--</div>`;
+  ov.innerHTML = html + cd;
+  tickCountdown();
+}
+function tickCountdown() {
+  const el = $('#cd'); if (!el) return;
+  const step = TFMIN[state.tf] * 60; const now = Date.now() / 1000;
+  let left = state.tf === 'D1' ? (Math.floor((now + VN) / 86400) + 1) * 86400 - VN - now : step - (now % step);
+  left = Math.max(0, Math.floor(left));
+  const h = Math.floor(left / 3600), m = Math.floor(left / 60) % 60, s = left % 60;
+  el.textContent = (h ? `${h}:` : '') + `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function updateHeader() {
+  const lb = m1[m1.length - 1]; const o = dayOpen();
+  const chg = lb.c - o, pct = (chg / o) * 100;
+  $('#px-now').textContent = f2(lb.c);
+  $('#px-now').className = `price-now num ${chg >= 0 ? 'up' : 'down'}`;
+  const p = $('#px-chg'); p.textContent = `${chg >= 0 ? '+' : ''}${f2(pct)}%`; p.className = `pill num ${chg >= 0 ? 'buy' : 'sell'}`;
+  const a = state.an[state.tf] || analyze(TFMIN[state.tf]);
+  const sg = $('#sym-sig'); sg.textContent = SIGTXT[a.sig]; sg.className = `sig ${a.sig}`;
+  const h = new Date((Date.now() / 1000 + VN) * 1000).getUTCHours();
+  $('#session-name').textContent = h >= 6 && h < 14 ? 'CHÂU Á' : h >= 14 && h < 20 ? 'CHÂU ÂU' : 'CHÂU MỸ';
+  const wl = a.bars[a.bars.length - 1].w;
+  $('#whale-lbl').innerHTML = `<b class="${wl >= 0 ? 'up' : 'down'}">${wl >= 0 ? '+' : ''}${f2(wl)}</b> • ${wl >= 0 ? 'Đang mua' : 'Đang bán'}`;
+  const rs = a.bars.slice(-20).reduce((s, b) => s + b.d, 0);
+  $('#retail-lbl').innerHTML = `<b class="${rs >= 0 ? 'up' : 'down'}">${rs >= 0 ? '+' : ''}${f0(rs / 10)}</b> • ${rs >= 0 ? 'Thiên tăng' : 'Thiên giảm'}`;
+}
+
+// ================================================================ CHẠY TRỰC TIẾP (mỗi giây 1 tick)
+const live = Math.random;
+function tick() {
+  const now = Math.floor(Date.now() / 1000);
+  let lb = m1[m1.length - 1];
+  const minute = Math.floor(now / 60) * 60;
+  let newBar = false;
+  if (minute > lb.t) { m1.push({ t: minute, o: lb.c, h: lb.c, l: lb.c, c: lb.c, v: 0, d: 0, w: 0 }); lb = m1[m1.length - 1]; newBar = true; }
+  const dp = gauss(live) * 0.22 - 0.004;
+  lb.c += dp; lb.h = Math.max(lb.h, lb.c); lb.l = Math.min(lb.l, lb.c); lb.v += 20 + live() * 30;
+  lb.d += dp * 900 + gauss(live) * 40; lb.w += dp * 0.9 + gauss(live) * 0.04;
+  const step = TFMIN[state.tf] * 60;
+  const tfStart = state.tf === 'D1' ? Math.floor((now + VN) / 86400) * 86400 - VN : Math.floor(now / step) * step;
+  if (newBar && (now - tfStart) < 60) { setData(false); }
+  else {
+    const a = state.an[state.tf]; const b = a.bars[a.bars.length - 1];
+    b.h = Math.max(b.h, lb.c); b.l = Math.min(b.l, lb.c); b.c = lb.c; b.w += dp * 0.9; b.d += dp * 900;
+    candles.update({ time: b.t + VN, open: b.o, high: b.h, low: b.l, close: b.c });
+    lineSeries.update({ time: b.t + VN, value: b.c });
+    whale.update({ time: b.t + VN, value: b.w, color: b.w >= 0 ? 'rgba(22,199,132,.75)' : 'rgba(239,79,95,.75)' });
+    updateHeader(); drawOverlay();
+  }
+  tickCountdown();
+}
+
+// ================================================================ ĐA KHUNG
+const COL = { M1: '#4cc9f0', M5: '#16c784', M15: '#f2b33d', H1: '#9b7bff', H4: '#ef4f5f', D1: '#4c8dff' };
+const AR = (v) => (v > 0 ? '<span class="up">▲</span>' : v < 0 ? '<span class="down">▼</span>' : '<span class="wait">■</span>');
+function renderMulti() {
+  const all = {}; TFS.forEach(([k, m]) => { all[k] = analyze(m); });
+  state.an = Object.assign(state.an, all);
+
+  // Phiếu đồng thuận M1..H4: mỗi chấm là dòng tiền 1 nến gần nhất
+  const rows = ['M1', 'M5', 'M15', 'H1', 'H4'];
+  const sells = rows.filter((k) => all[k].sig === 'sell').length, buys = rows.filter((k) => all[k].sig === 'buy').length;
+  const lead = sells > buys ? 'sell' : buys > sells ? 'buy' : 'wait';
+  const flowCons = rows.filter((k) => Math.sign(all[k].flowSum) === (lead === 'buy' ? 1 : -1)).length;
+  $('#ballot').innerHTML = `<div class="ballot-head"><span class="up">● Vào</span><span class="${lead === 'buy' ? 'up' : 'down'}">Tiền ${lead === 'buy' ? 'vào' : 'rút'} đồng thuận ${flowCons}/5</span><span class="down">Ra ●</span></div>
+    ${rows.map((k) => { const a = all[k]; const last30 = a.bars.slice(-30);
+      return `<div class="brow"><span>${k}</span><div class="dots">${last30.map((b) => `<i style="background:${b.d >= 0 ? 'var(--up)' : 'var(--down)'};opacity:${Math.min(1, 0.25 + Math.abs(b.d) / 1500)}"></i>`).join('')}</div><b class="${a.score >= 0 ? 'up' : 'down'}">${a.score > 0 ? '+' : ''}${Math.round(a.score * 15 + a.rsi - 50)}</b></div>`; }).join('')}
+    <div class="ballot-box ${lead}"><div><small>PHIẾU</small><b>${SIGTXT[lead]}</b><small>M${buys} B${sells}</small><small>/5 khung</small></div></div>`;
+
+  // Chip từng khung
+  $('#tf-chips').innerHTML = rows.map((k) => { const a = all[k]; return `<div class="${a.sig} ${k === state.tf ? 'cur' : ''}"><span>— ${k}</span>${SIGTXT[a.sig]} ${a.conf}%</div>`; }).join('');
+
+  // Dòng tiền: đường tích lũy dòng tiền từng khung trong cửa sổ đang chọn (phút)
+  const W = 400, H = 110, pts = 40;
+  const series = rows.map((k) => {
+    const mins = m1.slice(-state.win * (k === 'M1' ? 1 : 1));
+    // khung lớn hơn: làm mượt dòng tiền theo độ dài khung
+    const span = Math.max(1, Math.round(Math.log2(TFMIN[k]) + 1));
+    let cum = 0; const arr = mins.map((b, i) => { cum += b.d / span + (all[k].flowSum / 5000) * (i / mins.length); return cum; });
+    return { k, arr };
+  });
+  const flat = series.flatMap((s) => s.arr); const mn = Math.min(0, ...flat), mx = Math.max(0, ...flat), sp = mx - mn || 1;
+  const yOf = (v) => H - 8 - ((v - mn) / sp) * (H - 16);
+  $('#flow-svg').innerHTML = `<line x1="0" x2="${W}" y1="${yOf(0)}" y2="${yOf(0)}" stroke="rgba(255,255,255,.15)" stroke-dasharray="3 3"/>` +
+    series.map((s) => { const n = s.arr.length; const step = Math.max(1, Math.floor(n / pts));
+      const d = s.arr.filter((_, i) => i % step === 0 || i === n - 1).map((v, i, a) => `${(i / (a.length - 1)) * W},${yOf(v)}`).join(' ');
+      return `<polyline points="${d}" fill="none" stroke="${COL[s.k]}" stroke-width="1.8" vector-effect="non-scaling-stroke"/>`; }).join('');
+  $('#flow-legend').innerHTML = rows.map((k) => `<span style="color:${COL[k]}">● ${k}</span>`).join('') + `<span class="faint">-${state.win}' → Nay</span>`;
+  const upN = series.filter((s) => s.arr[s.arr.length - 1] > 0).length;
+  $('#flow-sum').innerHTML = `${state.win}' <span class="up">${upN}▲</span> <span class="down">${5 - upN}▼</span>`;
+
+  // Đồng thuận M5..D1
+  const crow = ['M5', 'M15', 'H1', 'H4', 'D1'];
+  const cs = crow.filter((k) => all[k].score < 0).length, cb = crow.filter((k) => all[k].score > 0).length;
+  $('#cons-sum').innerHTML = `<span class="up">MUA ${cb}/5</span> <span class="down">BÁN ${cs}/5</span>`;
+  $('#cons-body').innerHTML = crow.map((k) => { const a = all[k]; const neg = a.parts.filter((x) => x < 0).length, pos = a.parts.filter((x) => x > 0).length;
+    const v = neg > pos ? `<span class="down">BÁN ${neg}/4</span>` : pos > neg ? `<span class="up">MUA ${pos}/4</span>` : '<span class="wait">CHỜ</span>';
+    return `<tr><td>${k}</td>${a.parts.map(AR).map((x) => `<td>${x}</td>`).join('')}<td>${v}</td></tr>`; }).join('');
+
+  renderTiming(all, lead);
+  renderScores(all);
+  checkAlerts(all);
+}
+
+function renderTiming(all, lead) {
+  const a = all[state.tf]; const d1 = all.D1;
+  const now = new Date((Date.now() / 1000 + VN) * 1000); const h = now.getUTCHours(), mi = now.getUTCMinutes();
+  const sess = h >= 6 && h < 14 ? 'Phiên Á' : h >= 14 && h < 20 ? 'Phiên Âu' : 'Phiên Mỹ';
+  const toEU = ((15 - h + 24) % 24) * 60 - mi;
+  const sessTxt = h < 15 && h >= 6 ? `Ngoài giờ chính • Phiên Âu mở 15:00 (sau ${Math.floor(toEU / 60)}h${String(toEU % 60).padStart(2, '0')})` : `${sess} đang mở`;
+  const adr = d1.bars.slice(-15, -1).reduce((s, b) => s + (b.h - b.l), 0) / 14;
+  const today = d1.bars[d1.bars.length - 1]; const used = ((today.h - today.l) / adr) * 100;
+  const stretch = a.last.c - a.e20[a.e20.length - 1];
+  const px = a.last.c; const zs = state.zones || [];
+  const nearBuy = zs.filter((z) => z.kind === 'buy').map((z) => px - z.top).filter((x) => x > 0).sort((x, y) => x - y)[0];
+  const nearSell = zs.filter((z) => z.kind === 'sell').map((z) => z.bot - px).filter((x) => x > 0).sort((x, y) => x - y)[0];
+  const score = Math.round(50 + Math.abs(a.score) * 6 + (used < 80 ? 5 : -5));
+  const ok = Math.abs(a.score) >= 3 && used < 85;
+  $('#timing-tag').textContent = ok ? 'THUẬN LỢI' : 'THẬN TRỌNG'; $('#timing-tag').className = `pill ${ok ? 'buy' : 'wait'}`;
+  $('#timing-kv').innerHTML = `
+    <span>Phiên</span><b>${sessTxt}</b>
+    <span>Tin</span><b>Không có tin mạnh trong 60 phút <span class="faint">(demo)</span></b>
+    <span>Biên độ ngày</span><b>Đã đi <span class="${used > 80 ? 'down' : ''}">${f0(used)}%</span> biên độ trung bình (${f2(adr)})</b>
+    <span>Độ giãn</span><b>${f2(Math.abs(stretch))} giá ${stretch < 0 ? 'dưới' : 'trên'} EMA nhanh • ${Math.abs(stretch) > a.atr ? 'giãn mạnh' : 'đà yếu'}</b>
+    <span>Cản gần nhất</span><b>${nearBuy != null ? `▲ Vùng mua ${f2(nearBuy)} giá` : ''}${nearBuy != null && nearSell != null ? ' • ' : ''}${nearSell != null ? `▼ Vùng bán ${f2(nearSell)} giá` : ''}</b>`;
+  $('#timing-verdict').textContent = ok ? SIGTXT[a.sig] : 'CHỜ';
+  $('#timing-verdict').className = `big ${ok ? (a.sig === 'buy' ? 'up' : 'down') : 'wait'}`;
+  $('#timing-note').textContent = ok ? `Điểm ${score}% đủ xác nhận trên ${state.tf}` : `CHỜ: điểm ${score}% chưa đủ xác nhận, không vào đuổi.`;
+  $('#timing-score').textContent = `${score}%`;
+}
+
+function renderScores(all) {
+  const a = all[state.tf];
+  const total = ['M5', 'M15', 'H1', 'H4', 'D1'].reduce((s, k) => s + all[k].score, 0); // -20..20
+  const sell = Math.max(5, Math.round(33 - total * 1.6)), buy = Math.max(5, Math.round(33 + total * 1.6));
+  const wait = Math.max(5, 100 - sell - buy);
+  const norm = sell + buy + wait; const S = Math.round((sell / norm) * 100), B = Math.round((buy / norm) * 100), Wt = 100 - S - B;
+  const edge = Math.max(S, B);
+  const market = total < -3 ? 'GIẢM' : total > 3 ? 'TĂNG' : 'ĐI NGANG';
+  const risk = a.atr / a.last.c > 0.0012 ? 'CAO' : 'TRUNG BÌNH';
+  $('#score-grid').innerHTML = [
+    ['Ưu thế', edge], ['Khung', state.tf], ['Thiên hướng', SIGTXT[a.sig]],
+    ['Thị trường', market], ['Tin cậy', a.conf], ['Rủi ro', risk],
+  ].map(([k, v]) => `<div><span>${k}</span><b class="${v === 'BÁN' || v === 'GIẢM' ? 'down' : v === 'MUA' || v === 'TĂNG' ? 'up' : v === 'CHỜ' ? 'wait' : ''}">${v}</b></div>`).join('');
+  $('#mbars').innerHTML = [['MUA', B, 'var(--up)'], ['CHỜ', Wt, 'var(--wait)'], ['BÁN', S, 'var(--down)']]
+    .map(([k, v, c]) => `<div class="mbar"><span style="color:${c}">${k}</span><div class="meter"><i style="width:${v}%;background:${c}"></i></div><b class="num" style="text-align:right">${v}%</b></div>`).join('');
+  const dir = (v) => (v > 0 ? ['MUA', 'up'] : v < 0 ? ['BÁN', 'down'] : ['CHỜ', 'wait']);
+  const noise = Math.round(Math.min(100, (a.atr / Math.max(1e-9, Math.abs(a.e20[a.e20.length - 1] - a.e50[a.e50.length - 1]) + a.atr)) * 100));
+  const comps = [
+    ['Xu hướng', 50 + Math.abs(a.trend) * 10 + Math.abs(a.strength) * 5, a.trend, 'EMA/Xu hướng đa khung'],
+    ['Dòng tiền', 50 + Math.abs(a.flow) * 10, a.flow, `Dòng tiền ${f0(a.flowSum)} • Lực nến ${a.candle > 0 ? '+' : a.candle < 0 ? '−' : '0'}`],
+    ['Vùng', 55, 0, 'Cầu/Cung + vùng mua/bán gần nhất'],
+    ['Cấu trúc', 55, 0, 'BOS • CHOCH • đỉnh/đáy'],
+    ['Đi ngang', 100 - noise, noise < 60 ? 1 : 0, 'Đo độ nhiễu thị trường'],
+  ];
+  $('#comps').innerHTML = comps.map(([k, v, d, sub]) => { const [t, c] = k === 'Đi ngang' ? (d ? ['ĐẠT', 'up'] : ['NHIỄU', 'wait']) : dir(d);
+    return `<div class="comp"><b>${k}</b><b class="num">${Math.round(v)}</b><div class="meter"><i style="width:${Math.min(100, v)}%;background:var(--${c === 'up' ? 'up' : c === 'down' ? 'down' : 'wait'})"></i></div><span class="pill ${c === 'up' ? 'buy' : c === 'down' ? 'sell' : 'wait'}" style="text-align:center">${t}</span><small>${sub}</small></div>`; }).join('');
+}
+
+// ================================================================ THÔNG BÁO
+function pushNoti(text, kind) {
+  const t = new Date((Date.now() / 1000 + VN) * 1000).toISOString().slice(11, 19);
+  state.notis.unshift({ t, text, kind }); state.notis = state.notis.slice(0, 60);
+  if (state.view !== 'noti') state.unread += 1;
+  renderNoti();
+}
+function checkAlerts(all) {
+  ['M5', 'M15', 'H1'].forEach((k) => {
+    const s = all[k].sig; const prev = state.lastSig[k];
+    if (prev && prev !== s) pushNoti(`${k}: tín hiệu đổi từ ${SIGTXT[prev]} sang <b class="${s === 'buy' ? 'up' : s === 'sell' ? 'down' : 'wait'}">${SIGTXT[s]}</b> (${all[k].conf}%)`, s);
+    state.lastSig[k] = s;
+  });
+  const px = m1[m1.length - 1].c;
+  (state.zones || []).forEach((z) => {
+    const inZ = px <= z.top && px >= z.bot; const key = `${z.kind}${Math.round(z.top)}`;
+    if (inZ && !state['in' + key]) pushNoti(`Giá ${f2(px)} chạm ${z.label.toLowerCase()} ${f2(z.bot)}–${f2(z.top)}`, z.kind === 'buy' ? 'buy' : 'sell');
+    state['in' + key] = inZ;
+  });
+}
+function renderNoti() {
+  const n = state.unread;
+  [$('#badge-nav'), $('#badge-side')].forEach((b) => { b.hidden = !n; b.textContent = n > 99 ? '99+' : n; });
+  $('#p-noti').innerHTML = `<div class="card"><div class="card-h"><h3><i></i>Thông báo</h3><button class="ghost" type="button" id="noti-clear">Xóa hết</button></div>
+    ${state.notis.length ? state.notis.map((x) => `<div class="noti"><span class="pill ${x.kind === 'buy' ? 'buy' : x.kind === 'sell' ? 'sell' : 'wait'}">${x.kind === 'buy' ? 'MUA' : x.kind === 'sell' ? 'BÁN' : 'CHỜ'}</span><span>${x.text}</span><time>${x.t}</time></div>`).join('') : '<div class="empty">Chưa có thông báo. Thông báo xuất hiện khi tín hiệu M5, M15, H1 đổi chiều hoặc giá chạm vùng.</div>'}</div>`;
+  const c = $('#noti-clear'); if (c) c.onclick = () => { state.notis = []; state.unread = 0; renderNoti(); };
+}
+
+// ================================================================ EA (minh họa)
+const EAS = [
+  { id: 'ea1', name: 'Theo xu hướng H1', desc: 'Chỉ đi theo hướng đồng thuận H1–H4, dừng khi giá vào vùng ngược chiều.', on: true },
+  { id: 'ea2', name: 'Bắt hồi về vùng', desc: 'Chờ giá hồi về vùng mua/bán gần nhất rồi mới hành động, bỏ qua khi biến động cao.', on: false },
+  { id: 'ea3', name: 'Lướt phiên Âu', desc: 'Chỉ hoạt động 15:00–19:00, cần dòng tiền 4/5 khung cùng chiều.', on: false },
+];
+function renderEa() {
+  $('#p-ea').innerHTML = `<div class="card" style="font-size:12px;color:var(--muted)">Các EA dưới đây chỉ là minh họa giao diện, không kết nối tài khoản nào và không đặt lệnh.</div>` +
+    EAS.map((e, i) => {
+      let r = 1000 + i * 77; const pts = []; let v = 0; for (let k = 0; k < 40; k++) { r = (r * 9301 + 49297) % 233280; v += (r / 233280 - 0.45) * 3; pts.push(v); }
+      const mn = Math.min(...pts), mx = Math.max(...pts), sp = mx - mn || 1;
+      const d = pts.map((p, k) => `${(k / 39) * 300},${44 - ((p - mn) / sp) * 40}`).join(' ');
+      const col = pts[39] >= 0 ? 'var(--up)' : 'var(--down)';
+      return `<div class="card ea"><h4>${e.name}</h4><input type="checkbox" class="switch" ${e.on ? 'checked' : ''} aria-label="Bật ${e.name}" data-ea="${e.id}">
+        <p>${e.desc}</p><svg viewBox="0 0 300 46" preserveAspectRatio="none"><polyline points="${d}" fill="none" stroke="${col}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+        <div class="ea-stats"><span class="muted">Mô phỏng 40 phiên</span><span>Kết quả <b class="${pts[39] >= 0 ? 'up' : 'down'}">${pts[39] >= 0 ? '+' : ''}${f2(pts[39])}%</b></span></div></div>`;
+    }).join('');
+  $$('[data-ea]').forEach((s) => s.addEventListener('change', () => pushNoti(`EA "${EAS.find((e) => e.id === s.dataset.ea).name}" đã ${s.checked ? 'bật' : 'tắt'} (demo)`, 'wait')));
+}
+
+// ================================================================ ĐIỀU HƯỚNG
+function show(v) {
+  state.view = v;
+  const app = $('#app'); app.className = `app v-${v}`;
+  $$('#bnav button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+  const sideV = v === 'chart' ? (state.sideV || 'dakhung') : v;
+  if (v !== 'chart') state.sideV = v;
+  $$('.side-tabs button').forEach((b) => b.classList.toggle('on', b.dataset.v === sideV));
+  ['dakhung', 'ea', 'noti'].forEach((k) => { $(`#p-${k}`).hidden = k !== sideV; });
+  if (sideV === 'noti') { state.unread = 0; renderNoti(); }
+  state.view = sideV === 'noti' && (v === 'noti' || window.innerWidth >= 1024) ? 'noti' : v;
+}
+$$('#bnav button').forEach((b) => b.addEventListener('click', () => show(b.dataset.v)));
+// Máy tính: biểu đồ luôn hiện, thanh tab bên phải chỉ đổi nội dung cột phải
+$$('.side-tabs button').forEach((b) => b.addEventListener('click', () => { state.sideV = b.dataset.v; show('chart'); }));
+
+$('#tf-menu').innerHTML = TFS.map(([k]) => `<button type="button" data-tf="${k}" class="${k === state.tf ? 'on' : ''}">${k}</button>`).join('');
+$('#tf-btn').addEventListener('click', (e) => { e.stopPropagation(); $('#tf-menu').classList.toggle('open'); });
+document.addEventListener('click', () => $('#tf-menu').classList.remove('open'));
+$$('#tf-menu button').forEach((b) => b.addEventListener('click', () => {
+  state.tf = b.dataset.tf; $('#tf-btn').textContent = `${state.tf} ▾`;
+  $$('#tf-menu button').forEach((x) => x.classList.toggle('on', x === b));
+  setData(true); renderMulti();
+}));
+$('#type-btn').addEventListener('click', () => { state.showLine = !state.showLine; candles.applyOptions({ visible: !state.showLine }); lineSeries.applyOptions({ visible: state.showLine }); $('#type-btn').classList.toggle('on', !state.showLine); });
+$('#ema-btn').addEventListener('click', () => { state.showEma = !state.showEma; emaFast.applyOptions({ visible: state.showEma }); emaSlow.applyOptions({ visible: state.showEma }); $('#ema-btn').classList.toggle('on', state.showEma); });
+$('#ema-btn').classList.add('on');
+$('#refresh').addEventListener('click', renderMulti);
+$$('#win-seg button').forEach((b) => b.addEventListener('click', () => { state.win = Number(b.dataset.w); $$('#win-seg button').forEach((x) => x.classList.toggle('on', x === b)); renderMulti(); }));
+$('#menu-btn').addEventListener('click', () => pushNoti('Danh mục sản phẩm chưa có trong bản demo (chỉ có XAUUSD).', 'wait'));
+new ResizeObserver(() => drawOverlay()).observe($('#chart'));
+
+// ================================================================ KHỞI ĐỘNG
+setData(true);
+renderMulti();
+renderEa();
+renderNoti();
+show('chart');
+setInterval(tick, 1000);
+setInterval(renderMulti, 5000);
+})();
+</script>
+
+</body>
+</html>
