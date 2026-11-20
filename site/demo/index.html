@@ -172,18 +172,24 @@ tr:last-child td{border-bottom:0}
 .noti{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
 .noti:last-child{border-bottom:0}
 .noti time{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.tbl-wrap{overflow-x:auto;margin:0 -2px}
+.st-tbl td,.sig-tbl td{font-weight:600;font-size:12px}
+.st-tbl td:first-child{min-width:150px}
+.st-name{display:flex;gap:7px;align-items:flex-start;cursor:pointer}
+.st-name input{accent-color:var(--accent);margin-top:2px;flex:none}
+.sig-tbl td,.sig-tbl th{white-space:nowrap;padding:5px 4px}
 .empty{color:var(--muted);text-align:center;padding:30px 0}
 
 /* ---------- thanh dưới (điện thoại) */
 .bnav{display:none}
 @media (max-width:1023px){
   .side{display:none}
-  .app.v-dakhung .chart-col,.app.v-ea .chart-col,.app.v-noti .chart-col{display:none}
-  .app.v-dakhung .side,.app.v-ea .side,.app.v-noti .side{display:grid}
+  .app.v-dakhung .chart-col,.app.v-ea .chart-col,.app.v-noti .chart-col,.app.v-sig .chart-col{display:none}
+  .app.v-dakhung .side,.app.v-ea .side,.app.v-noti .side,.app.v-sig .side{display:grid}
   .side-tabs{display:none}
   .side{grid-template-rows:minmax(0,1fr)}
   .chart-col{grid-template-rows:auto minmax(0,1fr) 80px 80px;border-right:0}
-  .bnav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--bg2);padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
+  .bnav{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--bg2);padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
   .bnav button{appearance:none;border:0;background:transparent;color:var(--muted);display:grid;justify-items:center;gap:2px;padding:6px 0;font-size:11px;font-weight:700;cursor:pointer;position:relative}
   .bnav button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .bnav button.on{color:var(--accent)}
@@ -238,6 +244,7 @@ tr:last-child td{border-bottom:0}
       <div class="side-tabs" role="tablist">
         <button type="button" class="on" data-v="dakhung">Đa khung</button>
         <button type="button" data-v="ea">EA</button>
+        <button type="button" data-v="sig">Tín hiệu</button>
         <button type="button" data-v="noti">Thông báo<span class="badge" id="badge-side" hidden>0</span></button>
       </div>
 
@@ -281,6 +288,7 @@ tr:last-child td{border-bottom:0}
       </div>
 
       <div class="scroll" id="p-ea" hidden></div>
+      <div class="scroll" id="p-sig" hidden></div>
       <div class="scroll" id="p-noti" hidden></div>
     </aside>
   </div>
@@ -289,6 +297,7 @@ tr:last-child td{border-bottom:0}
     <button type="button" class="on" data-v="chart"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 4 8-9"/></svg>Biểu đồ</button>
     <button type="button" data-v="dakhung"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5"/></svg>Đa khung</button>
     <button type="button" data-v="ea"><svg viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01"/></svg>EA</button>
+    <button type="button" data-v="sig"><svg viewBox="0 0 24 24"><path d="M4 19h16M7 15l3-4 3 2 4-6"/></svg>Tín hiệu</button>
     <button type="button" data-v="noti"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2zM10 20a2 2 0 0 0 4 0"/></svg>Thông báo<span class="badge" id="badge-nav" hidden>0</span></button>
   </nav>
 </div>
@@ -632,45 +641,203 @@ function ruleEval(trend, flowN, powerN, deltaN, r, dist) {
   if (trend < 0 && flow < 0 && power < 0 && delta < 0 && conf >= RULE.conf && r > RULE.rsiSell && -dist >= RULE.distMin && -dist < RULE.distMax) return -1;
   return 0;
 }
-function signalHistory(bars) {
-  const n = bars.length; if (n < 40) return [];
-  const c = bars.map((b) => b.c), e8 = emaArr(c, 8), e21 = emaArr(c, 21);
-  const rs = []; let up = 0, dn = 0;
-  for (let i = 0; i < n; i++) {
-    if (!i) { rs.push(50); continue; }
-    const d = c[i] - c[i - 1], u = Math.max(d, 0), w = Math.max(-d, 0);
-    if (i <= 14) { up += u / 14; dn += w / 14; } else { up += (u - up) / 14; dn += (w - dn) / 14; }
-    rs.push(dn === 0 ? 100 : 100 - 100 / (1 + up / dn));
-  }
+// ================================================================ CHIẾN LƯỢC (giai đoạn 3)
+// 8 chiến lược chạy trên nến ĐÃ ĐÓNG (không vẽ lại khi nến đang chạy). Định nghĩa do Trạm Vàng tự đặt.
+// Nhóm: 'trend' chạy khi thị trường có xu hướng, 'range' khi đi ngang, 'both' luôn chạy (chế độ AUTO).
+const STRATS = [
+  { k: 'trend', name: 'Xu hướng + dòng tiền', code: 'XH', grp: 'trend', desc: 'Đủ 4 chỉ số cùng chiều, tin cậy ≥ 68%, RSI chưa quá mua/bán, giá cách EMA nhanh 0,7–2,5 ATR.' },
+  { k: 'pullback', name: 'Hồi về EMA', code: 'HE', grp: 'trend', desc: 'EMA 8 > 21 > 50 (hoặc ngược lại), giá hồi chạm EMA 21 rồi đóng nến thuận chiều vượt EMA 8.' },
+  { k: 'sd', name: 'Vùng cung/cầu', code: 'CC', grp: 'range', desc: 'Giá chạm vùng mua/bán (Order Block) còn hiệu lực rồi đóng nến bật ra khỏi vùng.' },
+  { k: 'fvg', name: 'Kiểm tra lại FVG', code: 'FV', grp: 'trend', desc: 'Giá quay về FVG cùng chiều xu hướng, chưa lấp kín, rồi đóng nến bật ra.' },
+  { k: 'breakout', name: 'Phá vỡ biên 20 nến', code: 'PV', grp: 'trend', desc: 'Đóng nến vượt đỉnh/đáy 20 nến, thân ≥ 0,8 ATR, dòng tiền cùng chiều.' },
+  { k: 'reversal', name: 'Đảo chiều quá mua/bán', code: 'ĐC', grp: 'range', desc: 'RSI < 30 (hoặc > 70) rồi xuất hiện nến nhấn chìm ngược chiều, lực nến xác nhận.' },
+  { k: 'smcb', name: 'SMC phá cấu trúc', code: 'SB', grp: 'trend', desc: 'Nến đóng phá đỉnh/đáy gần nhất (BOS) với dòng tiền cùng chiều. Dừng lỗ ngoài đáy/đỉnh đối diện.' },
+  { k: 'smcr', name: 'SMC kiểm tra lại', code: 'SR', grp: 'both', desc: 'Sau BOS/CHOCH, giá quay lại mức vừa phá trong 20 nến và đóng nến giữ được mức đó.' },
+];
+const SK = Object.fromEntries(STRATS.map((s) => [s.k, s]));
+const stratCfg = (() => {
+  const d = { mode: 'auto', on: Object.fromEntries(STRATS.map((s) => [s.k, 1])) };
+  try { const v = JSON.parse(localStorage.getItem('tv-strat') || 'null'); if (v) { d.mode = v.mode || d.mode; Object.assign(d.on, v.on || {}); } } catch {}
+  return d;
+})();
+const saveStrat = () => { try { localStorage.setItem('tv-strat', JSON.stringify(stratCfg)); } catch {} };
+
+function seriesOf(bars) {
+  const n = bars.length, c = bars.map((b) => b.c);
+  const e8 = emaArr(c, 8), e21 = emaArr(c, 21), e50 = emaArr(c, 50);
+  const rs = [], at = [], fN = [], pN = [], dN = [], trend = [];
+  let up = 0, dn = 0, st = 0, sd = 0, fl = 0;
   const tr = bars.map((b, i) => (i ? Math.max(b.h - b.l, Math.abs(b.h - bars[i - 1].c), Math.abs(b.l - bars[i - 1].c)) : b.h - b.l));
-  let st = 0, sd = 0, fl = 0, last = -99; const sigs = [];
   for (let i = 0; i < n; i++) {
-    st += tr[i]; if (i >= 14) st -= tr[i - 14];
-    sd += Math.abs(bars[i].d); if (i >= 60) sd -= Math.abs(bars[i - 60].d);
+    if (i) { const d = c[i] - c[i - 1], u = Math.max(d, 0), w = Math.max(-d, 0); if (i <= 14) { up += u / 14; dn += w / 14; } else { up += (u - up) / 14; dn += (w - dn) / 14; } }
+    rs.push(i ? (dn === 0 ? 100 : 100 - 100 / (1 + up / dn)) : 50);
+    st += tr[i]; if (i >= 14) st -= tr[i - 14]; const A = st / Math.min(i + 1, 14) || 1e-9; at.push(A);
+    sd += Math.abs(bars[i].d); if (i >= 60) sd -= Math.abs(bars[i - 60].d); const dsc = sd / Math.min(i + 1, 60) || 1;
     fl += bars[i].d; if (i >= 10) fl -= bars[i - 10].d;
-    if (i < 30) continue;
-    const A = st / 14 || 1e-9, dsc = sd / Math.min(i + 1, 60) || 1;
-    const trend = e8[i] > e21[i] && e8[i] >= e8[i - 1] ? 1 : e8[i] < e21[i] && e8[i] <= e8[i - 1] ? -1 : 0;
-    const dir = ruleEval(trend, Math.tanh(fl / (dsc * 6)), Math.tanh((c[i] - c[i - 5]) / (A * 1.5)), Math.tanh((bars[i].c - bars[i].o) / (A * 0.5)), rs[i], (c[i] - e8[i]) / A);
-    if (dir && i - last >= 6) { sigs.push(planFor(bars, i, dir, A)); last = i; }
+    fN.push(Math.tanh(fl / (dsc * 6)));
+    pN.push(Math.tanh((c[i] - c[Math.max(0, i - 5)]) / (A * 1.5)));
+    dN.push(Math.tanh((bars[i].c - bars[i].o) / (A * 0.5)));
+    trend.push(i && e8[i] > e21[i] && e8[i] >= e8[i - 1] ? 1 : i && e8[i] < e21[i] && e8[i] <= e8[i - 1] ? -1 : 0);
+  }
+  return { c, e8, e21, e50, rs, at, fN, pN, dN, trend };
+}
+// BOS/CHOCH theo chỉ số nến (đỉnh/đáy xác nhận sau k nến, không nhìn trước)
+function structEvents(bars, k = 3) {
+  const n = bars.length, piv = [];
+  for (let i = k; i < n - k; i++) {
+    let hi = true, lo = true;
+    for (let j = i - k; j <= i + k; j++) { if (j === i) continue; if (bars[j].h > bars[i].h) hi = false; if (bars[j].l < bars[i].l) lo = false; }
+    if (hi) piv.push({ i, type: 'H', p: bars[i].h }); if (lo) piv.push({ i, type: 'L', p: bars[i].l });
+  }
+  const ev = []; let dir = 0, lastH = null, lastL = null, pi = 0, refH = null, refL = null;
+  for (let i = 0; i < n; i++) {
+    while (pi < piv.length && piv[pi].i + k <= i) { if (piv[pi].type === 'H') { lastH = piv[pi]; refH = piv[pi]; } else { lastL = piv[pi]; refL = piv[pi]; } pi++; }
+    if (lastH && bars[i].c > lastH.p) { ev.push({ i, dir: 1, kind: dir < 0 ? 'CHOCH' : 'BOS', level: lastH.p, opp: refL ? refL.p : null }); dir = 1; lastH = null; }
+    else if (lastL && bars[i].c < lastL.p) { ev.push({ i, dir: -1, kind: dir > 0 ? 'CHOCH' : 'BOS', level: lastL.p, opp: refH ? refH.p : null }); dir = -1; lastL = null; }
+  }
+  return ev;
+}
+function fvgAll(bars, A) {
+  const out = [], n = bars.length;
+  for (let i = 2; i < n; i++) {
+    const a = bars[i - 2], c = bars[i];
+    if (c.l - a.h >= A * 0.25) out.push({ kind: 'buy', i, top: c.l, bot: a.h });
+    else if (a.l - c.h >= A * 0.25) out.push({ kind: 'sell', i, top: a.l, bot: c.h });
+  }
+  for (const g of out) for (let j = g.i + 1; j < n; j++) { const b = bars[j]; if (g.kind === 'buy' ? b.l <= g.bot : b.h >= g.top) { g.filled = j; break; } }
+  return out;
+}
+
+function runStrategies(bars, A0) {
+  const n = bars.length; if (n < 60) return [];
+  const S = seriesOf(bars), obs = findOB(bars, A0), fvgs = fvgAll(bars, A0), ev = structEvents(bars);
+  const evAt = new Map(ev.map((e) => [e.i, e]));
+  const pend = []; const lastAt = {}; const sigs = [];
+  for (let i = 50; i < n - 1; i++) {                       // n-1: nến cuối đang chạy, chưa xét
+    const b = bars[i], p = bars[i - 1], A = S.at[i];
+    const trending = Math.abs(S.e8[i] - S.e21[i]) / A >= 0.35;
+    const cands = [];
+    const r1 = ruleEval(S.trend[i], S.fN[i], S.pN[i], S.dN[i], S.rs[i], (S.c[i] - S.e8[i]) / A);
+    if (r1) cands.push(['trend', r1, null]);
+    const upT = S.e8[i] > S.e21[i] && S.e21[i] > S.e50[i], dnT = S.e8[i] < S.e21[i] && S.e21[i] < S.e50[i];
+    if (upT && b.l <= S.e21[i] + 0.15 * A && b.c > S.e8[i] && b.c > b.o && S.rs[i] > 40 && S.rs[i] < 65) cands.push(['pullback', 1, Math.min(b.l, S.e21[i])]);
+    if (dnT && b.h >= S.e21[i] - 0.15 * A && b.c < S.e8[i] && b.c < b.o && S.rs[i] < 60 && S.rs[i] > 35) cands.push(['pullback', -1, Math.max(b.h, S.e21[i])]);
+    for (const z of obs) {
+      if (z.i + 2 > i) break; if (z.broken != null && z.broken <= i) continue; if (i - z.i > 200) continue;
+      if (z.kind === 'buy' && b.l <= z.top && b.c > z.top && b.c > b.o && S.fN[i] > -0.2) { cands.push(['sd', 1, z.bot]); break; }
+      if (z.kind === 'sell' && b.h >= z.bot && b.c < z.bot && b.c < b.o && S.fN[i] < 0.2) { cands.push(['sd', -1, z.top]); break; }
+    }
+    for (const g of fvgs) {
+      if (g.i + 1 > i) break; if (g.filled != null && g.filled <= i) continue; if (i - g.i > 60) continue;
+      if (g.kind === 'buy' && S.trend[i] > 0 && b.l <= g.top && b.c > g.top && b.c > b.o) { cands.push(['fvg', 1, g.bot]); break; }
+      if (g.kind === 'sell' && S.trend[i] < 0 && b.h >= g.bot && b.c < g.bot && b.c < b.o) { cands.push(['fvg', -1, g.top]); break; }
+    }
+    if (i >= 21) {
+      let hh = -Infinity, ll = Infinity; for (let j = i - 20; j < i; j++) { hh = Math.max(hh, bars[j].h); ll = Math.min(ll, bars[j].l); }
+      const body = Math.abs(b.c - b.o);
+      if (b.c > hh && body >= 0.8 * A && S.fN[i] > 0.2) cands.push(['breakout', 1, b.l]);
+      if (b.c < ll && body >= 0.8 * A && S.fN[i] < -0.2) cands.push(['breakout', -1, b.h]);
+    }
+    if (S.rs[i - 1] < 30 && p.c < p.o && b.c > b.o && b.c > p.o && S.dN[i] > 0) cands.push(['reversal', 1, Math.min(p.l, b.l)]);
+    if (S.rs[i - 1] > 70 && p.c > p.o && b.c < b.o && b.c < p.o && S.dN[i] < 0) cands.push(['reversal', -1, Math.max(p.h, b.h)]);
+    const e = evAt.get(i);
+    if (e && e.kind === 'BOS' && Math.sign(S.fN[i]) === e.dir) cands.push(['smcb', e.dir, e.opp]);
+    for (let q = pend.length - 1; q >= 0; q--) {
+      const x = pend[q];
+      if (i - x.i > 20 || (x.dir > 0 ? b.c < x.level - A : b.c > x.level + A)) { pend.splice(q, 1); continue; }
+      if (x.dir > 0 && b.l <= x.level + 0.2 * A && b.c > x.level && b.c > b.o) { cands.push(['smcr', 1, b.l]); pend.splice(q, 1); }
+      else if (x.dir < 0 && b.h >= x.level - 0.2 * A && b.c < x.level && b.c < b.o) { cands.push(['smcr', -1, b.h]); pend.splice(q, 1); }
+    }
+    if (e) pend.push(e);
+    for (const [k, dir, slRef] of cands) {
+      if (!stratCfg.on[k]) continue;
+      if (stratCfg.mode === 'auto') { const g = SK[k].grp; if ((g === 'trend' && !trending) || (g === 'range' && trending)) continue; }
+      if (lastAt[k] != null && i - lastAt[k] < 6) continue;
+      lastAt[k] = i; sigs.push(Object.assign(planFor(bars, i, dir, A, slRef), { strat: k }));
+    }
   }
   return sigs;
 }
-function planFor(bars, i, dir, A) {
-  const entry = bars[i].c; const win = bars.slice(Math.max(0, i - 4), i + 1);
-  let risk = dir > 0 ? entry - (Math.min(...win.map((b) => b.l)) - 0.2 * A) : (Math.max(...win.map((b) => b.h)) + 0.2 * A) - entry;
+function planFor(bars, i, dir, A, slRef) {
+  const entry = bars[i].c; let risk;
+  if (slRef != null) risk = dir > 0 ? entry - (slRef - 0.15 * A) : (slRef + 0.15 * A) - entry;
+  else { const win = bars.slice(Math.max(0, i - 4), i + 1); risk = dir > 0 ? entry - (Math.min(...win.map((b) => b.l)) - 0.2 * A) : (Math.max(...win.map((b) => b.h)) + 0.2 * A) - entry; }
   risk = Math.min(3 * A, Math.max(0.8 * A, risk));
   const p = { i, t: bars[i].t, dir, entry, sl: entry - dir * risk, tp1: entry + dir * risk, tp2: entry + dir * 2 * risk, result: 'run' };
   let tp1 = false;
   for (let j = i + 1; j < bars.length; j++) {
-    const b = bars[j]; const hitSL = dir > 0 ? b.l <= (tp1 ? entry : p.sl) : b.h >= (tp1 ? entry : p.sl);
-    if (hitSL) { p.result = tp1 ? 'be' : 'sl'; p.end = j; break; }
+    const b = bars[j]; const stop = tp1 ? entry : p.sl;
+    if (dir > 0 ? b.l <= stop : b.h >= stop) { p.result = tp1 ? 'be' : 'sl'; p.end = j; break; }
     if (dir > 0 ? b.h >= p.tp2 : b.l <= p.tp2) { p.result = 'tp2'; p.end = j; break; }
-    if (!tp1 && (dir > 0 ? b.h >= p.tp1 : b.l <= p.tp1)) { tp1 = true; p.result = 'tp1'; }
+    if (!tp1 && (dir > 0 ? b.h >= p.tp1 : b.l <= p.tp1)) { tp1 = true; p.result = 'tp1run'; }
   }
-  if (p.result === 'tp1' && p.end == null) p.result = 'tp1run';
   return p;
 }
+// R của lệnh đã đóng: dừng lỗ −1R; chạm TP1 rồi về hòa vốn +0,5R (chốt nửa ở TP1); chạm TP2 +1,5R
+const R_OF = { sl: -1, be: 0.5, tp2: 1.5 };
+function statsOf(list) {
+  const done = list.filter((s) => s.result in R_OF), wins = done.filter((s) => s.result !== 'sl').length;
+  const R = done.reduce((a, s) => a + R_OF[s.result], 0);
+  return { n: list.length, done: done.length, wins, rate: done.length ? (wins / done.length) * 100 : null, R, avgR: done.length ? R / done.length : null, run: list.length - done.length };
+}
+
+// Giờ VN; nến không thuộc hôm nay thì thêm ngày/tháng
+function whenTxt(t) {
+  const iso = new Date((t + VN) * 1000).toISOString(), today = new Date(Date.now() + VN * 1000).toISOString().slice(0, 10);
+  return iso.slice(0, 10) === today ? iso.slice(11, 16) : `${iso.slice(8, 10)}/${iso.slice(5, 7)} ${iso.slice(11, 16)}`;
+}
+function renderSig() {
+  const el = $('#p-sig'); if (!el) return;
+  const sigs = state.sigs || []; const all = statsOf(sigs);
+  const by = Object.fromEntries(STRATS.map((s) => [s.k, statsOf(sigs.filter((x) => x.strat === s.k))]));
+  const pct = (x) => (x == null ? '—' : `${f0(x)}%`), rr = (x) => (x == null ? '—' : `${x >= 0 ? '+' : ''}${f2(x)}R`);
+  const grpTxt = { trend: 'Xu hướng', range: 'Đi ngang', both: 'Mọi lúc' };
+  const filt = state.sigFilter || 'all';
+  const rows = sigs.slice().reverse().filter((s) => filt === 'all' || (filt === 'run' ? !(s.result in R_OF) : s.result in R_OF)).slice(0, 40);
+  const resCls = { sl: 'down', be: 'wait', tp2: 'up', tp1run: 'up', run: '' };
+  el.innerHTML = `
+  <div class="card">
+    <div class="card-h"><h3><i></i>Chiến lược · ${state.tf}</h3><div class="seg" id="smode"><button type="button" data-m="auto" class="${stratCfg.mode === 'auto' ? 'on' : ''}">AUTO</button><button type="button" data-m="manual" class="${stratCfg.mode === 'manual' ? 'on' : ''}">Thủ công</button></div></div>
+    <p class="note" style="margin:0 0 6px">${stratCfg.mode === 'auto' ? 'AUTO: khi thị trường có xu hướng chỉ chạy nhóm Xu hướng, khi đi ngang chỉ chạy nhóm Đi ngang; nhóm Mọi lúc luôn chạy.' : 'Thủ công: chạy mọi chiến lược đang bật, không lọc theo trạng thái thị trường.'}</p>
+    <div class="tbl-wrap"><table class="st-tbl"><thead><tr><th>Chiến lược</th><th>Nhóm</th><th>Lệnh</th><th>Chạm TP1</th><th>R TB</th></tr></thead><tbody>
+    ${STRATS.map((s) => { const x = by[s.k]; return `<tr title="${s.desc}"><td><label class="st-name"><input type="checkbox" data-st="${s.k}" id="st-${s.k}" ${stratCfg.on[s.k] ? 'checked' : ''}><span><b>${s.name}</b> <span class="faint">${s.code}</span></span></label></td><td class="muted">${grpTxt[s.grp]}</td><td class="num">${x.n}</td><td class="num">${pct(x.rate)}</td><td class="num ${x.avgR > 0 ? 'up' : x.avgR < 0 ? 'down' : ''}">${rr(x.avgR)}</td></tr>`; }).join('')}
+    </tbody></table></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h3><i></i>Tổng hợp</h3><span class="pill">${state.tf} · ${DATA[state.tf].length} nến</span></div>
+    <div class="score-grid">
+      <div><span>Lệnh đã đóng</span><b class="num">${all.done}</b></div>
+      <div><span>Chạm TP1</span><b class="num ${all.rate >= 50 ? 'up' : all.rate != null ? 'down' : ''}">${pct(all.rate)}</b></div>
+      <div><span>Tổng R</span><b class="num ${all.R > 0 ? 'up' : all.R < 0 ? 'down' : ''}">${rr(all.done ? all.R : null)}</b></div>
+    </div>
+    <p class="note">Mỗi lệnh: dừng lỗ = 1R, chốt nửa ở TP1 (1R) rồi dời dừng lỗ về giá vào, nửa còn lại chốt ở TP2 (2R). Tính lại trên nến đã tải, chưa trừ phí và chênh lệch giá; quá khứ không bảo đảm tương lai.</p>
+  </div>
+  <div class="card">
+    <div class="card-h"><h3><i></i>Lịch sử tín hiệu</h3><div class="seg" id="sfilter"><button type="button" data-f="all" class="${filt === 'all' ? 'on' : ''}">Tất cả</button><button type="button" data-f="run" class="${filt === 'run' ? 'on' : ''}">Đang chạy ${all.run}</button><button type="button" data-f="done" class="${filt === 'done' ? 'on' : ''}">Đã đóng</button></div></div>
+    ${rows.length ? `<div class="tbl-wrap"><table class="sig-tbl"><thead><tr><th>Giờ</th><th>CL</th><th>Lệnh</th><th>Vào</th><th>SL</th><th>TP1</th><th>Kết quả</th></tr></thead><tbody>
+    ${rows.map((s) => `<tr title="${SK[s.strat].name}"><td class="num">${whenTxt(s.t)}</td><td>${SK[s.strat].code}</td><td class="${s.dir > 0 ? 'up' : 'down'}">${s.dir > 0 ? 'MUA' : 'BÁN'}</td><td class="num">${f2(s.entry)}</td><td class="num">${f2(s.sl)}</td><td class="num">${f2(s.tp1)}</td><td class="${resCls[s.result]}">${RESULT_TXT[s.result]}</td></tr>`).join('')}
+    </tbody></table></div>` : '<div class="empty">Chưa có tín hiệu phù hợp bộ lọc trên khung này.</div>'}
+  </div>`;
+}
+function bindSig() {
+  $('#p-sig').addEventListener('click', (e) => {
+    const m = e.target.closest('[data-m]'); const f = e.target.closest('[data-f]');
+    if (m) { stratCfg.mode = m.dataset.m; saveStrat(); setData(false); }
+    if (f) { state.sigFilter = f.dataset.f; renderSig(); }
+  });
+  $('#p-sig').addEventListener('change', (e) => { const c = e.target.closest('[data-st]'); if (c) { stratCfg.on[c.dataset.st] = c.checked ? 1 : 0; saveStrat(); setData(false); } });
+}
+function notifySignals() {
+  const sigs = state.sigs || []; const key = (s) => `${state.tf}|${s.t}|${s.strat}`;
+  state.seenSig = state.seenSig || new Set();
+  const first = !state.sigInitTf || !state.sigInitTf.has(state.tf);
+  for (const s of sigs) {
+    const k = key(s); if (state.seenSig.has(k)) continue; state.seenSig.add(k);
+    if (!first && s.i >= state.an[state.tf].bars.length - 3) pushNoti(`${state.tf} · ${SK[s.strat].name}: <b class="${s.dir > 0 ? 'up' : 'down'}">${s.dir > 0 ? 'MUA' : 'BÁN'}</b> tại ${f2(s.entry)} · SL ${f2(s.sl)} · TP1 ${f2(s.tp1)}`, s.dir > 0 ? 'buy' : 'sell');
+  }
+  (state.sigInitTf = state.sigInitTf || new Set()).add(state.tf);
+}
+
 const RESULT_TXT = { sl: 'Dừng lỗ ✗', be: 'Chạm TP1, về hòa vốn', tp1: 'Chạm TP1 ✓', tp1run: 'Đã chạm TP1 ✓, đang chạy', tp2: 'Chạm TP2 ✓✓', run: 'Đang chạy' };
 const hhmm = (t) => new Date((t + VN) * 1000).toISOString().slice(11, 16);
 
@@ -689,16 +856,18 @@ function setData(fit) {
   retail.setData(bars.map((b) => { if (!b.fk) return { time: b.t + VN }; cum += b.r; return { time: b.t + VN, value: cum, color: RCOL(cum) }; }));
   const lb = bars[bars.length - 1]; state.retailPrev = cum - (lb.fk ? lb.r : 0);
 
-  state.sigs = signalHistory(bars);
+  state.sigs = runStrategies(bars, a.atr);
   state.fvg = layers.fvg ? findFVG(bars, a.atr) : [];
   state.vp = volProfile(bars);
   computeZones(a, a.st);
   const marks = [...a.st.marks];
   if (layers.swing) marks.push(...swingLabels(bars, a.st.piv));
-  if (layers.sig) state.sigs.slice(-10).forEach((s) => marks.push({ time: s.t + VN, position: s.dir > 0 ? 'belowBar' : 'aboveBar', color: s.dir > 0 ? css('--up') : css('--down'), shape: s.dir > 0 ? 'arrowUp' : 'arrowDown', text: s.dir > 0 ? 'MUA' : 'BÁN' }));
+  if (layers.sig) state.sigs.slice(-10).forEach((s) => marks.push({ time: s.t + VN, position: s.dir > 0 ? 'belowBar' : 'aboveBar', color: s.dir > 0 ? css('--up') : css('--down'), shape: s.dir > 0 ? 'arrowUp' : 'arrowDown', text: `${s.dir > 0 ? 'MUA' : 'BÁN'} ${SK[s.strat].code}` }));
   candles.setMarkers(marks.sort((x, y) => x.time - y.time));
   setPriceLines(a);
   renderPlanCard(a);
+  renderSig();
+  notifySignals();
   if (fit) chart.timeScale().setVisibleLogicalRange({ from: bars.length - 70, to: bars.length + 6 });
   updateHeader();
 }
@@ -1079,7 +1248,7 @@ function show(v) {
   const sideV = v === 'chart' ? (state.sideV || 'dakhung') : v;
   if (v !== 'chart') state.sideV = v;
   $$('.side-tabs button').forEach((b) => b.classList.toggle('on', b.dataset.v === sideV));
-  ['dakhung', 'ea', 'noti'].forEach((k) => { $(`#p-${k}`).hidden = k !== sideV; });
+  ['dakhung', 'ea', 'sig', 'noti'].forEach((k) => { $(`#p-${k}`).hidden = k !== sideV; });
   if (sideV === 'noti') { state.unread = 0; renderNoti(); }
   state.view = sideV === 'noti' && (v === 'noti' || window.innerWidth >= 1024) ? 'noti' : v;
 }
@@ -1116,6 +1285,7 @@ new ResizeObserver(() => drawOverlay()).observe($('#chart'));
 // ================================================================ KHỞI ĐỘNG
 async function boot() {
   setSrcText();
+  bindSig();
   try { await loadLive(); SRC.mode = 'live'; }
   catch (e) { SRC.err = e.message || 'lỗi kết nối'; genSim(); SRC.mode = 'sim'; }
   setData(true);
