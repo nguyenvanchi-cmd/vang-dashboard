@@ -151,6 +151,9 @@ tr:last-child td{border-bottom:0}
 .score-grid div{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:6px 8px}
 .score-grid span{display:block;font-size:10.5px;color:var(--muted);font-weight:650}
 .score-grid b{font-size:14px}
+.bt-in{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:11.5px;color:var(--muted);font-weight:650}
+.bt-in label{display:flex;align-items:center;gap:6px}
+.bt-in input{width:68px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:3px 6px;font:inherit;font-variant-numeric:tabular-nums}
 .comp{display:grid;grid-template-columns:72px 30px 1fr 54px;gap:6px;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px dashed var(--line)}
 .comp:last-child{border-bottom:0}
 .comp small{color:var(--faint);grid-column:3/5;font-size:11px;margin-top:-4px}
@@ -712,10 +715,12 @@ const saveLayers = () => { try { localStorage.setItem('tv-layers', JSON.stringif
 const vwapLine = chart.addLineSeries({ color: 'rgba(242,179,61,.85)', lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
 
 // Order Block: nến ngược chiều cuối cùng ngay trước một nến bứt phá (thân ≥ 0,9 ATR, đóng vượt đỉnh/đáy nến đó)
-function findOB(bars, A) {
+// AT (tùy chọn): mảng ATR theo từng nến. Backtest truyền vào để mỗi vùng được dò bằng ATR lúc nó hình thành,
+// không dùng ATR của nến mới nhất (tránh nhìn trước dữ liệu).
+function findOB(bars, A0, AT) {
   const out = []; const n = bars.length;
   for (let i = 1; i < n - 1; i++) {
-    const c = bars[i], x = bars[i + 1]; const body = Math.abs(x.c - x.o);
+    const c = bars[i], x = bars[i + 1]; const body = Math.abs(x.c - x.o); const A = AT ? AT[i + 1] : A0;
     if (c.c < c.o && x.c > x.o && body >= A * 0.9 && x.c > c.h) out.push({ kind: 'buy', i, top: c.h, bot: c.l });
     else if (c.c > c.o && x.c < x.o && body >= A * 0.9 && x.c < c.l) out.push({ kind: 'sell', i, top: c.h, bot: c.l });
   }
@@ -834,10 +839,10 @@ function structEvents(bars, k = 3) {
   }
   return ev;
 }
-function fvgAll(bars, A) {
+function fvgAll(bars, A0, AT) {
   const out = [], n = bars.length;
   for (let i = 2; i < n; i++) {
-    const a = bars[i - 2], c = bars[i];
+    const a = bars[i - 2], c = bars[i]; const A = AT ? AT[i] : A0;
     if (c.l - a.h >= A * 0.25) out.push({ kind: 'buy', i, top: c.l, bot: a.h });
     else if (a.l - c.h >= A * 0.25) out.push({ kind: 'sell', i, top: a.l, bot: c.h });
   }
@@ -847,9 +852,9 @@ function fvgAll(bars, A) {
 
 function runStrategies(bars, A0) {
   const n = bars.length; if (n < 60) return [];
-  const S = seriesOf(bars), obs = findOB(bars, A0), fvgs = fvgAll(bars, A0), ev = structEvents(bars);
+  const S = seriesOf(bars), obs = findOB(bars, A0, S.at), fvgs = fvgAll(bars, A0, S.at), ev = structEvents(bars);
   const evAt = new Map(ev.map((e) => [e.i, e]));
-  const pend = []; const lastAt = {}; const sigs = [];
+  const pend = []; const lastAt = {}; const sigs = []; let obP = 0, fvP = 0;
   for (let i = 50; i < n - 1; i++) {                       // n-1: nến cuối đang chạy, chưa xét
     const b = bars[i], p = bars[i - 1], A = S.at[i];
     const trending = Math.abs(S.e8[i] - S.e21[i]) / A >= 0.35;
@@ -859,13 +864,15 @@ function runStrategies(bars, A0) {
     const upT = S.e8[i] > S.e21[i] && S.e21[i] > S.e50[i], dnT = S.e8[i] < S.e21[i] && S.e21[i] < S.e50[i];
     if (upT && b.l <= S.e21[i] + 0.15 * A && b.c > S.e8[i] && b.c > b.o && S.rs[i] > 40 && S.rs[i] < 65) cands.push(['pullback', 1, Math.min(b.l, S.e21[i])]);
     if (dnT && b.h >= S.e21[i] - 0.15 * A && b.c < S.e8[i] && b.c < b.o && S.rs[i] < 60 && S.rs[i] > 35) cands.push(['pullback', -1, Math.max(b.h, S.e21[i])]);
-    for (const z of obs) {
-      if (z.i + 2 > i) break; if (z.broken != null && z.broken <= i) continue; if (i - z.i > 200) continue;
+    while (obP < obs.length && i - obs[obP].i > 200) obP++;   // vùng quá cũ (> 200 nến) vốn bị bỏ qua, nhảy qua cho nhanh
+    for (let q = obP; q < obs.length; q++) {
+      const z = obs[q]; if (z.i + 2 > i) break; if (z.broken != null && z.broken <= i) continue; if (i - z.i > 200) continue;
       if (z.kind === 'buy' && b.l <= z.top && b.c > z.top && b.c > b.o && S.fN[i] > -0.2) { cands.push(['sd', 1, z.bot]); break; }
       if (z.kind === 'sell' && b.h >= z.bot && b.c < z.bot && b.c < b.o && S.fN[i] < 0.2) { cands.push(['sd', -1, z.top]); break; }
     }
-    for (const g of fvgs) {
-      if (g.i + 1 > i) break; if (g.filled != null && g.filled <= i) continue; if (i - g.i > 60) continue;
+    while (fvP < fvgs.length && i - fvgs[fvP].i > 60) fvP++;
+    for (let q = fvP; q < fvgs.length; q++) {
+      const g = fvgs[q]; if (g.i + 1 > i) break; if (g.filled != null && g.filled <= i) continue; if (i - g.i > 60) continue;
       if (g.kind === 'buy' && S.trend[i] > 0 && b.l <= g.top && b.c > g.top && b.c > b.o) { cands.push(['fvg', 1, g.bot]); break; }
       if (g.kind === 'sell' && S.trend[i] < 0 && b.h >= g.bot && b.c < g.bot && b.c < b.o) { cands.push(['fvg', -1, g.top]); break; }
     }
@@ -911,11 +918,64 @@ function planFor(bars, i, dir, A, slRef) {
   return p;
 }
 // R của lệnh đã đóng: dừng lỗ −1R; chạm TP1 rồi về hòa vốn +0,5R (chốt nửa ở TP1); chạm TP2 +1,5R
-const R_OF = { sl: -1, be: 0.5, tp2: 1.5 };
-function statsOf(list) {
+// Lệnh đã chạm TP1 nhưng chưa đóng (tp1run): nửa lệnh đã chốt +1R, nửa còn lại dừng lỗ ở giá vào, nên chắc chắn ≥ +0,5R → tính +0,5R.
+const R_OF = { sl: -1, be: 0.5, tp1run: 0.5, tp2: 1.5 };
+// cost: chi phí khứ hồi mỗi lệnh tính bằng giá (spread + phí), trừ vào R theo khoảng dừng lỗ của từng lệnh.
+// days: số ngày giao dịch của giai đoạn kiểm tra (để ra R/ngày).
+function statsOf(list, cost = 0, days = 0) {
   const done = list.filter((s) => s.result in R_OF), wins = done.filter((s) => s.result !== 'sl').length;
-  const R = done.reduce((a, s) => a + R_OF[s.result], 0);
-  return { n: list.length, done: done.length, wins, rate: done.length ? (wins / done.length) * 100 : null, R, avgR: done.length ? R / done.length : null, run: list.length - done.length };
+  const rs = done.map((s) => R_OF[s.result] - cost / Math.max(1e-9, Math.abs(s.entry - s.sl)));
+  const R = rs.reduce((a, x) => a + x, 0);
+  let eq = 0, pk = 0, dd = 0, gp = 0, gl = 0;
+  for (const x of rs) { eq += x; pk = Math.max(pk, eq); dd = Math.max(dd, pk - eq); if (x > 0) gp += x; else gl -= x; }
+  return { n: list.length, done: done.length, wins, rate: done.length ? (wins / done.length) * 100 : null, R, avgR: done.length ? R / done.length : null,
+    run: list.length - done.length, perDay: days ? R / days : null, perDayN: days ? done.length / days : null, pf: gl ? gp / gl : null, dd };
+}
+
+// ================================================================ THỐNG KÊ DÀI HẠN (backtest trong trình duyệt)
+// Bảng thống kê không dùng 300 nến trên biểu đồ (quá ít lệnh, số nhảy theo giờ mở trang) mà tải tối đa 8 × 1.500 nến
+// của khung đang xem: H4 ≈ 5 năm (XAUUSDT mới có từ 12/2025), H1 ≈ 1,4 năm, M15 ≈ 4 tháng, M5 ≈ 6 tuần, M1 ≈ 8 ngày.
+// Vàng: bỏ lệnh rơi vào giờ MT5 đóng cửa (21:00 UTC thứ Sáu → 22:00 UTC Chủ nhật), ngày giao dịch = thứ Hai–thứ Sáu.
+const BT = { key: '', bars: null, at: 0, loading: '', err: '', memo: null };
+const isGold = () => /XAU|PAXG/.test(SYMBOL);
+const mt5Open = (t) => { const d = new Date(t * 1000), w = d.getUTCDay(), h = d.getUTCHours(); return !(w === 6 || (w === 5 && h >= 21) || (w === 0 && h < 22)); };
+const tradeDays = (bars) => {
+  const s = new Set(); for (const b of bars) { const w = new Date(b.t * 1000).getUTCDay(); if (!isGold() || (w >= 1 && w <= 5)) s.add(Math.floor(b.t / 86400)); }
+  return s.size;
+};
+const BT_CFG = (() => { try { return Object.assign({ risk: 1, cost: {} }, JSON.parse(localStorage.getItem('tv-bt') || '{}')); } catch { return { risk: 1, cost: {} }; } })();
+const saveBT = () => { try { localStorage.setItem('tv-bt', JSON.stringify(BT_CFG)); } catch {} };
+// Chi phí mặc định: vàng 0,3 giá (spread MT5 thường gặp); crypto 0,04% giá
+const costOf = () => { const v = BT_CFG.cost[SYMBOL]; if (v != null && isFinite(v)) return +v; const lb = DATA.M1[DATA.M1.length - 1]; return isGold() ? 0.3 : +(((lb ? lb.c : 0) * 0.0004).toPrecision(2)); };
+async function loadBT() {
+  const tf = state.tf, key = `${SYMBOL}|${tf}|${SRC.mode}`;
+  if (REPLAY) return;
+  if (SRC.mode !== 'live') { if (BT.key !== key || !BT.bars) { BT.key = key; BT.bars = DATA[tf].slice(); BT.at = Date.now(); BT.memo = null; } return; }
+  if (BT.key === key && BT.bars && Date.now() - BT.at < 30 * 60000) return;
+  if (BT.loading === key) return;
+  BT.loading = key; BT.err = ''; if (BT.key !== key) { BT.bars = null; BT.memo = null; }
+  BT.key = key; renderSig();
+  try {
+    const A = api(); let end = null, rows = [];
+    for (let p = 0; p < 8; p++) {
+      const page = await getJSON(`${A.kl}?symbol=${SYMBOL}&interval=${BINANCE_TF[tf]}&limit=1500${end ? `&endTime=${end}` : ''}`, A.hosts);
+      if (BT.loading !== key) return;                                   // người dùng đã đổi khung/mã
+      rows = page.concat(rows); if (page.length < 1500) break; end = page[0][0] - 1;
+    }
+    BT.bars = rows.map((x) => { const v = +x[5], tb = +x[9]; return { t: x[0] / 1000, o: +x[1], h: +x[2], l: +x[3], c: +x[4], v, d: 2 * tb - v }; });
+    BT.at = Date.now(); BT.memo = null;
+  } catch (e) { BT.err = e.message || 'lỗi tải'; }
+  if (BT.loading === key) BT.loading = '';
+  renderSig(); if (state.an[state.tf]) renderPlanCard(state.an[state.tf]);
+}
+// Chạy 8 chiến lược trên lịch sử dài (nhớ kết quả theo cấu hình để không tính lại mỗi lần vẽ)
+function btResult() {
+  if (!BT.bars || BT.key !== `${SYMBOL}|${state.tf}|${SRC.mode}` || BT.bars.length < 80) return null;
+  const mk = JSON.stringify(stratCfg) + BT.at;
+  if (BT.memo && BT.memo.mk === mk) return BT.memo;
+  const sigs = runStrategies(BT.bars, 0).filter((s) => !isGold() || mt5Open(s.t));
+  BT.memo = { mk, sigs, days: tradeDays(BT.bars), from: BT.bars[0].t, to: BT.bars[BT.bars.length - 1].t };
+  return BT.memo;
 }
 
 // Giờ VN; nến không thuộc hôm nay thì thêm ngày/tháng
@@ -925,9 +985,23 @@ function whenTxt(t) {
 }
 function renderSig() {
   const el = $('#p-sig'); if (!el) return;
-  const sigs = state.sigs || []; const all = statsOf(sigs);
-  const by = Object.fromEntries(STRATS.map((s) => [s.k, statsOf(sigs.filter((x) => x.strat === s.k))]));
+  loadBT();
+  const ae = document.activeElement; if (ae && (ae.id === 'bt-cost' || ae.id === 'bt-risk') ) return; // đang gõ số, chưa vẽ lại
+  const bt = btResult(); const cost = costOf(), risk = BT_CFG.risk;
+  const sigs = bt ? bt.sigs : []; const days = bt ? bt.days : 0;
+  const all = statsOf(sigs, cost, days);
+  const by = Object.fromEntries(STRATS.map((s) => [s.k, statsOf(sigs.filter((x) => x.strat === s.k), cost, days)]));
   const pct = (x) => (x == null ? '—' : `${f0(x)}%`), rr = (x) => (x == null ? '—' : `${x >= 0 ? '+' : ''}${f2(x)}R`);
+  const cls = (x) => (x > 0 ? 'up' : x < 0 ? 'down' : '');
+  const dTxt = (t) => new Date((t + VN) * 1000).toISOString().slice(0, 10).split('-').reverse().join('/');
+  const period = bt ? `${dTxt(bt.from)} → ${dTxt(bt.to)} · ${days} ngày giao dịch · ${f0(BT.bars.length)} nến` : '';
+  const status = REPLAY ? 'Đang xem lại: thống kê dài hạn tạm dừng.'
+    : BT.loading ? 'Đang tải lịch sử dài để thống kê…'
+    : BT.err ? `Không tải được lịch sử dài (${BT.err}).` : !bt ? 'Chưa đủ dữ liệu để thống kê.' : '';
+  const pctDay = all.perDay != null ? all.perDay * risk : null;
+  const warn = bt && all.done >= 30 && all.avgR < 0
+    ? `<p class="note down" style="margin:6px 0 0"><b>Khung ${state.tf} đang lỗ sau chi phí</b> trong giai đoạn kiểm tra (${rr(all.avgR)} mỗi lệnh). Không nên vào lệnh theo tín hiệu ở khung này.</p>`
+    : bt && all.done < 100 ? `<p class="note" style="margin:6px 0 0">Mới có ${all.done} lệnh, mẫu còn ít: con số dễ thay đổi.</p>` : '';
   const grpTxt = { trend: 'Xu hướng', range: 'Đi ngang', both: 'Mọi lúc' };
   const filt = state.sigFilter || 'all';
   const rows = sigs.slice().reverse().filter((s) => filt === 'all' || (filt === 'run' ? !(s.result in R_OF) : s.result in R_OF)).slice(0, 40);
@@ -936,18 +1010,30 @@ function renderSig() {
   <div class="card">
     <div class="card-h"><h3><i></i>Chiến lược · ${state.tf}</h3><div class="seg" id="smode"><button type="button" data-m="auto" class="${stratCfg.mode === 'auto' ? 'on' : ''}">AUTO</button><button type="button" data-m="manual" class="${stratCfg.mode === 'manual' ? 'on' : ''}">Thủ công</button></div></div>
     <p class="note" style="margin:0 0 6px">${stratCfg.mode === 'auto' ? 'AUTO: khi thị trường có xu hướng chỉ chạy nhóm Xu hướng, khi đi ngang chỉ chạy nhóm Đi ngang; nhóm Mọi lúc luôn chạy.' : 'Thủ công: chạy mọi chiến lược đang bật, không lọc theo trạng thái thị trường.'}</p>
-    <div class="tbl-wrap"><table class="st-tbl"><thead><tr><th>Chiến lược</th><th>Nhóm</th><th>Lệnh</th><th>Chạm TP1</th><th>R TB</th></tr></thead><tbody>
-    ${STRATS.map((s) => { const x = by[s.k]; return `<tr title="${s.desc}"><td><label class="st-name"><input type="checkbox" data-st="${s.k}" id="st-${s.k}" ${stratCfg.on[s.k] ? 'checked' : ''}><span><b>${s.name}</b> <span class="faint">${s.code}</span></span></label></td><td class="muted">${grpTxt[s.grp]}</td><td class="num">${x.n}</td><td class="num">${pct(x.rate)}</td><td class="num ${x.avgR > 0 ? 'up' : x.avgR < 0 ? 'down' : ''}">${rr(x.avgR)}</td></tr>`; }).join('')}
+    <div class="tbl-wrap"><table class="st-tbl"><thead><tr><th>Chiến lược</th><th>Nhóm</th><th>Lệnh</th><th>Chạm TP1</th><th>R/lệnh</th><th>R/ngày</th></tr></thead><tbody>
+    ${STRATS.map((s) => { const x = by[s.k]; return `<tr title="${s.desc}"><td><label class="st-name"><input type="checkbox" data-st="${s.k}" id="st-${s.k}" ${stratCfg.on[s.k] ? 'checked' : ''}><span><b>${s.name}</b> <span class="faint">${s.code}</span></span></label></td><td class="muted">${grpTxt[s.grp]}</td><td class="num">${x.done}</td><td class="num">${pct(x.rate)}</td><td class="num ${cls(x.avgR)}">${rr(x.avgR)}</td><td class="num ${cls(x.perDay)}">${rr(x.perDay)}</td></tr>`; }).join('')}
     </tbody></table></div>
+    <p class="note" style="margin:6px 0 0">Thống kê dài hạn ${period ? `trên ${period}` : ''}${status ? ` · ${status}` : ''}</p>
   </div>
   <div class="card">
-    <div class="card-h"><h3><i></i>Tổng hợp</h3><span class="pill">${state.tf} · ${DATA[state.tf].length} nến</span></div>
+    <div class="card-h"><h3><i></i>Tổng hợp</h3><span class="pill">${state.tf} · ${stratCfg.mode === 'auto' ? 'AUTO' : 'Thủ công'}</span></div>
     <div class="score-grid">
       <div><span>Lệnh đã đóng</span><b class="num">${all.done}</b></div>
       <div><span>Chạm TP1</span><b class="num ${all.rate >= 50 ? 'up' : all.rate != null ? 'down' : ''}">${pct(all.rate)}</b></div>
-      <div><span>Tổng R</span><b class="num ${all.R > 0 ? 'up' : all.R < 0 ? 'down' : ''}">${rr(all.done ? all.R : null)}</b></div>
+      <div><span>R mỗi lệnh</span><b class="num ${cls(all.avgR)}">${rr(all.avgR)}</b></div>
+      <div><span>Lệnh mỗi ngày</span><b class="num">${all.perDayN == null ? '—' : f2(all.perDayN)}</b></div>
+      <div><span>R mỗi ngày</span><b class="num ${cls(all.perDay)}">${rr(all.perDay)}</b></div>
+      <div><span>%/ngày (rủi ro ${f2(risk)}%)</span><b class="num ${cls(pctDay)}">${pctDay == null ? '—' : `${pctDay >= 0 ? '+' : ''}${f2(pctDay)}%`}</b></div>
+      <div><span>Tổng R</span><b class="num ${cls(all.R)}">${rr(all.done ? all.R : null)}</b></div>
+      <div><span>Hệ số lợi nhuận</span><b class="num ${all.pf >= 1 ? 'up' : all.pf != null ? 'down' : ''}">${all.pf == null ? '—' : f2(all.pf)}</b></div>
+      <div><span>Sụt vốn lớn nhất</span><b class="num down">${all.done ? `${f2(all.dd)}R` : '—'}</b></div>
     </div>
-    <p class="note">Mỗi lệnh: dừng lỗ = 1R, chốt nửa ở TP1 (1R) rồi dời dừng lỗ về giá vào, nửa còn lại chốt ở TP2 (2R). Tính lại trên nến đã tải, chưa trừ phí và chênh lệch giá; quá khứ không bảo đảm tương lai.</p>
+    <div class="bt-in">
+      <label>Chi phí mỗi lệnh (giá) <input type="number" step="0.05" min="0" id="bt-cost" value="${cost}"></label>
+      <label>Rủi ro mỗi lệnh (%) <input type="number" step="0.25" min="0.1" max="10" id="bt-risk" value="${risk}"></label>
+    </div>
+    ${warn}
+    <p class="note">Mỗi lệnh: dừng lỗ = 1R, chốt nửa ở TP1 (1R) rồi dời dừng lỗ về giá vào, nửa còn lại chốt ở TP2 (2R). Đã trừ chi phí khứ hồi (spread + phí) theo khoảng dừng lỗ từng lệnh. Lệnh đã chạm TP1 mà chưa đóng tính +0,5R (phần đã chốt). ${isGold() ? 'Bỏ lệnh rơi vào giờ MT5 đóng cửa cuối tuần. ' : ''}Nhiều chiến lược có thể vào lệnh cùng lúc nên rủi ro thực tế có lúc gấp vài lần mức đặt. Quá khứ không bảo đảm tương lai.</p>
   </div>
   <div class="card">
     <div class="card-h"><h3><i></i>Lịch sử tín hiệu</h3><div class="seg" id="sfilter"><button type="button" data-f="all" class="${filt === 'all' ? 'on' : ''}">Tất cả</button><button type="button" data-f="run" class="${filt === 'run' ? 'on' : ''}">Đang chạy ${all.run}</button><button type="button" data-f="done" class="${filt === 'done' ? 'on' : ''}">Đã đóng</button></div></div>
@@ -962,7 +1048,10 @@ function bindSig() {
     if (m) { stratCfg.mode = m.dataset.m; saveStrat(); setData(false); }
     if (f) { state.sigFilter = f.dataset.f; renderSig(); }
   });
-  $('#p-sig').addEventListener('change', (e) => { const c = e.target.closest('[data-st]'); if (c) { stratCfg.on[c.dataset.st] = c.checked ? 1 : 0; saveStrat(); setData(false); } });
+  $('#p-sig').addEventListener('change', (e) => {
+    if (e.target.id === 'bt-cost') { const v = parseFloat(e.target.value); if (v >= 0) { BT_CFG.cost[SYMBOL] = v; saveBT(); } e.target.blur(); renderSig(); if (state.an[state.tf]) renderPlanCard(state.an[state.tf]); return; }
+    if (e.target.id === 'bt-risk') { const v = parseFloat(e.target.value); if (v > 0 && v <= 10) { BT_CFG.risk = v; saveBT(); } e.target.blur(); renderSig(); return; }
+    const c = e.target.closest('[data-st]'); if (c) { stratCfg.on[c.dataset.st] = c.checked ? 1 : 0; saveStrat(); setData(false); } });
 }
 function notifySignals() {
   if (REPLAY) return;
@@ -1057,11 +1146,11 @@ function renderPlanCard(a) {
     return `<div class="pc-row"><span class="${k === 'sell' ? 'down' : 'up'}">${k === 'sell' ? 'Vùng bán' : 'Vùng mua'}</span><b class="num">${f2(z.bot)}–${f2(z.top)}</b><span class="faint">${dist <= 0 ? 'giá đang trong vùng' : `cách ${f2(dist)} giá`}</span><span class="pill ${z.touches ? 'wait' : ''}">${st}</span></div>`;
   };
   const s = state.sigs && state.sigs[state.sigs.length - 1];
-  const done = (state.sigs || []).filter((x) => !['run', 'tp1run'].includes(x.result));
-  const wins = done.filter((x) => ['tp1', 'tp2', 'be'].includes(x.result)).length;
+  const bt = btResult(); const st = bt ? statsOf(bt.sigs, costOf(), bt.days) : null;
   const plan = s ? `Lệnh gần nhất: <b class="${s.dir > 0 ? 'up' : 'down'}">${s.dir > 0 ? 'MUA' : 'BÁN'} ${hhmm(s.t)}</b> tại ${f2(s.entry)} · SL ${f2(s.sl)} · TP1 ${f2(s.tp1)} · TP2 ${f2(s.tp2)} · <b>${RESULT_TXT[s.result]}</b>` : 'Chưa có tín hiệu nào đạt đủ điều kiện trên khung này.';
-  const stats = done.length ? `${done.length} lệnh đã đóng trên ${state.tf}: ${wins} lệnh chạm TP1 (${f0((wins / done.length) * 100)}%)` : '';
-  $('#plan-body').innerHTML = zl(S, 'sell') + zl(B, 'buy') + `<div class="pc-plan">${plan}</div>` + (stats ? `<div class="pc-plan faint">${stats} · tính lại trên dữ liệu đã tải, chỉ để tham khảo</div>` : '');
+  const rr = (x) => `${x >= 0 ? '+' : ''}${f2(x)}R`;
+  const stats = st && st.done ? `Thống kê ${state.tf} (${bt.days} ngày, ${st.done} lệnh, đã trừ chi phí): chạm TP1 ${f0(st.rate)}% · <b class="${st.avgR >= 0 ? 'up' : 'down'}">${rr(st.avgR)} mỗi lệnh, ${rr(st.perDay)} mỗi ngày</b>` : '';
+  $('#plan-body').innerHTML = zl(S, 'sell') + zl(B, 'buy') + `<div class="pc-plan">${plan}</div>` + (stats ? `<div class="pc-plan faint">${stats} · chỉ để tham khảo</div>` : '');
 }
 
 function drawOverlay() {
@@ -1273,7 +1362,7 @@ function renderTiming(all) {
   $('#timing-verdict').textContent = verdict[0]; $('#timing-verdict').className = `big ${verdict[2]}`;
   $('#timing-note').textContent = `${verdict[3]} Ô này chỉ để tham khảo, không đổi tín hiệu.`;
   $('#timing-score').textContent = `${5 - reds - yellows}/5`;
-  state.newsLock = nw.mins <= 30;
+  state.newsLock = !!nw && nw.mins <= 30;
 }
 
 // RADAR: 5 điểm thành phần → tỷ lệ MUA/CHỜ/BÁN, EDGE, điểm, rồi so với ngưỡng của chế độ đang chọn.
