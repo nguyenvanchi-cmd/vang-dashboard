@@ -201,6 +201,17 @@ tr:last-child td{border-bottom:0}
 }
 @media (max-width:420px){#px-chg{display:none}.top{gap:6px;padding:8px}}
 
+/* ---------- lịch tin */
+.cal-day{font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--faint);padding:8px 0 2px;text-transform:uppercase}
+.cal-row{display:grid;grid-template-columns:40px 8px 32px minmax(0,1fr) auto;gap:6px;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px dashed var(--line)}
+.cal-row.past{opacity:.45}
+.cal-row .imp{width:8px;height:8px;border-radius:50%}
+.cal-row .imp.high{background:var(--down)}.cal-row .imp.med{background:var(--wait)}
+.cal-row .cur{font-weight:800;font-size:11px;color:var(--muted)}
+.cal-t{font-weight:650;min-width:0}
+.cal-t small{display:block;font-size:10.5px;color:var(--faint);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:420px){.cal-row{grid-template-columns:38px 8px 30px minmax(0,1fr)}.cal-row>small{grid-column:4}}
+
 /* ---------- giao diện sáng */
 :root[data-theme="light"]{
   --bg:#f5f7fb;--bg2:#ffffff;--panel:#ffffff;--panel2:#f0f3f8;--line:#e2e7ef;--line2:#cfd7e3;
@@ -367,6 +378,11 @@ tr:last-child td{border-bottom:0}
           <div id="comps" style="margin-top:8px"></div>
           <p class="note" id="radar-note"></p>
           <p class="note">Bản demo: điểm số tính từ dữ liệu mô phỏng, chỉ để minh họa giao diện.</p>
+        </div>
+        <div class="card" id="macro-card">
+          <div class="card-h"><h3><i></i>4. Vĩ mô: DXY và lịch tin</h3><span class="faint" id="macro-upd" style="font-size:11px"></span></div>
+          <div id="dxy-box"></div>
+          <div id="cal-box" style="margin-top:8px"></div>
         </div>
       </div>
 
@@ -1169,6 +1185,7 @@ function renderMulti() {
 
   renderTiming(all, lead);
   renderScores(all);
+  renderMacro();
   checkAlerts(all);
 }
 
@@ -1176,6 +1193,16 @@ function renderMulti() {
 const NEWS = [[19, 30, 'Đơn trợ cấp thất nghiệp Mỹ'], [21, 0, 'Niềm tin tiêu dùng Mỹ'], [1, 0, 'Biên bản họp Fed'], [9, 30, 'CPI Trung Quốc']];
 function vnNow() { const d = new Date((Date.now() / 1000 + VN) * 1000); return { h: d.getUTCHours(), m: d.getUTCMinutes() }; }
 function nextNews() {
+  const real = MACRO && MACRO.calendar ? MACRO.calendar : null;
+  if (real) {
+    const now = Date.now() / 1000;
+    // tin USD đang diễn ra (trong 15 phút sau giờ ra) hoặc sắp tới; ưu tiên tin mức Cao
+    const up = real.filter((e) => e.cur === 'USD' && e.t > now - 900).sort((x, y) => x.t - y.t);
+    const hi = up.find((e) => e.imp === 'high'), md = up.find((e) => e.imp === 'med');
+    const pick = hi && (!md || hi.t - now < 6 * 3600 || md.t >= hi.t) ? hi : md;
+    if (!pick) return null;
+    return { name: pick.vi || pick.title, at: whenTxt(pick.t), mins: Math.round((pick.t - now) / 60), imp: pick.imp, real: true };
+  }
   const { h, m } = vnNow(); const now = h * 60 + m;
   return NEWS.map(([hh, mm, name]) => { let d = hh * 60 + mm - now; if (d < 0) d += 1440; return { name, at: `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`, mins: d }; })
     .sort((x, y) => x.mins - y.mins)[0];
@@ -1199,8 +1226,14 @@ function renderTiming(all) {
   else rows.push(['yellow', 'Phiên', 'Cuối phiên Mỹ: thanh khoản giảm dần']);
   // 2. Tin mạnh
   const nw = nextNews();
-  const nwTxt = `${nw.name} lúc ${nw.at} (còn ${nw.mins >= 60 ? `${Math.floor(nw.mins / 60)}h${String(nw.mins % 60).padStart(2, '0')}` : `${nw.mins} phút`}) · lịch minh họa`;
-  rows.push([nw.mins <= 30 ? 'red' : nw.mins <= 60 ? 'yellow' : 'green', 'Tin', nwTxt]);
+  if (!nw) rows.push(['green', 'Tin', 'Không còn tin USD đáng chú ý trong lịch tuần này']);
+  else {
+    const left = nw.mins < 0 ? `vừa ra ${-nw.mins} phút trước` : `còn ${nw.mins >= 1440 ? `${Math.floor(nw.mins / 1440)} ngày` : nw.mins >= 60 ? `${Math.floor(nw.mins / 60)}h${String(nw.mins % 60).padStart(2, '0')}` : `${nw.mins} phút`}`;
+    const nwTxt = `${nw.name}${nw.real ? (nw.imp === 'high' ? ' (mạnh)' : ' (vừa)') : ''} lúc ${nw.at} (${left})${nw.real ? '' : ' · lịch minh họa'}`;
+    const near = nw.mins <= 30, soon = nw.mins <= 60;
+    const col = nw.real && nw.imp === 'med' ? (nw.mins <= 15 ? 'yellow' : 'green') : near ? 'red' : soon ? 'yellow' : 'green';
+    rows.push([col, 'Tin', nwTxt]);
+  }
   // 3. Quãng đường trong ngày so với biên độ trung bình (ADR 14 ngày)
   const adr = d1.bars.slice(-15, -1).reduce((s, b) => s + (b.h - b.l), 0) / 14;
   const today = d1.bars[d1.bars.length - 1]; const used = ((today.h - today.l) / adr) * 100;
@@ -1327,6 +1360,12 @@ function renderNoti() {
   $('#p-noti').innerHTML = `<div class="card"><div class="card-h"><h3><i></i>Thông báo</h3><button class="ghost" type="button" id="noti-clear">Xóa hết</button></div>
     ${state.notis.length ? state.notis.map((x) => `<div class="noti"><span class="pill ${x.kind === 'buy' ? 'buy' : x.kind === 'sell' ? 'sell' : 'wait'}">${x.kind === 'buy' ? 'MUA' : x.kind === 'sell' ? 'BÁN' : 'CHỜ'}</span><span>${x.text}</span><time>${x.t}</time></div>`).join('') : '<div class="empty">Chưa có thông báo. Thông báo xuất hiện khi tín hiệu M5, M15, H1 đổi chiều hoặc giá chạm vùng.</div>'}</div>`;
   const c = $('#noti-clear'); if (c) c.onclick = () => { state.notis = []; state.unread = 0; renderNoti(); };
+  $('#p-noti').insertAdjacentHTML('beforeend', `<div class="card"><div class="card-h"><h3><i></i>Cảnh báo Telegram</h3><span class="pill ${TELEGRAM_URL ? 'buy' : 'wait'}">${TELEGRAM_URL ? 'ĐANG BẬT' : 'CHƯA BẬT'}</span></div>
+    <p class="note" style="margin-top:0">Máy chủ GitHub tự tính phiếu tổng đa khung của PAXG khoảng 10 phút một lần (cùng luật với trang này) và gửi tin vào Telegram khi:</p>
+    <div class="trow"><i style="background:var(--accent)"></i><span>Phiếu tổng</span><b>đổi trạng thái MUA/BÁN mạnh, yếu hoặc về CHỜ</b></div>
+    <div class="trow"><i style="background:var(--down)"></i><span>Tin mạnh</span><b>còn khoảng 30 phút tới tin USD mức Cao</b></div>
+    ${TELEGRAM_URL ? `<a class="ghost" style="display:inline-block;margin-top:8px;text-decoration:none" href="${TELEGRAM_URL}" target="_blank" rel="noopener">Tham gia kênh Telegram ↗</a>` : '<p class="note">Kênh nhận cảnh báo đang được thiết lập.</p>'}
+    <p class="note">Thông báo trong trang (ô phía trên) chỉ hiện khi đang mở trang; Telegram vẫn nhận khi tắt máy. Chỉ để tham khảo, không phải tín hiệu giao dịch.</p></div>`);
 }
 
 // ================================================================ EA (minh họa)
@@ -1490,6 +1529,64 @@ function bindShell() {
   setInterval(loadQuotes, 20000);
 }
 
+// ================================================================ VĨ MÔ (giai đoạn 5): lịch tin thật, DXY, Telegram
+const TELEGRAM_URL = ''; // điền link kênh Telegram (vd https://t.me/ten_kenh) khi đã tạo kênh
+let MACRO = null;
+async function loadMacro() {
+  try {
+    const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 8000);
+    const r = await fetch(`../data/macro.json?t=${Math.floor(Date.now() / 600000)}`, { signal: ctl.signal, cache: 'no-store' });
+    clearTimeout(to); if (!r.ok) throw new Error(r.status);
+    MACRO = await r.json();
+  } catch { /* trang chạy ngoài website (bản xem trên Claude) thì dùng lịch minh họa */ }
+  renderMacro();
+}
+const DOW = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+const vnDay = (t) => { const d = new Date((t + VN) * 1000); return `${DOW[d.getUTCDay()]} ${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`; };
+function corrDxy() {
+  const dx = MACRO && MACRO.dxy && MACRO.dxy.daily; if (!dx || !DATA.D1.length) return null;
+  const g = new Map(DATA.D1.map((b) => [new Date(b.t * 1000).toISOString().slice(0, 10), b.c]));
+  const pairs = dx.filter(([d]) => g.has(d)).map(([d, v]) => [v, g.get(d)]);
+  const ra = [], rb = [];
+  for (let i = 1; i < pairs.length; i++) { ra.push(Math.log(pairs[i][0] / pairs[i - 1][0])); rb.push(Math.log(pairs[i][1] / pairs[i - 1][1])); }
+  const n = Math.min(30, ra.length); if (n < 10) return null;
+  const a = ra.slice(-n), b = rb.slice(-n), ma = a.reduce((s, x) => s + x, 0) / n, mb = b.reduce((s, x) => s + x, 0) / n;
+  let sab = 0, saa = 0, sbb = 0; for (let i = 0; i < n; i++) { sab += (a[i] - ma) * (b[i] - mb); saa += (a[i] - ma) ** 2; sbb += (b[i] - mb) ** 2; }
+  return { r: sab / Math.sqrt(saa * sbb || 1), n };
+}
+function renderMacro() {
+  const dxb = $('#dxy-box'), cb = $('#cal-box'); if (!dxb) return;
+  if (!MACRO) {
+    $('#macro-upd').textContent = '';
+    dxb.innerHTML = '<p class="note" style="margin:0">Bản xem này không tải được dữ liệu vĩ mô; ô "Tin" ở trên đang dùng lịch minh họa. Mở bản trên website để xem DXY và lịch tin thật.</p>';
+    cb.innerHTML = ''; return;
+  }
+  const upd = (MACRO.dxy_updated || MACRO.updated || '').slice(5, 16).replace('T', ' ').replace(/^(\d\d)-(\d\d)/, '$2/$1');
+  $('#macro-upd').textContent = upd ? `cập nhật ${upd}` : '';
+  const D = MACRO.dxy;
+  if (D && D.hourly && D.hourly.length > 5) {
+    const ch = D.prev ? ((D.last - D.prev) / D.prev) * 100 : 0;
+    const pts = D.hourly.map((x) => x[1]); const mn = Math.min(...pts), mx = Math.max(...pts), sp = mx - mn || 1;
+    const poly = pts.map((p, i) => `${((i / (pts.length - 1)) * 300).toFixed(1)},${(40 - ((p - mn) / sp) * 36).toFixed(1)}`).join(' ');
+    const col = ch >= 0 ? 'var(--up)' : 'var(--down)';
+    const cr = corrDxy(); const P = PROD();
+    const crTxt = cr ? `Tương quan lợi nhuận ngày DXY với ${P.code} (${cr.n} phiên): <b class="${cr.r < -0.2 ? 'down' : cr.r > 0.2 ? 'up' : ''}">${cr.r >= 0 ? '+' : ''}${cr.r.toFixed(2)}</b>${cr.r < -0.3 ? ' · ngược chiều rõ: DXY tăng thường kèm giá giảm' : cr.r > 0.3 ? ' · đang cùng chiều (bất thường với vàng)' : ' · liên hệ yếu gần đây'}` : '';
+    const bias = ch >= 0.15 ? `<span class="down">DXY tăng ${ch.toFixed(2)}%: bất lợi cho vàng</span>` : ch <= -0.15 ? `<span class="up">DXY giảm ${ch.toFixed(2)}%: hỗ trợ vàng</span>` : '<span class="muted">DXY đi ngang trong ngày</span>';
+    dxb.innerHTML = `<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font-size:13px">Chỉ số đô la DXY</b><b class="num" style="font-size:17px">${f2(D.last)}</b><span class="pill ${ch >= 0 ? 'buy' : 'sell'} num">${ch >= 0 ? '+' : ''}${ch.toFixed(2)}%</span></div>
+      <svg viewBox="0 0 300 42" preserveAspectRatio="none" style="width:100%;height:42px;display:block;margin-top:4px"><polyline points="${poly}" fill="none" stroke="${col}" stroke-width="1.8" vector-effect="non-scaling-stroke"/></svg>
+      <p class="note" style="margin-top:2px">${bias} · 5 ngày gần nhất, nến 1 giờ, trễ tối đa ~1 giờ.${crTxt ? `<br>${crTxt}` : ''}</p>`;
+  } else dxb.innerHTML = '<p class="note" style="margin:0">Chưa có dữ liệu DXY.</p>';
+  const now = Date.now() / 1000;
+  const list = (MACRO.calendar || []).filter((e) => e.t > now - 3 * 3600).slice(0, 10);
+  let lastDay = '';
+  cb.innerHTML = `<b style="font-size:13px">Lịch tin sắp tới (giờ VN)</b>` + (list.length ? list.map((e) => {
+    const day = vnDay(e.t); const head = day !== lastDay ? `<div class="cal-day">${day}</div>` : ''; lastDay = day;
+    const past = e.t < now; const fp = [e.forecast && `DB ${e.forecast}`, e.previous && `trước ${e.previous}`].filter(Boolean).join(' · ');
+    return `${head}<div class="cal-row ${past ? 'past' : ''}"><span class="num">${hhmm(e.t)}</span><i class="imp ${e.imp}" title="${e.imp === 'high' ? 'Tác động mạnh' : 'Tác động vừa'}"></i><span class="cur">${e.cur}</span><span class="cal-t">${e.vi || e.title}${e.vi ? `<small>${e.title}</small>` : ''}</span><small class="num faint">${fp}</small></div>`;
+  }).join('') : '<p class="note">Không còn tin đáng chú ý trong tuần này.</p>') +
+    '<p class="note">Chỉ lấy tin USD mức mạnh/vừa và tin mạnh của EUR, GBP, JPY, CNY. Nguồn: lịch kinh tế Forex Factory, DXY từ Yahoo Finance.</p>';
+}
+
 // ================================================================ ĐIỀU HƯỚNG
 function show(v) {
   state.view = v;
@@ -1548,6 +1645,7 @@ async function boot() {
   if (SRC.mode === 'live') { connectWS(); loadQuotes(); } else { setInterval(simTick, 1000); renderRail(); }
   setInterval(frame, 500);
   setInterval(renderMulti, 5000);
+  loadMacro().then(renderMulti); setInterval(loadMacro, 600000);
   setInterval(setSrcText, 15000);
 }
 boot();
