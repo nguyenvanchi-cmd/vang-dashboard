@@ -23,6 +23,29 @@
   };
   const isDark = () => document.documentElement.getAttribute('data-theme') !== 'light';
 
+  // ------------------------------------------------------------ thuật ngữ chuyên môn
+  // Dữ liệu cũ (và bản nhận định cũ) còn dùng Gốc/Thân/Ngọn, Mầm/Chín, Vạch an toàn…
+  // Hai hàm dưới đổi sang thuật ngữ phổ thông của thị trường lúc hiển thị.
+  const TERM = {
+    'Gốc': 'Dài hạn', 'Thân': 'Trung hạn', 'Ngọn': 'Ngắn hạn',
+    'Mầm': 'Chưa xác nhận', 'Chín': 'Đã xác nhận',
+  };
+  const term = (s) => TERM[String(s ?? '').trim()] || String(s ?? '');
+  const confirmed = (s) => /^(Chín|Đã xác nhận)$/.test(String(s ?? '').trim());
+  const PROSE = [
+    [/tầng Gốc/g, 'xu hướng dài hạn'], [/tầng Thân/g, 'xu hướng trung hạn'], [/tầng Ngọn/g, 'xu hướng ngắn hạn'],
+    [/Vạch an toàn/g, 'Điểm hòa vốn'], [/vạch an toàn/g, 'điểm hòa vốn'],
+    [/Hết hơi/g, 'Suy yếu động lượng'], [/hết hơi/g, 'suy yếu động lượng'],
+    [/Mua nền/g, 'Mua định kỳ (DCA)'], [/mua nền/g, 'mua định kỳ (DCA)'],
+    [/Mua xác nhận/g, 'Mua theo xu hướng'], [/mua xác nhận/g, 'mua theo xu hướng'],
+    [/Mua tiếp sức/g, 'Mua gia tăng'], [/mua tiếp sức/g, 'mua gia tăng'],
+    [/quỹ chờ/g, 'quỹ dự phòng'], [/Quỹ chờ/g, 'Quỹ dự phòng'],
+    [/chiến dịch 70–20–10/g, 'phân bổ vốn 70/20/10'], [/Chiến dịch 70–20–10/g, 'Phân bổ vốn 70/20/10'],
+    [/sát vạch/g, 'sát điểm hòa vốn'],
+    [/\b(là|có|vẫn|còn) Mầm\b/g, '$1 dấu hiệu sớm (chưa xác nhận) của việc'], [/\bMầm\b/g, 'dấu hiệu sớm'],
+  ];
+  const prose = (s) => PROSE.reduce((t, [re, to]) => t.replace(re, to), String(s ?? ''));
+
   const state = { d: {}, charts: {}, inited: {}, hist: { page: 0, rows: [] }, season: 'y10' };
 
   async function load(name) {
@@ -208,11 +231,11 @@
       b.className = `trend-badge ${dirClass(c.xu_huong)}`;
       b.classList.add(dirClass(c.xu_huong));
       $('#c-conf').textContent = `Mức tin cậy: ${c.tin_cay || '—'}`;
-      $('#c-summary').textContent = c.tom_tat || '';
+      $('#c-summary').textContent = prose(c.tom_tat || '');
       const tiers = Array.isArray(c.ba_tang) ? c.ba_tang : [];
-      $('#c-tiers').innerHTML = tiers.map((t) => `<div class="tier"><b>${esc(t.tang)}</b>
-        <span class="dir ${dirClass(t.huong)}">${esc(t.huong)}</span><span class="pill ${t.trang_thai === 'Chín' ? 'gold' : ''}">${esc(t.trang_thai)}</span>
-        <p>${esc(t.ly_do)}</p></div>`).join('');
+      $('#c-tiers').innerHTML = tiers.map((t) => `<div class="tier"><b>${esc(term(t.tang))}</b>
+        <span class="dir ${dirClass(t.huong)}">${esc(prose(t.huong))}</span><span class="pill ${confirmed(t.trang_thai) ? 'gold' : ''}">${esc(term(t.trang_thai))}</span>
+        <p>${esc(prose(t.ly_do))}</p></div>`).join('');
     } else {
       $('#c-date').textContent = dmy(s.date);
       const b = $('#c-trend');
@@ -293,7 +316,7 @@
     $('#mtf-body').innerHTML = rows.map((r) => `<tr class="${r.khung === '15m' ? 'hl' : ''}"><td><b>${esc(r.khung)}</b></td>
       <td class="${dirClass(r.xu_huong)}">${esc(r.xu_huong)}</td><td>${esc(r.gia_vs_ema)}</td><td class="num">${fmt(r.ema, 1)}</td>
       <td class="num ${cls(r.macd)}">${fmt(r.macd, 1)}<span class="cell-sub">${esc(r.macd_mo_ta)}</span></td>
-      <td>${esc(r.ho_tro)}</td><td>${esc(r.khang_cu)}</td><td>${esc(r.ghi_chu)}</td></tr>`).join('');
+      <td>${esc(r.ho_tro)}</td><td>${esc(r.khang_cu)}</td><td>${esc(prose(r.ghi_chu))}</td></tr>`).join('');
   }
 
   function renderCalendarNews() {
@@ -304,8 +327,8 @@
       <span class="stars" title="Mức độ ảnh hưởng">${'★'.repeat(Math.max(0, Math.min(3, Number(x.muc_do) || 0)))}</span></div>`).join('')
       : '<div class="notice">Chưa có lịch tin.</div>';
     const news = Array.isArray(c.tin_chon_loc) ? c.tin_chon_loc.slice().sort((a, b) => (a.thu_tu || 0) - (b.thu_tu || 0)) : [];
-    $('#news').innerHTML = news.length ? news.map((n) => `<div class="list-item"><span>${esc(n.tieu_de)}</span>
-      <span class="meta"><span class="pill">${esc(n.tang)}</span><span class="pill ${n.trang_thai === 'Chín' ? 'gold' : ''}">${esc(n.trang_thai)}</span>
+    $('#news').innerHTML = news.length ? news.map((n) => `<div class="list-item"><span>${esc(prose(n.tieu_de))}</span>
+      <span class="meta"><span class="pill">${esc(term(n.tang))}</span><span class="pill ${confirmed(n.trang_thai) ? 'gold' : ''}">${esc(term(n.trang_thai))}</span>
       <span class="pill ${dirClass(n.tac_dong)}">${esc(n.tac_dong)}</span>
       ${/^https:\/\//.test(n.url || '') ? `<a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer">${esc(n.nguon || 'Nguồn')}</a>` : esc(n.nguon || '')}</span></div>`).join('')
       : '<div class="notice">Chưa có tin chọn lọc.</div>';
@@ -432,8 +455,8 @@
     const s = state.d.summary || {};
     $('#q-range').textContent = `${dmy(s.stats_from || s.first_date)} – ${dmy(s.date)} · ${fmt(s.stats_rows || s.rows, 0)} phiên`;
     const tone = { 'mạnh': 'gold', 'khá': 'gold', 'vừa': '', 'yếu': 'flat' };
-    $('#insights').innerHTML = q.insights.map((x) => `<div class="insight ${x.active ? 'active' : ''}"><div class="insight-head"><b>${esc(x.title)}</b>
-      <span class="pill ${tone[x.strength] || ''}">Độ tin cậy: ${esc(x.strength)}</span></div><p>${esc(x.text)}</p></div>`).join('');
+    $('#insights').innerHTML = q.insights.map((x) => `<div class="insight ${x.active ? 'active' : ''}"><div class="insight-head"><b>${esc(prose(x.title))}</b>
+      <span class="pill ${tone[x.strength] || ''}">Độ tin cậy: ${esc(x.strength)}</span></div><p>${esc(prose(x.text))}</p></div>`).join('');
   }
 
   function renderEvents() {
@@ -494,9 +517,9 @@
     if (!q || !q.accumulation || !q.accumulation.length) { $('#acc').innerHTML = '<div class="notice">Chưa đủ dữ liệu.</div>'; return; }
     $('#acc').innerHTML = q.accumulation.map((a) => `<div style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:8px">${a.years} năm gần nhất · ${fmt(a.months, 0)} tháng · ${dmy(a.from)} – ${dmy(a.to)}</div>
       <div class="table-wrap"><table><thead><tr><th>Cách mua</th><th class="num">Giá vốn bình quân</th><th class="num">Lượng vàng</th><th class="num">Tổng tiền bỏ ra</th><th class="num">Giá trị cuối kỳ</th><th class="num">Lãi/lỗ</th><th class="num">Tiền chưa dùng</th></tr></thead>
-      <tbody>${a.rows.map((r, i) => `<tr class="${i === 0 ? 'base' : ''}"><td>${esc(r.label)}</td><td class="num">${fmt(r.avg_cost, 0)} USD/oz</td><td class="num">${fmt(r.oz, 2)} oz</td>
+      <tbody>${a.rows.map((r, i) => `<tr class="${i === 0 ? 'base' : ''}"><td>${esc(prose(r.label))}</td><td class="num">${fmt(r.avg_cost, 0)} USD/oz</td><td class="num">${fmt(r.oz, 2)} oz</td>
       <td class="num">${fmt(r.invested, 0)} USD</td><td class="num">${fmt(r.value, 0)} USD</td><td class="num ${cls(r.ret)}">${pct(r.ret, 1)}</td><td class="num">${fmt(r.cash_left, 0)} USD</td></tr>`).join('')}</tbody></table></div>
-      <p class="small faint" style="margin-top:6px">Số tháng có Mua xác nhận: ${fmt(a.events.mua_xac_nhan, 0)} · số lần dùng quỹ chờ: ${fmt(a.events.quy_cho, 0)}.</p></div>`).join('');
+      <p class="small faint" style="margin-top:6px">Số tháng có Mua theo xu hướng: ${fmt(a.events.mua_xac_nhan, 0)} · số lần dùng quỹ dự phòng: ${fmt(a.events.quy_cho, 0)}.</p></div>`).join('');
   }
 
   function renderMl() {

@@ -93,7 +93,7 @@
           <div class="list" id="calendar"></div>
         </div>
         <div class="card">
-          <div class="card-head"><h3>Tin chọn lọc</h3><span class="sub">Tầng · Mầm/Chín · tác động</span></div>
+          <div class="card-head"><h3>Tin chọn lọc</h3><span class="sub">Kỳ hạn · mức xác nhận · tác động</span></div>
           <div class="list" id="news"></div>
         </div>
       </div>
@@ -251,9 +251,9 @@
       </div>
 
       <div class="card">
-        <div class="card-head"><h3>Mua nền đều so với chiến dịch 70–20–10</h3><span class="sub">Mỗi tháng 1.000 USD, cùng tổng số tiền</span></div>
+        <div class="card-head"><h3>Mua định kỳ (DCA) so với phân bổ vốn 70/20/10</h3><span class="sub">Mỗi tháng 1.000 USD, cùng tổng số tiền</span></div>
         <div id="acc"></div>
-        <p class="small faint" style="margin-top:8px">Chiến dịch 70–20–10: 70% mua ngay đầu tháng (Mua nền); 20% để dành và chỉ mua khi giá trên EMA50 và EMA50 trên EMA200 (Mua xác nhận); 10% là quỹ chờ, chỉ dùng khi giá thấp hơn đỉnh 52 tuần từ 15% trở lên.</p>
+        <p class="small faint" style="margin-top:8px">Phân bổ vốn 70/20/10: 70% mua ngay đầu tháng (mua định kỳ); 20% để dành và chỉ mua khi giá trên EMA50 và EMA50 trên EMA200 (mua theo xu hướng); 10% là quỹ dự phòng, chỉ dùng khi giá thấp hơn đỉnh 52 tuần từ 15% trở lên.</p>
       </div>
     </section>
 
@@ -292,7 +292,7 @@
           <li>Chênh lệch giá trong nước so với thế giới: dùng giá giao ngay XAU/USD mà Claude ghi nhận trên TradingView buổi sáng (nếu có), nhân tỷ giá bán Vietcombank và hệ số 1,20565 (1 lượng = 1,20565 ounce).</li>
           <li>Tỷ giá USD/VND: Vietcombank (giá bán), dự phòng open.er-api.com.</li>
           <li>Giá vàng trong nước: website SJC và PNJ khi lấy được, cùng bảng giá Claude tổng hợp mỗi sáng từ các báo.</li>
-          <li>Phân tích 5 khung, 3 tầng và tin chọn lọc: Claude đọc biểu đồ TradingView và tin tức trong, ngoài nước lúc 6h42 mỗi sáng (thứ Hai đến thứ Bảy).</li>
+          <li>Phân tích 5 khung, xu hướng 3 kỳ hạn và tin chọn lọc: Claude đọc biểu đồ TradingView và tin tức trong, ngoài nước lúc 6h42 mỗi sáng (thứ Hai đến thứ Bảy).</li>
         </ul>
         <h4>Định lượng</h4>
         <ul>
@@ -300,14 +300,14 @@
           <li>Kiểm định chiến lược: quyết định ở phiên trước, áp dụng cho phiên sau (không nhìn trước tương lai). Có hai mức phí: 0,05% mỗi lần đổi trạng thái như thị trường thế giới, và 1,5% như chênh mua–bán ở tiệm vàng.</li>
           <li>Học máy: hai mô hình (hồi quy logistic và gradient boosting) học từ 17 dữ kiện kỹ thuật để đoán giá sau 5 phiên cao hay thấp hơn hôm nay. Kiểm tra theo kiểu trượt: mỗi năm chỉ dùng dữ liệu các năm trước để huấn luyện, bỏ 5 phiên giáp ranh để tránh rò rỉ thông tin. So sánh với cách đoán đơn giản là luôn chọn hướng phổ biến hơn.</li>
         </ul>
-        <h4>Thuật ngữ của kênh</h4>
+        <h4>Thuật ngữ</h4>
         <div class="glossary">
-          <div><b>Gốc · Thân · Ngọn</b>Xu hướng nhiều năm · pha vài tháng đến một năm · nhịp vài ngày đến vài tuần.</div>
-          <div><b>Mầm · Chín</b>Tin mới hé lộ, chưa xác nhận · tin đã có dữ kiện xác nhận.</div>
-          <div><b>Hết hơi</b>Đà yếu dần nhưng chưa đảo chiều; thường thấy khi giá tạo đáy mới mà MACD không xác nhận.</div>
-          <div><b>Vạch an toàn</b>Mức giá mà tiệm mua lại vàng của bạn đúng bằng số tiền bạn đã trả.</div>
-          <div><b>Mua nền · Mua xác nhận · Mua tiếp sức</b>Mua đều theo lịch · mua khi tầng Thân Chín theo hướng tăng · mua thêm tối đa 20% tiền lãi khi đã qua Vạch an toàn.</div>
-          <div><b>Quy tắc 70–20–10</b>70% cho Gốc, 20% cho Thân, 10% làm quỹ chờ.</div>
+          <div><b>Xu hướng dài hạn · trung hạn · ngắn hạn</b>Nhiều năm · vài tháng đến một năm · vài ngày đến vài tuần.</div>
+          <div><b>Chưa xác nhận · Đã xác nhận</b>Thông tin mới xuất hiện, chưa có số liệu kiểm chứng · thông tin đã có số liệu xác nhận.</div>
+          <div><b>Suy yếu động lượng (phân kỳ)</b>Đà giảm hoặc tăng yếu dần nhưng chưa đảo chiều; thường thấy khi giá tạo đáy mới mà MACD không tạo đáy mới.</div>
+          <div><b>Điểm hòa vốn</b>Mức giá mà tiệm mua lại vàng của bạn đúng bằng số tiền bạn đã trả (đã tính chênh lệch mua–bán).</div>
+          <div><b>Mua định kỳ (DCA) · Mua theo xu hướng · Mua gia tăng</b>Mua đều theo lịch · mua khi xu hướng trung hạn tăng và đã xác nhận · mua thêm tối đa 20% tiền lãi khi giá đã vượt điểm hòa vốn.</div>
+          <div><b>Phân bổ vốn 70/20/10</b>70% cho tích lũy dài hạn, 20% cho mua theo xu hướng trung hạn, 10% làm quỹ dự phòng.</div>
         </div>
         <h4>Lưu ý</h4>
         <p>Đây là nghiên cứu tham khảo, không phải khuyến nghị mua bán. Kết quả quá khứ không bảo đảm cho tương lai. Giá trong nước có thể khác giữa các cửa hàng và thay đổi trong ngày.</p>
