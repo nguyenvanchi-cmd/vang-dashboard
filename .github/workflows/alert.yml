@@ -29,7 +29,7 @@ jobs:
       - name: Tính phiếu tổng và kiểm tra tin sắp ra
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID: "@tramvang_canhbao"   # kênh công khai t.me/tramvang_canhbao (không cần giữ bí mật)
           ALERT_TEST: ${{ inputs.test && '1' || '0' }}
         run: python3 scripts/telegram_alert.py
 
