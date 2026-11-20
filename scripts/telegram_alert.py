@@ -2,7 +2,7 @@
 """Cảnh báo Telegram cho Terminal DEMO (chạy bằng GitHub Actions khoảng 10 phút một lần).
 
 Gửi tin khi:
-  1. Phiếu tổng đa khung của PAXG/USDT đổi trạng thái (MUA/BÁN mạnh, MUA/BÁN yếu, CHỜ).
+  1. Phiếu tổng đa khung của vàng (XAUUSDT Binance Futures, dự phòng PAXG/USDT) đổi trạng thái (MUA/BÁN mạnh, MUA/BÁN yếu, CHỜ).
      Cách tính giống hệt trang demo: mỗi khung M1–H4 cho MUA/BÁN/CHỜ theo luật EMA + dòng tiền + sức mạnh
      + lực nến + tin cậy ≥ 68% + RSI + khoảng cách tới EMA; phiếu = trọng số × tin cậy.
   2. Còn khoảng 30 phút tới một tin USD mức Cao trong site/data/macro.json.
@@ -23,8 +23,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE = os.path.join(ROOT, "data", "alert_state.json")
 MACRO = os.path.join(ROOT, "site", "data", "macro.json")
 VN = dt.timezone(dt.timedelta(hours=7))
-SYMBOL = os.environ.get("ALERT_SYMBOL", "PAXGUSDT")
-HOSTS = ["https://data-api.binance.vision", "https://api.binance.com"]
+# Nguồn chính: hợp đồng vĩnh cửu XAUUSDT (Binance Futures, bám chỉ số vàng giao ngay) - giống trang demo.
+# Máy chủ GitHub đặt ở Mỹ có thể bị Binance Futures chặn: khi đó tự chuyển sang PAXGUSDT (Binance Spot).
+SOURCES = [
+    {"sym": "XAUUSDT", "name": "XAUUSD (Binance Futures)", "hosts": ["https://fapi.binance.com"], "kl": "/fapi/v1/klines"},
+    {"sym": "PAXGUSDT", "name": "PAXG (≈XAU, Binance Spot)", "hosts": ["https://data-api.binance.vision", "https://api.binance.com"], "kl": "/api/v3/klines"},
+]
 TFS = {"M1": "1m", "M5": "5m", "M15": "15m", "H1": "1h", "H4": "4h"}
 VOTE_W = {"H1": 0.25, "M15": 0.25, "M5": 0.2, "H4": 0.2, "M1": 0.1}
 RULE = {"conf": 68, "rsiBuy": 68, "rsiSell": 40, "distMin": 0.7, "distMax": 2.5}
@@ -33,9 +37,9 @@ LINK = "https://nguyenvanchi-cmd.github.io/vang-dashboard/demo/"
 UA = "vang-dashboard-alert/1.0"
 
 
-def get_json(path):
+def get_json(path, hosts):
     err = None
-    for h in HOSTS:
+    for h in hosts:
         try:
             with urllib.request.urlopen(urllib.request.Request(h + path, headers={"User-Agent": UA}), timeout=20) as r:
                 return json.loads(r.read().decode())
@@ -150,25 +154,36 @@ def main():
     now = dt.datetime.now(VN)
     changed = False
     if os.environ.get("ALERT_TEST") == "1":
-        send(f"✅ <b>Kênh Trạm Vàng Cảnh Báo đã kết nối</b>\nTin thử lúc {now:%H:%M %d/%m} giờ VN. Từ giờ kênh nhận tin khi phiếu tổng PAXG đổi trạng thái và trước tin USD mạnh khoảng 30 phút.\n<a href=\"{LINK}\">Mở Terminal DEMO</a> · Chỉ để tham khảo, không phải tín hiệu giao dịch.")
+        send(f"✅ <b>Kênh Trạm Vàng Cảnh Báo đã kết nối</b>\nTin thử lúc {now:%H:%M %d/%m} giờ VN. Từ giờ kênh nhận tin khi phiếu tổng của vàng đổi trạng thái và trước tin USD mạnh khoảng 30 phút.\n<a href=\"{LINK}\">Mở Terminal DEMO</a> · Chỉ để tham khảo, không phải tín hiệu giao dịch.")
 
     # 1. Phiếu tổng
-    all_ = {}
-    for k, iv in TFS.items():
-        raw = get_json(f"/api/v3/klines?symbol={SYMBOL}&interval={iv}&limit=300")
-        bars = [{"o": float(x[1]), "h": float(x[2]), "l": float(x[3]), "c": float(x[4]), "d": 2 * float(x[9]) - float(x[5])} for x in raw]
-        all_[k] = analyze(bars)
+    all_, src, errs = {}, None, []
+    for S in SOURCES:
+        try:
+            for k, iv in TFS.items():
+                raw = get_json(f"{S['kl']}?symbol={S['sym']}&interval={iv}&limit=300", S["hosts"])
+                bars = [{"o": float(x[1]), "h": float(x[2]), "l": float(x[3]), "c": float(x[4]), "d": 2 * float(x[9]) - float(x[5])} for x in raw]
+                all_[k] = analyze(bars)
+            src = S
+            break
+        except Exception as e:
+            errs.append(f"{S['sym']}: {e}")
+            all_ = {}
+    if src is None:
+        raise RuntimeError("; ".join(errs))
+    if errs:
+        print("Nguồn dự phòng vì: " + "; ".join(errs))
     v, d, level = global_vote(all_)
     key = f"{d}-{level}"
     px = all_["M1"]["close"]
-    print(f"{now:%d/%m %H:%M} phiếu {v:+.1f} → {key} · " + " ".join(f"{k}:{a['sig']}/{a['conf']}" for k, a in all_.items()))
+    print(f"{now:%d/%m %H:%M} [{src['sym']}] phiếu {v:+.1f} → {key} · " + " ".join(f"{k}:{a['sig']}/{a['conf']}" for k, a in all_.items()))
     if state.get("vote") is None:
         state["vote"] = key; changed = True  # lần đầu: chỉ ghi nhận, không gửi
     elif key != state["vote"]:
         name = {"buy": "MUA", "sell": "BÁN", "wait": "CHỜ"}[d]
         lv = {"strong": " MẠNH", "weak": " yếu", "wait": ""}[level]
         icon = "🟢" if d == "buy" else "🔴" if d == "sell" else "⚪"
-        lines = [f"{icon} <b>PAXG (≈XAU) · Phiếu tổng: {name}{lv}</b> ({v:+.0f})", f"Giá {px:,.2f} · lúc {now:%H:%M} giờ VN", ""]
+        lines = [f"{icon} <b>Vàng · Phiếu tổng: {name}{lv}</b> ({v:+.0f})", f"{src['name']}: {px:,.2f} · lúc {now:%H:%M} giờ VN", ""]
         lines += [f"{k}: {({'buy': 'MUA', 'sell': 'BÁN', 'wait': 'CHỜ'})[a['sig']]} {a['conf']}% · {a['why']}" for k, a in all_.items()]
         lines += ["", f"Trước đó: {state['vote']}", f'<a href="{LINK}">Mở Terminal DEMO</a> · Chỉ để tham khảo, không phải tín hiệu giao dịch.']
         if send("\n".join(lines)):
