@@ -15,6 +15,7 @@ import datetime as dt
 import json
 import math
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -127,6 +128,13 @@ def send(text):
             ok = json.loads(r.read().decode()).get("ok")
             print("Đã gửi Telegram" if ok else "Telegram trả lỗi")
             return bool(ok)
+    except urllib.error.HTTPError as e:
+        try:
+            desc = json.loads(e.read().decode()).get("description", "")
+        except Exception:
+            desc = ""
+        print(f"Gửi Telegram lỗi {e.code}: {desc}")  # không in token
+        return False
     except Exception as e:
         print(f"Gửi Telegram lỗi: {type(e).__name__}")  # không in token
         return False
