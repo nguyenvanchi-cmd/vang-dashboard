@@ -141,6 +141,8 @@ def main():
             state = {}
     now = dt.datetime.now(VN)
     changed = False
+    if os.environ.get("ALERT_TEST") == "1":
+        send(f"✅ <b>Kênh Trạm Vàng Cảnh Báo đã kết nối</b>\nTin thử lúc {now:%H:%M %d/%m} giờ VN. Từ giờ kênh nhận tin khi phiếu tổng PAXG đổi trạng thái và trước tin USD mạnh khoảng 30 phút.\n<a href=\"{LINK}\">Mở Terminal DEMO</a> · Chỉ để tham khảo, không phải tín hiệu giao dịch.")
 
     # 1. Phiếu tổng
     all_ = {}
