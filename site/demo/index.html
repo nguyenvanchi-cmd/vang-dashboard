@@ -200,6 +200,64 @@ tr:last-child td{border-bottom:0}
   .chart-col,.top{min-width:0}
 }
 @media (max-width:420px){#px-chg{display:none}.top{gap:6px;padding:8px}}
+
+/* ---------- giao diện sáng */
+:root[data-theme="light"]{
+  --bg:#f5f7fb;--bg2:#ffffff;--panel:#ffffff;--panel2:#f0f3f8;--line:#e2e7ef;--line2:#cfd7e3;
+  --text:#14202f;--muted:#5b6b82;--faint:#8a97ab;
+  --up:#0f9d6b;--upbg:rgba(15,157,107,.12);--down:#d93848;--downbg:rgba(217,56,72,.1);
+  --wait:#b87c0c;--waitbg:rgba(201,138,18,.12);--accent:#0fa585;
+  color-scheme:light;
+}
+:root[data-theme="light"] .plan-card,:root[data-theme="light"] .tf-menu,:root[data-theme="light"] .layer-menu{box-shadow:0 10px 26px rgba(20,32,47,.14)}
+:root[data-theme="light"] .ballot-box.wait{background:rgba(255,247,228,.94)}
+:root[data-theme="light"] .ballot-box.buy{background:rgba(228,247,239,.94)}
+:root[data-theme="light"] .ballot-box.sell{background:rgba(252,233,235,.94)}
+:root[data-theme="light"] .ibtn.on,:root[data-theme="light"] .seg button.on,:root[data-theme="light"] .tf-menu button.on{color:#fff}
+
+/* ---------- cột danh mục */
+.rail{display:none;min-height:0;background:var(--bg2);border-right:1px solid var(--line);grid-template-rows:auto minmax(0,1fr) auto}
+.rail-backdrop{display:none}
+.rl-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line)}
+.rl-close{height:28px;min-width:28px;font-size:12px}
+.rl-list{overflow-y:auto;padding:6px}
+.rl-grp{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:10px 8px 4px}
+.rl-item{appearance:none;width:100%;border:1px solid transparent;background:transparent;border-radius:9px;padding:7px 8px;display:flex;justify-content:space-between;gap:8px;cursor:pointer;text-align:left}
+.rl-item:hover{background:var(--panel2)}
+.rl-item.on{background:var(--panel);border-color:var(--accent)}
+.rl-item small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.rl-name b,.rl-q b{font-size:12.5px;font-weight:800}
+.rl-q{text-align:right}
+.rl-note{font-size:11px;color:var(--faint);padding:8px;margin:0}
+.rl-tools{border-top:1px solid var(--line);padding:6px 6px 10px;display:grid;gap:2px}
+.rl-tool{appearance:none;border:0;background:transparent;border-radius:8px;padding:8px;display:flex;align-items:center;gap:10px;font-weight:650;font-size:12.5px;cursor:pointer;text-align:left}
+.rl-tool:hover{background:var(--panel2)}
+.rl-tool.on{color:var(--accent)}
+.rl-tool svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.rl-tool .theme-toggle{width:17px;text-align:center}
+@media (min-width:1024px){
+  .app.rail-on .rail{display:grid}
+  .app.rail-on .main{grid-template-columns:210px minmax(0,1fr) 420px}
+}
+@media (min-width:1024px) and (max-width:1279px){.app.rail-on .main{grid-template-columns:200px minmax(0,1fr) 360px}}
+@media (max-width:1023px){
+  .rail{position:fixed;left:0;top:0;bottom:0;width:min(280px,84vw);z-index:60;display:grid;transform:translateX(-102%);transition:transform .2s;box-shadow:8px 0 30px rgba(0,0,0,.35)}
+  .app.rail-on .rail{transform:none}
+  .app.rail-on .rail-backdrop{display:block;position:fixed;inset:0;z-index:59;background:rgba(0,0,0,.45)}
+}
+@media (min-width:1024px){.rl-close{display:none}}
+
+/* ---------- thanh xem lại */
+.rp-bar{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:6;display:none;align-items:center;gap:5px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 90px);background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:5px 8px;box-shadow:0 10px 26px rgba(0,0,0,.35);font-size:12px}
+.app.replaying .rp-bar{display:flex}
+.app.replaying .session-chip{display:none}
+.app.replaying .plan-card{top:8px}
+.rp-tag{font-size:10.5px;font-weight:850;letter-spacing:.06em;color:var(--accent)}
+.rp-bar>button{appearance:none;border:1px solid var(--line2);background:var(--panel2);border-radius:8px;height:28px;min-width:28px;padding:0 8px;font-weight:800;cursor:pointer}
+.rp-bar>button.on{background:var(--accent);border-color:var(--accent);color:#04241d}
+.rp-bar .rp-main{background:var(--accent);border-color:var(--accent);color:#04241d}
+.rp-bar .rp-exit{color:var(--down)}
+@media (max-width:560px){.rp-bar{bottom:6px;max-width:calc(100% - 70px);gap:4px;padding:5px}.rp-bar #rp-time{width:100%;text-align:center}.rp-tag{display:none}}
 </style>
 </head>
 <body>
@@ -207,11 +265,23 @@ tr:last-child td{border-bottom:0}
   <div class="demo-bar" id="src-txt">Đang tải giá PAXG/USDT từ Binance…</div>
 
   <div class="main">
+    <!-- =============== CỘT DANH MỤC =============== -->
+    <aside class="rail" id="rail" aria-label="Danh mục sản phẩm">
+      <div class="rl-head"><b>Danh mục</b><button class="ibtn rl-close" type="button" id="rail-close" aria-label="Đóng danh mục">✕</button></div>
+      <div class="rl-list" id="rail-list"></div>
+      <div class="rl-tools">
+        <div class="rl-grp">Công cụ</div>
+        <button type="button" class="rl-tool rp-toggle"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 8v4l3 2"/></svg>Xem lại quá khứ</button>
+        <button type="button" class="rl-tool theme-swap"><span class="theme-toggle">☀</span>Đổi sáng / tối</button>
+        <button type="button" class="rl-tool full-swap"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Toàn màn hình</button>
+      </div>
+    </aside>
+    <div class="rail-backdrop" id="rail-backdrop"></div>
     <!-- =============== CỘT BIỂU ĐỒ =============== -->
     <section class="chart-col view" id="v-chart">
       <div class="top">
         <button class="ibtn" type="button" aria-label="Danh mục" id="menu-btn"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-        <div class="sym" title="PAXG/USDT trên Binance: token vàng, giá bám XAUUSD"><span>PAXG<small class="faint" style="font-weight:600"> ≈XAU</small></span><span class="sig wait" id="sym-sig">CHỜ</span></div>
+        <div class="sym" id="sym-box" title="Mã đang xem"><span id="sym-name">PAXG<small class="faint" style="font-weight:600"> ≈XAU</small></span><span class="sig wait" id="sym-sig">CHỜ</span></div>
         <div class="tf-wrap">
           <button class="ibtn on" type="button" id="tf-btn">M5 ▾</button>
           <div class="tf-menu" id="tf-menu"></div>
@@ -222,6 +292,9 @@ tr:last-child td{border-bottom:0}
           <button class="ibtn" type="button" id="layer-btn" title="Lớp hiển thị trên biểu đồ" aria-label="Lớp hiển thị"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5"/></svg></button>
           <div class="layer-menu" id="layer-menu"></div>
         </div>
+        <button class="ibtn hide-sm rp-toggle" type="button" title="Xem lại quá khứ từng nến" aria-label="Xem lại"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 8v4l3 2"/></svg></button>
+        <button class="ibtn hide-sm theme-toggle" type="button" title="Chuyển giao diện sáng" aria-label="Đổi sáng tối">☀</button>
+        <button class="ibtn hide-sm full-toggle" type="button" title="Toàn màn hình" aria-label="Toàn màn hình"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
         <span class="spacer"></span>
         <span class="price-now num" id="px-now">—</span>
         <span class="pill num" id="px-chg">—</span>
@@ -233,6 +306,16 @@ tr:last-child td{border-bottom:0}
         <div class="plan-card" id="plan-card">
           <button type="button" class="pc-head" id="plan-toggle" aria-expanded="true"><span class="muted">Vùng chờ</span><span class="dot"></span><b class="num" id="wait-px">—</b><span class="pc-caret">▾</span></button>
           <div class="pc-body" id="plan-body"></div>
+        </div>
+        <div class="rp-bar" id="rp-bar">
+          <span class="rp-tag">XEM LẠI</span><b class="num" id="rp-time"></b>
+          <button type="button" id="rp-back" title="Lùi 20 nến">«</button>
+          <button type="button" id="rp-prev" title="Lùi 1 nến">‹</button>
+          <button type="button" id="rp-play" class="rp-main" aria-label="Chạy">▶</button>
+          <button type="button" id="rp-next" title="Tới 1 nến">›</button>
+          <span class="seg" id="rp-speed"><button type="button" data-s="1" class="on">1x</button><button type="button" data-s="3">3x</button><button type="button" data-s="10">10x</button></span>
+          <button type="button" id="rp-pick" title="Bấm rồi chọn một nến trên biểu đồ để bắt đầu từ đó">Chọn điểm</button>
+          <button type="button" id="rp-exit" class="rp-exit">Thoát</button>
         </div>
       </div>
       <div class="pane"><div class="pane-title">Cá mập <span id="whale-lbl">—</span></div><div class="c" id="whale"></div></div>
@@ -324,18 +407,38 @@ const TFS = [['M1', 1], ['M5', 5], ['M15', 15], ['H1', 60], ['H4', 240], ['D1', 
 const TFMIN = Object.fromEntries(TFS);
 const KEY = Object.fromEntries(TFS.map(([k, m]) => [m, k]));
 const BINANCE_TF = { M1: '1m', M5: '5m', M15: '15m', H1: '1h', H4: '4h', D1: '1d' };
-const SYMBOL = 'PAXGUSDT';
+// Danh mục sản phẩm (đều lấy từ Binance). Vàng dùng PAXG; các mã crypto để so sánh dòng tiền.
+const PRODUCTS = [
+  { sym: 'PAXGUSDT', name: 'Vàng', code: 'PAXG', sub: '≈ XAUUSD', grp: 'Kim loại', unit: 'oz' },
+  { sym: 'BTCUSDT', name: 'Bitcoin', code: 'BTC', sub: 'BTC/USDT', grp: 'Crypto', unit: 'BTC' },
+  { sym: 'ETHUSDT', name: 'Ethereum', code: 'ETH', sub: 'ETH/USDT', grp: 'Crypto', unit: 'ETH' },
+  { sym: 'SOLUSDT', name: 'Solana', code: 'SOL', sub: 'SOL/USDT', grp: 'Crypto', unit: 'SOL' },
+  { sym: 'BNBUSDT', name: 'BNB', code: 'BNB', sub: 'BNB/USDT', grp: 'Crypto', unit: 'BNB' },
+];
+let SYMBOL = (() => { try { const v = localStorage.getItem('tv-sym'); return PRODUCTS.some((p) => p.sym === v) ? v : 'PAXGUSDT'; } catch { return 'PAXGUSDT'; } })();
+const PROD = () => PRODUCTS.find((p) => p.sym === SYMBOL);
 const REST_HOSTS = ['https://data-api.binance.vision', 'https://api.binance.com'];
-const WS_URLS = [`wss://data-stream.binance.vision/stream?streams=${SYMBOL.toLowerCase()}@aggTrade`, `wss://stream.binance.com:9443/stream?streams=${SYMBOL.toLowerCase()}@aggTrade`];
+const wsUrls = () => [`wss://data-stream.binance.vision/stream?streams=${SYMBOL.toLowerCase()}@aggTrade`, `wss://stream.binance.com:9443/stream?streams=${SYMBOL.toLowerCase()}@aggTrade`];
 const DATA = { M1: [], M5: [], M15: [], H1: [], H4: [], D1: [] }; // bar: {t,o,h,l,c,v,d,w,r,fk} — d: chênh lệch mua/bán chủ động, w: cá mập, r: cá con, fk: đã có dữ liệu lệnh khớp
 const SRC = { mode: 'loading', whaleUsd: 0, tradeFrom: null, lastA: 0, lastMsg: 0, wsTry: 0, wsOpen: false, err: '' };
 let dirty = false;
 
 // D1 theo ngày UTC của sàn (mở lúc 07:00 giờ VN)
 const startOf = (k, t) => (k === 'D1' ? Math.floor(t / 86400) * 86400 : Math.floor(t / (TFMIN[k] * 60)) * TFMIN[k] * 60);
-const lastBar = () => DATA.M1[DATA.M1.length - 1];
-const dayOpen = () => { const d = DATA.D1[DATA.D1.length - 1]; return d ? d.o : lastBar().o; };
-function agg(min) { return DATA[KEY[min]]; }
+// Chế độ Xem lại: chỉ thấy các nến đã đóng trước thời điểm đang xem lại (khung lớn không lộ nến tương lai)
+const durOf = (k) => (k === 'D1' ? 86400 : TFMIN[k] * 60);
+let REPLAY = null; // { t: giờ mở nến đang xem (giây), playing, speed, timer, pick }
+function agg(min) {
+  const k = KEY[min], arr = DATA[k]; if (!REPLAY) return arr;
+  const lim = REPLAY.t + durOf(REPLAY.tf) - durOf(k);
+  let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m].t <= lim) lo = m + 1; else hi = m; }
+  return arr.slice(0, lo);
+}
+const lastBar = () => { if (!REPLAY) return DATA.M1[DATA.M1.length - 1]; const v = agg(TFMIN[REPLAY.tf]); return v[v.length - 1]; };
+const dayOpen = () => {
+  const d1 = DATA.D1; if (!REPLAY) { const d = d1[d1.length - 1]; return d ? d.o : lastBar().o; }
+  const day = Math.floor(REPLAY.t / 86400) * 86400; const d = d1.find((b) => b.t === day); return d ? d.o : lastBar().o;
+};
 
 function pushTrade(tSec, p, q, isBuy, usd) {
   const big = usd >= SRC.whaleUsd; const sq = isBuy ? q : -q;
@@ -389,16 +492,18 @@ async function loadLive() {
 }
 
 function connectWS() {
-  const url = WS_URLS[SRC.wsTry++ % WS_URLS.length];
+  const urls = wsUrls(); const url = urls[SRC.wsTry++ % urls.length]; const mySym = SYMBOL;
   let ws; try { ws = new WebSocket(url); } catch { setTimeout(connectWS, 5000); return; }
+  SRC.ws = ws; ws.sym = mySym;
   ws.onopen = () => { SRC.wsOpen = true; setSrcText(); };
   ws.onmessage = (e) => {
     let x; try { x = JSON.parse(e.data).data; } catch { return; }
+    if (ws.abandoned || ws.sym !== SYMBOL || SRC.mode !== 'live') return;
     if (!x || x.a <= SRC.lastA) return; SRC.lastA = x.a;
     pushTrade(x.T / 1000, +x.p, +x.q, !x.m, x.p * x.q);
     SRC.lastMsg = Date.now(); dirty = true;
   };
-  ws.onclose = () => { SRC.wsOpen = false; setSrcText(); setTimeout(connectWS, 3000); };
+  ws.onclose = () => { if (ws.abandoned || ws.sym !== SYMBOL) return; SRC.wsOpen = false; setSrcText(); setTimeout(connectWS, 3000); };
   ws.onerror = () => { try { ws.close(); } catch {} };
 }
 
@@ -443,10 +548,11 @@ function setSrcText() {
   const el = $('#src-txt'); if (!el) return;
   if (SRC.mode === 'live') {
     const ago = SRC.lastMsg ? Math.round((Date.now() - SRC.lastMsg) / 1000) : null;
-    el.innerHTML = `<span class="live-dot ${SRC.wsOpen ? 'on' : ''}"></span>Giá thật PAXG/USDT · Binance${SRC.wsOpen ? '' : ' · đang kết nối lại…'}${ago != null && ago > 90 ? ` · chưa có lệnh khớp mới ${Math.round(ago / 60)} phút` : ''} · PAXG bám XAUUSD, có thể lệch vài giá · Phân tích để tham khảo, không phải tín hiệu giao dịch`;
+    const P = PROD(); const gold = P.sym === 'PAXGUSDT';
+    el.innerHTML = `<span class="live-dot ${SRC.wsOpen ? 'on' : ''}"></span>Giá thật ${P.code}/USDT · Binance${SRC.wsOpen ? '' : ' · đang kết nối lại…'}${ago != null && ago > 90 ? ` · chưa có lệnh khớp mới ${Math.round(ago / 60)} phút` : ''}${gold ? ' · PAXG bám XAUUSD, có thể lệch vài giá' : ''} · Phân tích để tham khảo, không phải tín hiệu giao dịch`;
   } else if (SRC.mode === 'sim') {
     el.innerHTML = `<span class="live-dot"></span>BẢN DEMO · Không kết nối được Binance (${SRC.err}) nên đang chạy dữ liệu mô phỏng · Không phải tín hiệu giao dịch`;
-  } else el.textContent = 'Đang tải giá PAXG/USDT từ Binance…';
+  } else el.textContent = `Đang tải giá ${PROD().code}/USDT từ Binance…`;
 }
 
 const emaArr = (vals, n) => { const k = 2 / (n + 1); let e = vals[0]; return vals.map((v, i) => (e = i ? v * k + e * (1 - k) : v)); };
@@ -828,6 +934,7 @@ function bindSig() {
   $('#p-sig').addEventListener('change', (e) => { const c = e.target.closest('[data-st]'); if (c) { stratCfg.on[c.dataset.st] = c.checked ? 1 : 0; saveStrat(); setData(false); } });
 }
 function notifySignals() {
+  if (REPLAY) return;
   const sigs = state.sigs || []; const key = (s) => `${state.tf}|${s.t}|${s.strat}`;
   state.seenSig = state.seenSig || new Set();
   const first = !state.sigInitTf || !state.sigInitTf.has(state.tf);
@@ -949,7 +1056,7 @@ function drawOverlay() {
   }
   const lb = lastBar();
   const y = candles.priceToCoordinate(lb.c);
-  const cd = y == null ? '' : `<div class="countdown ${lb.c >= dayOpen() ? 'upc' : ''}" id="cd" style="top:${y + 10}px">--:--</div>`;
+  const cd = y == null || REPLAY ? '' : `<div class="countdown ${lb.c >= dayOpen() ? 'upc' : ''}" id="cd" style="top:${y + 10}px">--:--</div>`;
   ov.innerHTML = html + cd;
   tickCountdown();
 }
@@ -977,7 +1084,7 @@ function updateHeader() {
   $('#session-name').textContent = h >= 6 && h < 14 ? 'CHÂU Á' : h >= 14 && h < 20 ? 'CHÂU ÂU' : 'CHÂU MỸ';
   // Đơn vị: ounce (1 PAXG = 1 oz vàng). Tổng 5 nến gần nhất có dữ liệu lệnh khớp.
   const fkBars = a.bars.filter((b) => b.fk).slice(-5);
-  const oz = (x) => `${x >= 0 ? '+' : ''}${Math.abs(x) < 10 ? f2(x) : f0(x)} oz`;
+  const oz = (x) => `${x >= 0 ? '+' : ''}${Math.abs(x) < 10 ? f2(x) : f0(x)} ${PROD().unit}`;
   const thr = `lệnh ≥ $${f0(SRC.whaleUsd)}`;
   if (!fkBars.length) {
     $('#whale-lbl').textContent = `${thr} · chưa có lệnh khớp ở khung này`;
@@ -993,6 +1100,7 @@ function updateHeader() {
 const WCOL = (v) => (v >= 0 ? 'rgba(22,199,132,.75)' : 'rgba(239,79,95,.75)');
 const RCOL = (v) => (v >= 0 ? 'rgba(22,199,132,.6)' : 'rgba(239,79,95,.6)');
 function frame() {
+  if (REPLAY) return;            // đang xem lại: không vẽ nến trực tiếp
   tickCountdown();
   if (!dirty) return; dirty = false;
   const a = state.an[state.tf]; const arr = DATA[state.tf]; const b = arr[arr.length - 1];
@@ -1197,6 +1305,7 @@ function pushNoti(text, kind) {
   renderNoti();
 }
 function checkAlerts(all) {
+  if (REPLAY) return;
   const g = state.global; const gk = g ? (g.strong ? `${g.dir}-strong` : g.dir) : '';
   if (state.lastGlobal != null && gk !== state.lastGlobal && g.strong) pushNoti(`Phiếu tổng ${SIGTXT[g.dir]} MẠNH ${f0(g.m)} và khung ${state.tf} cùng hướng`, g.dir);
   state.lastGlobal = gk;
@@ -1240,10 +1349,151 @@ function renderEa() {
   $$('[data-ea]').forEach((s) => s.addEventListener('change', () => pushNoti(`EA "${EAS.find((e) => e.id === s.dataset.ea).name}" đã ${s.checked ? 'bật' : 'tắt'} (demo)`, 'wait')));
 }
 
+// ================================================================ KHUNG GIAO DIỆN (giai đoạn 4): danh mục, xem lại, sáng/tối, toàn màn hình
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+// ---- Danh mục sản phẩm
+const quotes = {};
+function renderRail() {
+  const grps = [...new Set(PRODUCTS.map((p) => p.grp))];
+  $('#rail-list').innerHTML = grps.map((g) => `<div class="rl-grp">${g}</div>` + PRODUCTS.filter((p) => p.grp === g).map((p) => {
+    const q = quotes[p.sym]; const ch = q ? q.pct : null;
+    return `<button type="button" class="rl-item ${p.sym === SYMBOL ? 'on' : ''}" data-sym="${p.sym}">
+      <span class="rl-name"><b>${p.name}</b><small>${p.sub}</small></span>
+      <span class="rl-q"><b class="num">${q ? f2(q.last) : '—'}</b><small class="num ${ch > 0 ? 'up' : ch < 0 ? 'down' : 'faint'}">${ch == null ? '' : `${ch > 0 ? '+' : ''}${f2(ch)}%`}</small></span></button>`;
+  }).join('')).join('') + (SRC.mode === 'sim' ? '<p class="rl-note">Đang chạy dữ liệu mô phỏng nên chưa đổi mã được.</p>' : '<p class="rl-note">Giá và % 24 giờ từ Binance, cập nhật 20 giây một lần.</p>');
+}
+async function loadQuotes() {
+  if (SRC.mode === 'sim') return;
+  try {
+    const arr = await getJSON(`/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(PRODUCTS.map((p) => p.sym)))}`);
+    arr.forEach((x) => { quotes[x.symbol] = { last: +x.lastPrice, pct: +x.priceChangePercent }; });
+    renderRail();
+  } catch {}
+}
+function updateSymLabel() {
+  const P = PROD();
+  $('#sym-name').innerHTML = `${P.code}${P.sym === 'PAXGUSDT' ? '<small class="faint" style="font-weight:600"> ≈XAU</small>' : ''}`;
+  document.title = `${P.code} · Trạm Vàng Demo`;
+}
+async function switchSymbol(sym) {
+  if (sym === SYMBOL || SRC.mode === 'sim') return;
+  if (state.switching) return; state.switching = true;
+  exitReplay(true);
+  const prev = SYMBOL;
+  SYMBOL = sym; updateSymLabel(); renderRail();
+  if (SRC.ws) { SRC.ws.abandoned = true; try { SRC.ws.close(); } catch {} }
+  Object.assign(SRC, { mode: 'loading', lastA: 0, lastMsg: 0, wsOpen: false });
+  setSrcText();
+  try { await loadLive(); }
+  catch (e) {
+    SYMBOL = prev; updateSymLabel(); renderRail();
+    try { await loadLive(); setData(true); } catch {}
+    pushNoti(`Không tải được ${PRODUCTS.find((p) => p.sym === sym).code}: ${e.message || 'lỗi kết nối'}`, 'wait');
+    SRC.mode = 'live'; setSrcText(); connectWS(); state.switching = false; return;
+  }
+  SRC.mode = 'live'; store.set('tv-sym', sym);
+  state.an = {}; state.lastSig = {}; state.lastGlobal = null; state.seenSig = new Set(); state.sigInitTf = new Set();
+  setData(true); renderMulti(); setSrcText(); connectWS(); state.switching = false;
+  if (window.innerWidth < 1024) setRail(false);
+}
+function setRail(on) {
+  $('#app').classList.toggle('rail-on', on);
+  $('#menu-btn').setAttribute('aria-expanded', String(on));
+  if (window.innerWidth >= 1024) store.set('tv-rail', on ? '1' : '0');
+  setTimeout(drawOverlay, 50);
+}
+
+// ---- Xem lại
+function enterReplay() {
+  if (REPLAY) return;
+  const arr = DATA[state.tf]; if (arr.length < 80) return;
+  REPLAY = { tf: state.tf, t: arr[Math.max(60, arr.length - 150)].t, playing: false, speed: 1, timer: null, pick: false, steps: 0 };
+  $('#app').classList.add('replaying');
+  $$('.rp-toggle').forEach((b) => b.classList.add('on'));
+  replayRender(true);
+}
+function exitReplay(silent) {
+  if (!REPLAY) return;
+  clearInterval(REPLAY.timer); REPLAY = null;
+  $('#app').classList.remove('replaying');
+  $$('.rp-toggle').forEach((b) => b.classList.remove('on'));
+  if (!silent) { setData(true); renderMulti(); }
+}
+function replayRender(fit) {
+  setData(fit); if (fit || REPLAY.steps % 5 === 0) renderMulti();
+  const lb = lastBar();
+  $('#rp-time').textContent = lb ? `${whenTxt(lb.t)} · ${state.tf}` : '';
+  $('#rp-play').textContent = REPLAY.playing ? '⏸' : '▶';
+  $('#rp-play').setAttribute('aria-label', REPLAY.playing ? 'Tạm dừng' : 'Chạy');
+  $('#rp-pick').classList.toggle('on', REPLAY.pick);
+  $$('#rp-speed button').forEach((b) => b.classList.toggle('on', Number(b.dataset.s) === REPLAY.speed));
+}
+function replayStep(n) {
+  if (!REPLAY) return;
+  const arr = DATA[REPLAY.tf]; let i = arr.findIndex((b) => b.t === REPLAY.t); if (i < 0) i = arr.length - 1;
+  const j = Math.max(30, Math.min(arr.length - 1, i + n));
+  if (j >= arr.length - 1 && n > 0) { exitReplay(); pushNoti('Xem lại đã chạy tới hiện tại, quay về giá trực tiếp.', 'wait'); return; }
+  REPLAY.t = arr[j].t; REPLAY.steps++; replayRender(false);
+}
+function replayPlay(on) {
+  if (!REPLAY) return;
+  REPLAY.playing = on; clearInterval(REPLAY.timer);
+  if (on) REPLAY.timer = setInterval(() => replayStep(1), 1000 / REPLAY.speed);
+  replayRender(false);
+}
+function replayTf(newTf) {
+  const end = REPLAY.t + durOf(REPLAY.tf);
+  REPLAY.tf = newTf; REPLAY.t = startOf(newTf, end) - durOf(newTf);
+}
+
+// ---- Sáng/tối và toàn màn hình
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t); store.set('tv-theme', t);
+  const grid = t === 'light' ? 'rgba(15,30,50,.06)' : 'rgba(255,255,255,.04)';
+  const o = { layout: { textColor: css('--muted') }, grid: { vertLines: { color: grid }, horzLines: { color: grid } }, rightPriceScale: { borderColor: css('--line') }, timeScale: { borderColor: css('--line') } };
+  [chart, whaleChart, retailChart].forEach((c) => c.applyOptions(o));
+  chart.applyOptions({ watermark: { color: t === 'light' ? 'rgba(15,30,50,.05)' : 'rgba(255,255,255,.04)' } });
+  candles.applyOptions({ upColor: css('--up'), downColor: css('--down'), wickUpColor: css('--up'), wickDownColor: css('--down') });
+  $$('.theme-toggle').forEach((b) => { b.textContent = t === 'light' ? '☾' : '☀'; b.title = t === 'light' ? 'Chuyển giao diện tối' : 'Chuyển giao diện sáng'; });
+  if (state.an[state.tf]) setData(false);
+}
+async function toggleFull() {
+  try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); }
+  catch { pushNoti('Trình duyệt này không cho bật toàn màn hình.', 'wait'); }
+}
+
+function bindShell() {
+  renderRail(); updateSymLabel();
+  setRail(window.innerWidth >= 1024 ? (store.get('tv-rail') ?? (window.innerWidth >= 1280 ? '1' : '0')) === '1' : false);
+  $('#menu-btn').addEventListener('click', () => setRail(!$('#app').classList.contains('rail-on')));
+  $('#rail-close').addEventListener('click', () => setRail(false));
+  $('#rail-backdrop').addEventListener('click', () => setRail(false));
+  $('#rail-list').addEventListener('click', (e) => { const b = e.target.closest('[data-sym]'); if (b) switchSymbol(b.dataset.sym); });
+  $$('.rp-toggle').forEach((b) => b.addEventListener('click', () => { if (REPLAY) exitReplay(); else enterReplay(); if (window.innerWidth < 1024) { setRail(false); show('chart'); } }));
+  $('#rp-play').addEventListener('click', () => replayPlay(!REPLAY.playing));
+  $('#rp-next').addEventListener('click', () => { replayPlay(false); replayStep(1); });
+  $('#rp-prev').addEventListener('click', () => { replayPlay(false); replayStep(-1); });
+  $('#rp-back').addEventListener('click', () => { replayPlay(false); replayStep(-20); });
+  $('#rp-exit').addEventListener('click', () => exitReplay());
+  $('#rp-pick').addEventListener('click', () => { REPLAY.pick = !REPLAY.pick; replayRender(false); });
+  $$('#rp-speed button').forEach((b) => b.addEventListener('click', () => { REPLAY.speed = Number(b.dataset.s); replayPlay(REPLAY.playing); }));
+  chart.subscribeClick((p) => {
+    if (!REPLAY || !REPLAY.pick || p.time == null) return;
+    const t = p.time - VN; const arr = DATA[REPLAY.tf]; const b = arr.filter((x) => x.t <= t).pop();
+    if (b && arr.indexOf(b) >= 30) { REPLAY.t = b.t; REPLAY.pick = false; replayPlay(false); replayRender(false); }
+  });
+  $$('button.theme-toggle, .theme-swap').forEach((b) => b.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light')));
+  $$('.full-toggle, .full-swap').forEach((b) => b.addEventListener('click', toggleFull));
+  document.addEventListener('fullscreenchange', () => $$('.full-toggle, .full-swap').forEach((b) => b.classList.toggle('on', !!document.fullscreenElement)));
+  if (store.get('tv-theme') === 'light') applyTheme('light');
+  setInterval(loadQuotes, 20000);
+}
+
 // ================================================================ ĐIỀU HƯỚNG
 function show(v) {
   state.view = v;
-  const app = $('#app'); app.className = `app v-${v}`;
+  const app = $('#app'); [...app.classList].filter((c) => c.startsWith('v-')).forEach((c) => app.classList.remove(c)); app.classList.add(`v-${v}`);
   $$('#bnav button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
   const sideV = v === 'chart' ? (state.sideV || 'dakhung') : v;
   if (v !== 'chart') state.sideV = v;
@@ -1262,6 +1512,7 @@ document.addEventListener('click', () => $('#tf-menu').classList.remove('open'))
 $$('#tf-menu button').forEach((b) => b.addEventListener('click', () => {
   state.tf = b.dataset.tf; $('#tf-btn').textContent = `${state.tf} ▾`;
   $$('#tf-menu button').forEach((x) => x.classList.toggle('on', x === b));
+  if (REPLAY) { replayTf(state.tf); replayRender(true); return; }
   setData(true); renderMulti();
 }));
 $('#type-btn').addEventListener('click', () => { state.showLine = !state.showLine; candles.applyOptions({ visible: !state.showLine }); lineSeries.applyOptions({ visible: state.showLine }); $('#type-btn').classList.toggle('on', !state.showLine); });
@@ -1279,7 +1530,7 @@ $$('[data-ly]').forEach((c) => c.addEventListener('change', () => { layers[c.dat
 })();
 $$('#preset-seg button').forEach((b) => b.addEventListener('click', () => { state.preset = b.dataset.p; $$('#preset-seg button').forEach((x) => x.classList.toggle('on', x === b)); renderMulti(); }));
 $$('#win-seg button').forEach((b) => b.addEventListener('click', () => { state.win = Number(b.dataset.w); $$('#win-seg button').forEach((x) => x.classList.toggle('on', x === b)); renderMulti(); }));
-$('#menu-btn').addEventListener('click', () => pushNoti('Danh mục sản phẩm chưa có trong bản demo (chỉ có XAUUSD).', 'wait'));
+bindShell();
 new ResizeObserver(() => drawOverlay()).observe($('#chart'));
 
 // ================================================================ KHỞI ĐỘNG
@@ -1294,7 +1545,7 @@ async function boot() {
   renderNoti();
   show('chart');
   setSrcText();
-  if (SRC.mode === 'live') connectWS(); else setInterval(simTick, 1000);
+  if (SRC.mode === 'live') { connectWS(); loadQuotes(); } else { setInterval(simTick, 1000); renderRail(); }
   setInterval(frame, 500);
   setInterval(renderMulti, 5000);
   setInterval(setSrcText, 15000);
