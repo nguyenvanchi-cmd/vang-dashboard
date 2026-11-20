@@ -218,7 +218,186 @@
     if (box) box.innerHTML = html;
     const per = [['1 tuần', s.chg1w], ['1 tháng', s.chg1m], ['Từ đầu năm', s.ytd], ['1 năm', s.chg1y]];
     $('#h-periods').innerHTML = per.map(([k, v]) => `<div><span>${k}</span><b class="${cls(v)}">${pct(v, 1)}</b></div>`).join('');
-    if (state.s) sparkline($('#h-spark'), state.s.c.slice(-120));
+    renderTicker();
+  }
+
+  // ------------------------------------------------------------ TRẠM KIỂU TERMINAL
+  // Đọc số dạng Việt Nam "3.850" hoặc "3.832,5" thành 3850 / 3832.5
+  const vnNum = (s) => {
+    const m = String(s ?? '').match(/\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?/);
+    return m ? Number(m[0].replace(/\./g, '').replace(',', '.')) : null;
+  };
+  const vnNums = (s) => String(s ?? '').split(/[;]/).map((x) => vnNum(x)).filter((x) => Number.isFinite(x));
+  // Điểm hòa vốn của chiến dịch tích lũy: lấy từ câu nhận định ("vạch an toàn 3.850" / "điểm hòa vốn 3.850")
+  function breakEven() {
+    const c = state.d.claude || {};
+    const txt = [c.tom_tat, ...(c.ba_tang || []).map((t) => `${t.huong} ${t.ly_do}`)].join(' ');
+    const m = txt.match(/(?:vạch an toàn|điểm hòa vốn)\s*(\d{1,3}(?:\.\d{3})+(?:,\d+)?)/i);
+    return m ? vnNum(m[1]) : null;
+  }
+  const dirOf = (s) => dirClass(s); // up | down | flat
+  // Các mức giá trong nhận định, xếp lại theo giá đóng cửa mới nhất:
+  // mức nằm trên giá là kháng cự, nằm dưới giá là hỗ trợ (hỗ trợ đã bị phá thành kháng cự).
+  function keyLevels() {
+    const d1 = mtfRows().find((r) => r.khung === 'D');
+    const close = Number((state.d.summary || {}).close);
+    if (!d1 || !Number.isFinite(close)) return { sup: [], res: [] };
+    const all = [...new Set([...vnNums(d1.ho_tro), ...vnNums(d1.khang_cu)])].filter((v) => Math.abs(v / close - 1) < 0.12);
+    const be = breakEven();
+    const lv = all.filter((v) => !be || Math.abs(v - be) > 5);
+    return {
+      sup: lv.filter((v) => v < close).sort((a, b) => b - a).slice(0, 2),
+      res: lv.filter((v) => v > close).sort((a, b) => a - b).slice(0, 2),
+    };
+  }
+  const ARROW = { up: '▲', down: '▼', flat: '■' };
+  const arrow = (d) => `<span class="ar ${d}" aria-label="${d === 'up' ? 'tăng' : d === 'down' ? 'giảm' : 'trung tính'}">${ARROW[d]}</span>`;
+
+  function renderTicker() {
+    const s = state.d.summary || {};
+    const dom = state.d.domestic || {};
+    const p = dom.premium || {};
+    const ring = (dom.latest || []).find((x) => /nhẫn/i.test(x.product || ''));
+    const items = [];
+    const it = (label, val, extra = '') => items.push(`<div class="tk-item"><span>${label}</span><b ${extra}>${val}</b></div>`);
+    if (ok(p.sjc_sell)) it('SJC bán ra', `${fmt(p.sjc_sell, 1)}<small>tr</small>`);
+    if (ring && ok(ring.sell)) it(`Nhẫn 9999 (${esc(ring.brand)})`, `${fmt(ring.sell, 1)}<small>tr</small>`);
+    if (ok(p.world_vnd)) it('Thế giới quy đổi', `${fmt(p.world_vnd, 1)}<small>tr</small>`);
+    if (ok(p.prem_sell)) it('Chênh SJC', `${fmt(p.prem_sell, 1)}<small>tr</small>`, `class="${p.prem_sell > 15 ? 'down' : ''}"`);
+    if (dom.usd_vnd && ok(dom.usd_vnd.sell)) it('USD/VND', fmt(dom.usd_vnd.sell, 0));
+    if (ok(s.rsi14)) it('RSI(14) D', fmt(s.rsi14, 1), `class="${s.rsi14 < 30 ? 'down' : s.rsi14 > 70 ? 'up' : ''}"`);
+    if (ok(s.dist_ema200)) it('Cách EMA200', pct(s.dist_ema200, 1), `class="${cls(s.dist_ema200)}"`);
+    if (ok(s.dd_from_ath)) it('Cách đỉnh', pct(s.dd_from_ath, 1), 'class="down"');
+    $('#tk-list').innerHTML = items.join('');
+  }
+
+  function mtfRows() {
+    const c = state.d.claude || {};
+    return Array.isArray(c.da_khung) ? c.da_khung.slice().sort((a, b) => (a.thu_tu || 0) - (b.thu_tu || 0)) : [];
+  }
+
+  function renderRail() {
+    const c = state.d.claude || {};
+    const rows = mtfRows();
+    if (!rows.length) { $('#rail').hidden = true; return; }
+    $('#mtf-date').textContent = c.cap_nhat ? `nhận định ${c.cap_nhat}` : dmy(c.ngay);
+
+    // Đồng thuận theo xu hướng từng khung
+    const cnt = { up: 0, down: 0, flat: 0 };
+    rows.forEach((r) => { cnt[dirOf(r.xu_huong)] += 1; });
+    const n = rows.length;
+    const lead = ['down', 'up', 'flat'].reduce((a, b) => (cnt[b] > cnt[a] ? b : a), 'down');
+    const leadTxt = { up: 'TĂNG', down: 'GIẢM', flat: 'ĐI NGANG' }[lead];
+    const col = { up: 'var(--up)', down: 'var(--down)', flat: 'var(--warn)' };
+    $('#mtf-vote').innerHTML = `<div class="vote-badge ${lead}"><small>ĐỒNG THUẬN</small><b>${leadTxt}</b><small>${cnt[lead]}/${n} khung</small></div>
+      <div class="vote-bars">${[['up', 'Tăng'], ['flat', 'Đi ngang'], ['down', 'Giảm']].map(([k, t]) =>
+        `<div class="vote-row"><span>${t}</span><span class="vote-track"><i style="width:${(cnt[k] / n) * 100}%;background:${col[k]}"></i></span><b>${cnt[k]}/${n}</b></div>`).join('')}</div>`;
+
+    // Chip từng khung; khung 15m quyết định xu hướng ngày
+    $('#mtf-chips').innerHTML = rows.map((r) => {
+      const d = dirOf(r.xu_huong);
+      return `<div class="tf-chip ${d} ${r.khung === '15m' ? 'key' : ''}" title="${esc(r.khung)}: ${esc(r.xu_huong)}"><span>${esc(r.khung)}</span><b class="${d}">${esc(String(r.xu_huong || '').replace(/^Đi ngang$/i, 'Ngang'))}</b></div>`;
+    }).join('');
+
+    // Bảng chấm mũi tên: 4 tiêu chí
+    const emaDir = (s) => (/^trên/i.test(s || '') ? 'up' : /^dưới/i.test(s || '') ? 'down' : 'flat');
+    const numDir = (v) => (!ok(v) ? 'flat' : Number(v) > 0 ? 'up' : Number(v) < 0 ? 'down' : 'flat');
+    const histDir = (s) => {
+      const m = String(s || '').match(/histogram\s*([+\-−]?\d+(?:,\d+)?)/i);
+      if (!m) return 'flat';
+      const v = Number(m[1].replace('−', '-').replace(',', '.'));
+      return numDir(v);
+    };
+    $('#mtf-score').innerHTML = rows.map((r) => {
+      const ds = [dirOf(r.xu_huong), emaDir(r.gia_vs_ema), numDir(r.macd), histDir(r.macd_mo_ta)];
+      const u = ds.filter((d) => d === 'up').length, dn = ds.filter((d) => d === 'down').length;
+      const verdict = dn > u ? ['down', `Giảm ${dn}/4`] : u > dn ? ['up', `Tăng ${u}/4`] : ['flat', 'Cân bằng'];
+      return `<tr class="${r.khung === '15m' ? 'hl' : ''}"><td><b>${esc(r.khung)}</b></td>${ds.map((d) => `<td class="${d}">${arrow(d)}</td>`).join('')}
+        <td class="${verdict[0]}">${verdict[1]}</td></tr>`;
+    }).join('');
+
+    // Thẻ hành động cho người tích lũy
+    const trend = dirOf(c.xu_huong);
+    const tag = { down: 'THẬN TRỌNG', up: 'THUẬN LỢI', flat: 'CHỜ XÁC NHẬN' }[trend];
+    const be = breakEven();
+    const { sup, res } = keyLevels();
+    $('#action-card').innerHTML = `<div class="action-head"><span>Người tích lũy hôm nay</span><span class="action-tag ${trend}">${tag}</span></div>
+      <p>${esc(prose(c.tom_tat || ''))}</p>
+      <div class="levels">${be ? `<span class="pill gold">Điểm hòa vốn ${fmt(be, 0)}</span>` : ''}
+        ${sup.map((v) => `<span class="pill up">Hỗ trợ ${fmt(v, 0)}</span>`).join('')}
+        ${res.map((v) => `<span class="pill down">Kháng cự ${fmt(v, 0)}</span>`).join('')}</div>
+      <p class="small faint">Tham khảo, không phải khuyến nghị mua bán. Mức tin cậy: ${esc(c.tin_cay || '—')}.</p>`;
+    renderNextEvent();
+  }
+
+  // Tin quan trọng kế tiếp + đồng hồ đếm ngược (giờ Việt Nam)
+  function renderNextEvent() {
+    const c = state.d.claude || {};
+    const now = Date.now();
+    const evs = (c.lich_tin || []).map((x) => {
+      const hm = /^\d{1,2}:\d{2}$/.test(x.gio_vn || '') ? x.gio_vn.padStart(5, '0') : '00:00';
+      return { ...x, at: Date.parse(`${x.ngay}T${hm}:00+07:00`) };
+    }).filter((x) => Number.isFinite(x.at) && x.at > now).sort((a, b) => a.at - b.at || (b.muc_do || 0) - (a.muc_do || 0));
+    const el = $('#next-ev');
+    const ev = evs.find((x) => Number(x.muc_do) >= 2) || evs[0];
+    if (!ev) { el.innerHTML = ''; return; }
+    const tick = () => {
+      const ms = ev.at - Date.now();
+      if (ms <= 0) { el.querySelector('.cd').textContent = 'đang diễn ra'; return; }
+      const d = Math.floor(ms / 86400000), h = Math.floor(ms / 3600000) % 24, m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60;
+      el.querySelector('.cd').textContent = `${d ? `${d} ngày ` : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    };
+    el.innerHTML = `<span class="lbl">Tin kế tiếp · ${esc(ev.thu)} ${esc(ev.gio_vn)}</span><span class="cd"></span>
+      <span class="ev">${esc(ev.su_kien)} <span class="stars">${'★'.repeat(Math.max(0, Math.min(3, Number(ev.muc_do) || 0)))}</span></span>`;
+    tick();
+    clearInterval(renderNextEvent._t);
+    renderNextEvent._t = setInterval(tick, 1000);
+  }
+
+  // Biểu đồ chính của trạm: nến ngày, EMA, đường hỗ trợ / kháng cự / hòa vốn
+  async function initTermChart() {
+    const el = $('#tc-chart');
+    if (!el || !state.s) return;
+    if (!(await ensureCharts())) { chartFail(el, 'Không tải được thư viện biểu đồ. Hãy tải lại trang.'); return; }
+    const S = state.s;
+    // Không giữ thao tác cuộn trang: con lăn và vuốt dọc vẫn cuộn trang; kéo ngang và chụm 2 ngón vẫn xem biểu đồ
+    const ch = makeChart(el, {
+      rightPriceScale: { borderColor: css('--border'), scaleMargins: { top: 0.06, bottom: 0.06 } },
+      handleScroll: { mouseWheel: false, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+      handleScale: { mouseWheel: false, pinch: true, axisPressedMouseMove: true },
+    });
+    const candles = ch.addCandlestickSeries(candleColors());
+    candles.setData(S.t.map((t, i) => ({ time: t, open: S.o[i], high: S.h[i], low: S.l[i], close: S.c[i] })));
+    state.charts.termCandles = candles;
+    const lines = [[20, '#60a5fa', 1], [50, '#a78bfa', 1], [200, '#e6b84a', 2]];
+    lines.forEach(([n, color, w]) => {
+      const ser = ch.addLineSeries({ color, lineWidth: w, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
+      ser.setData(S.t.map((t, i) => ({ time: t, value: S[`ema${n}`][i] })));
+    });
+    const legend = [['#60a5fa', 'EMA20'], ['#a78bfa', 'EMA50'], ['#e6b84a', 'EMA200']].map(([c2, t]) => `<span><i style="border-color:${c2}"></i>${t}</span>`);
+    const { sup, res } = keyLevels();
+    sup.forEach((v) => candles.createPriceLine({ price: v, color: css('--up'), lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: 'Hỗ trợ' }));
+    res.forEach((v) => candles.createPriceLine({ price: v, color: css('--down'), lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: 'Kháng cự' }));
+    if (sup.length) legend.push(`<span><i class="dash" style="border-color:${css('--up')}"></i>Hỗ trợ</span>`);
+    if (res.length) legend.push(`<span><i class="dash" style="border-color:${css('--down')}"></i>Kháng cự</span>`);
+    const be = breakEven();
+    if (be) {
+      candles.createPriceLine({ price: be, color: css('--gold'), lineWidth: 2, lineStyle: 0, axisLabelVisible: true, title: 'Hòa vốn' });
+      legend.push(`<span><i style="border-color:${css('--gold')}"></i>Điểm hòa vốn</span>`);
+    }
+    $('#tc-legend').innerHTML = legend.join('') + '<span class="faint">Mức giá lấy từ bản nhận định gần nhất</span>';
+    state.charts.term = ch;
+    setTermRange(6);
+  }
+  function setTermRange(months) {
+    const ch = state.charts.term, S = state.s;
+    if (!ch || !S) return;
+    $$('#tc-range button').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.r) === months)));
+    const last = new Date(S.t[S.t.length - 1] + 'T00:00:00Z');
+    last.setUTCMonth(last.getUTCMonth() - months);
+    const f = last.toISOString().slice(0, 10);
+    const i0 = Math.max(0, S.t.findIndex((t) => t >= f));
+    ch.timeScale().setVisibleLogicalRange({ from: i0, to: S.t.length - 1 + 4 });
   }
 
   function renderClaude() {
@@ -587,6 +766,7 @@
     if (!$(`#tab-${name}`)) name = 'tong-quan';
     $$('.tab').forEach((s) => s.classList.toggle('active', s.id === `tab-${name}`));
     $$('.tab-btn').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+    $$('.bn-btn').forEach((b) => (b.dataset.tab === name ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current')));
     if (push) history.replaceState(null, '', `#${name}`);
     if (TAB_INIT[name] && !state.inited[name] && state.loaded) {
       state.inited[name] = true;
@@ -601,8 +781,10 @@
       document.documentElement.setAttribute('data-theme', next);
       try { localStorage.setItem('vang-theme', next); } catch (e) { /* bỏ qua */ }
       rethemeCharts();
-      if (state.s) sparkline($('#h-spark'), state.s.c.slice(-120));
+      if (state.charts.termCandles) state.charts.termCandles.applyOptions(candleColors());
     });
+    $$('#tc-range button').forEach((b) => b.addEventListener('click', () => setTermRange(Number(b.dataset.r))));
+    $$('.bn-btn').forEach((b) => b.addEventListener('click', () => { showTab(b.dataset.tab); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
     $('#share-btn').addEventListener('click', async () => {
       const url = location.href.split('#')[0];
       if (navigator.share) {
@@ -636,13 +818,14 @@
     if (state.d.prices && state.d.prices.rows && state.d.prices.rows.length) state.s = series(state.d.prices);
     const safe = (fn) => { try { fn(); } catch (e) { console.error(e); } };
     safe(renderHeader); safe(renderHero); safe(renderClaude); safe(renderKpis); safe(renderTechState);
-    safe(renderActivePatterns); safe(renderMtf); safe(renderCalendarNews);
+    safe(renderActivePatterns); safe(renderMtf); safe(renderRail); safe(renderCalendarNews);
     safe(renderInsights); safe(renderEvents); safe(renderSeason); safe(renderBacktestTable); safe(renderAccumulation); safe(renderMl);
     safe(renderDomestic);
     if (!state.d.meta) {
       $('#global-notice').innerHTML = '<div class="notice warn">Chưa tải được dữ liệu. Nếu trang vừa được tạo, hãy quay lại sau ít phút.</div>';
     }
     state.loaded = true;
+    initTermChart().catch((e) => console.error(e));
     const start = (location.hash || '#tong-quan').slice(1);
     await showTab(start, false);
     window.addEventListener('hashchange', () => showTab((location.hash || '#tong-quan').slice(1), false));

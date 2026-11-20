@@ -44,24 +44,60 @@
 
     <!-- ================= TỔNG QUAN ================= -->
     <section class="tab active" id="tab-tong-quan" role="tabpanel">
-      <div class="hero">
-        <div class="card hero-price">
-          <div class="eyebrow"><span id="h-label">XAU/USD</span> · nến D đã đóng cửa <span id="h-date">—</span></div>
-          <div class="big" id="h-close"><span class="skeleton">0.000,00</span></div>
-          <div class="chg-row" id="h-chg"></div>
-          <div id="h-ohlc"></div>
-          <div class="period-stats" id="h-periods"></div>
-          <div class="spark" id="h-spark" aria-hidden="true"></div>
+      <!-- Trạm theo dõi kiểu terminal -->
+      <div class="ticker" id="ticker" aria-label="Bảng giá nhanh">
+        <div class="tk-main">
+          <span class="tk-sym">XAU/USD</span>
+          <b class="tk-price" id="h-close"><span class="skeleton">0.000,00</span></b>
+          <span id="h-chg" class="tk-chg"></span>
         </div>
-        <div class="card view-card" id="claude-card">
-          <div class="eyebrow">Nhận định trong ngày · <span id="c-date">—</span></div>
-          <div class="trend-line">
-            <span class="trend-badge" id="c-trend">—</span>
-            <span class="pill" id="c-conf">Mức tin cậy: —</span>
+        <div class="tk-list" id="tk-list"></div>
+      </div>
+
+      <div class="term">
+        <div class="card term-chart">
+          <div class="term-head">
+            <div class="term-title">
+              <b>Nến ngày</b><span class="faint" id="h-date-wrap">đã đóng cửa <span id="h-date">—</span></span>
+            </div>
+            <div class="seg" id="tc-range" role="group" aria-label="Khoảng thời gian">
+              <button type="button" data-r="3" aria-pressed="false">3T</button>
+              <button type="button" data-r="6" aria-pressed="true">6T</button>
+              <button type="button" data-r="12" aria-pressed="false">1N</button>
+              <button type="button" data-r="36" aria-pressed="false">3N</button>
+            </div>
           </div>
-          <p class="view-summary" id="c-summary">Đang tải nhận định…</p>
-          <div class="tiers" id="c-tiers"></div>
+          <div id="h-ohlc" class="tc-ohlc"></div>
+          <div class="tc-chart" id="tc-chart"></div>
+          <div class="tc-legend" id="tc-legend"></div>
+          <div class="period-stats" id="h-periods"></div>
         </div>
+
+        <aside class="card term-rail" id="rail" aria-label="Phân tích đa khung">
+          <div class="term-head">
+            <div class="term-title"><b>Phân tích đa khung</b><span class="faint" id="mtf-date">—</span></div>
+          </div>
+          <div class="vote" id="mtf-vote"></div>
+          <div class="tf-chips" id="mtf-chips"></div>
+          <div class="table-wrap mtf-grid">
+            <table>
+              <thead><tr><th>Khung</th><th title="Hướng của cấu trúc giá">Xu hướng</th><th title="Giá so với EMA 200">Giá/EMA</th><th title="MACD so với mức 0">MACD</th><th title="Histogram MACD">Động lượng</th><th>Kết luận</th></tr></thead>
+              <tbody id="mtf-score"></tbody>
+            </table>
+          </div>
+          <div class="action" id="action-card"></div>
+          <div class="next-ev" id="next-ev"></div>
+        </aside>
+      </div>
+
+      <div class="card view-card" id="claude-card">
+        <div class="eyebrow">Nhận định trong ngày · <span id="c-date">—</span></div>
+        <div class="trend-line">
+          <span class="trend-badge" id="c-trend">—</span>
+          <span class="pill" id="c-conf">Mức tin cậy: —</span>
+        </div>
+        <p class="view-summary" id="c-summary">Đang tải nhận định…</p>
+        <div class="tiers" id="c-tiers"></div>
       </div>
 
       <div class="kpis" id="kpis"></div>
@@ -78,7 +114,7 @@
       </div>
 
       <div class="card" id="mtf-card">
-        <div class="card-head"><h3>Phân tích 5 khung thời gian</h3><span class="sub">Xu hướng ngày lấy theo khung 15m</span></div>
+        <div class="card-head"><h3>Chi tiết 5 khung: hỗ trợ, kháng cự, ghi chú</h3><span class="sub">Xu hướng ngày lấy theo khung 15m</span></div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Khung</th><th>Xu hướng</th><th>Giá so với EMA</th><th class="num">EMA</th><th class="num">MACD</th><th>Hỗ trợ</th><th>Kháng cự</th><th>Ghi chú</th></tr></thead>
@@ -319,6 +355,14 @@
     <div>Dữ liệu: Yahoo Finance (COMEX GC=F), Dukascopy, Vietcombank, SJC, PNJ, các báo trong nước và quốc tế. Phân tích hằng ngày bởi Claude. Biểu đồ: <a href="https://www.tradingview.com/lightweight-charts/" target="_blank" rel="noopener">TradingView Lightweight Charts™</a>.</div>
     <div>Đây là nghiên cứu tham khảo, không phải khuyến nghị mua bán. <span id="build-info"></span></div>
   </footer>
+
+  <nav class="bottom-nav" aria-label="Điều hướng nhanh">
+    <button type="button" class="bn-btn" data-tab="tong-quan" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l5-6 4 4 8-9"/><path d="M15 6h5v5"/></svg><span>Tổng quan</span></button>
+    <button type="button" class="bn-btn" data-tab="bieu-do"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M6 8h-2v6h2M12 3v18M12 6h-2v9h2M18 6v14M18 10h-2v5h2"/></svg><span>Biểu đồ</span></button>
+    <button type="button" class="bn-btn" data-tab="dinh-luong"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Định lượng</span></button>
+    <button type="button" class="bn-btn" data-tab="trong-nuoc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l9-6 9 6M5 10v9h14v-9M9 19v-5h6v5"/></svg><span>Trong nước</span></button>
+    <button type="button" class="bn-btn" data-tab="phuong-phap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg><span>Phương pháp</span></button>
+  </nav>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="vendor/lightweight-charts.js"></script>
