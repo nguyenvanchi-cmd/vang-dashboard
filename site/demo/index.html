@@ -73,7 +73,7 @@ button{font:inherit;color:inherit}
 .side-tabs button.on{color:var(--text);background:var(--panel);border-color:var(--line2)}
 .badge{position:absolute;top:-4px;right:8px;background:var(--down);color:#fff;font-size:10px;font-weight:800;border-radius:99px;padding:0 5px;line-height:16px}
 .scroll[hidden]{display:none!important}
-.scroll{overflow-y:auto;min-height:0;padding:10px;display:grid;gap:10px;align-content:start}
+.scroll{grid-template-columns:minmax(0,1fr);overflow-x:hidden;overflow-y:auto;min-height:0;padding:10px;display:grid;gap:10px;align-content:start}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:11px}
 .card-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .card-h h3{margin:0;font-size:13.5px;display:flex;align-items:center;gap:6px}
@@ -116,6 +116,11 @@ tr:last-child td{border-bottom:0}
 .kv{display:grid;grid-template-columns:96px 1fr;gap:6px 10px;font-size:12.5px}
 .kv span{color:var(--muted)}
 .kv b{font-weight:650}
+.trow{display:grid;grid-template-columns:10px 92px 1fr;gap:8px;align-items:start;font-size:12.5px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.trow:last-child{border-bottom:0}
+.trow i{width:8px;height:8px;border-radius:50%;margin-top:5px}
+.trow span{color:var(--muted)}
+.trow b{font-weight:600;min-width:0}
 .verdict{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding:8px 10px;border-radius:9px;background:var(--panel2);border:1px solid var(--line)}
 .verdict .big{font-size:18px;font-weight:850}
 .meter{height:7px;border-radius:99px;background:var(--bg);overflow:hidden;display:flex}
@@ -211,12 +216,14 @@ tr:last-child td{border-bottom:0}
         <div class="card">
           <div class="card-h"><h3>Phân tích đa khung</h3><button class="ghost" type="button" id="refresh">↻ Làm mới</button></div>
           <div class="ballot" id="ballot"></div>
+          <p class="note" id="ballot-note"></p>
         </div>
         <div class="card">
           <div class="card-h"><h3><i></i>Biến động trong</h3>
             <div class="seg" id="win-seg"><button type="button" data-w="5">5'</button><button type="button" data-w="15" class="on">15'</button><button type="button" data-w="60">1h</button></div>
           </div>
           <div class="tfc" id="tf-chips"></div>
+          <p class="note" id="tf-why"></p>
         </div>
         <div class="card">
           <div class="card-h"><h3><i></i>1. Dòng tiền</h3><span class="num" id="flow-sum" style="font-weight:800;font-size:12px"></span></div>
@@ -229,14 +236,17 @@ tr:last-child td{border-bottom:0}
         </div>
         <div class="card">
           <div class="card-h"><h3><i></i>3. Thời điểm hành động</h3><span class="pill" id="timing-tag">—</span></div>
-          <div class="kv" id="timing-kv"></div>
+          <div id="timing-rows"></div>
           <div class="verdict"><div><div class="big" id="timing-verdict">—</div><div class="note" id="timing-note" style="margin:0"></div></div><b class="num" id="timing-score" style="font-size:20px">—</b></div>
         </div>
         <div class="card">
-          <div class="card-h"><h3><i></i>Bảng điểm quyết định</h3><span class="pill" id="live-tag">TRỰC TIẾP</span></div>
+          <div class="card-h"><h3><i></i>Radar quyết định</h3>
+            <div class="seg" id="preset-seg"><button type="button" data-p="safe">An toàn</button><button type="button" data-p="bal" class="on">Cân bằng</button><button type="button" data-p="fast">Nhanh</button></div>
+          </div>
           <div class="score-grid" id="score-grid"></div>
           <div id="mbars" style="margin-top:8px"></div>
           <div id="comps" style="margin-top:8px"></div>
+          <p class="note" id="radar-note"></p>
           <p class="note">Bản demo: điểm số tính từ dữ liệu mô phỏng, chỉ để minh họa giao diện.</p>
         </div>
       </div>
@@ -312,24 +322,61 @@ function atr(bars, n = 14) { const s = bars.slice(-n - 1); let a = 0; for (let i
 
 // ================================================================ PHÂN TÍCH MỖI KHUNG
 const SIGTXT = { sell: 'BÁN', buy: 'MUA', wait: 'CHỜ' };
+// Luật mỗi khung (theo cách tính PLM mô tả công khai, code tự viết):
+// MUA khi 2 EMA nhanh xếp tăng + DÒNG TIỀN, SỨC MẠNH, LỰC NẾN đều dương + tin cậy ≥ 68%
+// + RSI < 68 + giá trên EMA nhanh từ 0,7 đến dưới 2,5 ATR. BÁN ngược lại (RSI > 40).
+const RULE = { conf: 68, rsiBuy: 68, rsiSell: 40, distMin: 0.7, distMax: 2.5 };
 function analyze(min) {
   const bars = agg(min).slice(-300);
   const c = bars.map((b) => b.c);
-  const e20 = emaArr(c, 20), e50 = emaArr(c, 50);
-  const n = c.length - 1;
-  const last = bars[n];
-  const trend = c[n] > e20[n] && e20[n] > e50[n] ? 1 : c[n] < e20[n] && e20[n] < e50[n] ? -1 : 0;
-  const flowSum = bars.slice(-10).reduce((a, b) => a + b.d, 0);
-  const flow = Math.abs(flowSum) < 400 ? 0 : Math.sign(flowSum);
+  const e8 = emaArr(c, 8), e21 = emaArr(c, 21);
+  const n = c.length - 1, last = bars[n], A = atr(bars);
+  const trend = e8[n] > e21[n] && e8[n] >= e8[n - 1] ? 1 : e8[n] < e21[n] && e8[n] <= e8[n - 1] ? -1 : 0;
+  const flowSum = bars.slice(-10).reduce((s, b) => s + b.d, 0);
+  const flowN = Math.tanh(flowSum / 2500);                                   // DÒNG TIỀN: tổng dòng tiền 10 nến
+  const powerN = Math.tanh((c[n] - c[Math.max(0, n - 5)]) / (A * 1.5));     // SỨC MẠNH: đà 5 nến theo ATR
+  const deltaN = Math.tanh((last.c - last.o) / (A * 0.5));                   // LỰC NẾN: nến đang chạy
+  const sgn = (x, eps) => (Math.abs(x) < eps ? 0 : Math.sign(x));
+  const flow = sgn(flowN, 0.08), power = sgn(powerN, 0.08), delta = sgn(deltaN, 0.05);
   const r = rsi(c.slice(-120));
-  const strength = r > 55 ? 1 : r < 45 ? -1 : 0;
-  const force = bars.slice(-3).reduce((a, b) => a + (b.c - b.o), 0);
-  const candle = Math.abs(force) < atr(bars) * 0.15 ? 0 : Math.sign(force);
-  const parts = [trend, flow, strength, candle];
-  const score = parts.reduce((a, b) => a + b, 0);
-  const sig = score >= 3 ? 'buy' : score <= -3 ? 'sell' : 'wait';
-  const conf = Math.round(Math.min(92, 52 + Math.abs(score) * 7 + Math.min(10, Math.abs(r - 50) / 2)));
-  return { min, bars, e20, e50, trend, flow, strength, candle, parts, score, sig, conf, rsi: r, atr: atr(bars), last, flowSum };
+  const dist = (c[n] - e8[n]) / A;
+  const parts = [trend, flow, power, delta];
+  const dir = trend || Math.sign(flowN + powerN);
+  const agree = [flow, power, delta].filter((x) => x !== 0 && x === dir).length;
+  const conf = Math.round(Math.min(95, 50 + agree * 7 + Math.abs(trend) * 6 + Math.min(10, Math.abs(r - 50) / 2.5)));
+  const allUp = trend > 0 && flow > 0 && power > 0 && delta > 0;
+  const allDn = trend < 0 && flow < 0 && power < 0 && delta < 0;
+  let sig = 'wait', why = 'Bốn chỉ số chưa cùng dấu';
+  if (allUp) {
+    if (conf < RULE.conf) why = `Tin cậy ${conf}% < ${RULE.conf}%`;
+    else if (r >= RULE.rsiBuy) why = `RSI ${f0(r)} đã quá mua`;
+    else if (dist < RULE.distMin) why = `Giá mới cách EMA nhanh ${f2(dist)} ATR`;
+    else if (dist >= RULE.distMax) why = `Giá chạy quá xa EMA (${f2(dist)} ATR)`;
+    else { sig = 'buy'; why = 'Đủ điều kiện MUA'; }
+  } else if (allDn) {
+    if (conf < RULE.conf) why = `Tin cậy ${conf}% < ${RULE.conf}%`;
+    else if (r <= RULE.rsiSell) why = `RSI ${f0(r)} đã quá bán`;
+    else if (-dist < RULE.distMin) why = `Giá mới cách EMA nhanh ${f2(-dist)} ATR`;
+    else if (-dist >= RULE.distMax) why = `Giá rơi quá xa EMA (${f2(-dist)} ATR)`;
+    else { sig = 'sell'; why = 'Đủ điều kiện BÁN'; }
+  }
+  const score = parts.reduce((s, x) => s + x, 0);
+  const st = structure(bars);
+  return { min, bars, e8, e21, trend, flow, power, delta, flowN, powerN, deltaN, parts, score, sig, conf, why, rsi: r, atr: A, last, flowSum, dist, st };
+}
+
+// PHIẾU TỔNG: phiếu khung = trọng số × độ tin cậy (MUA dương, BÁN âm, CHỜ = 0)
+const VOTE_W = { H1: 0.25, M15: 0.25, M5: 0.2, H4: 0.2, M1: 0.1 };
+const VOTE_WEAK = 10, VOTE_STRONG = 23;
+const voteOf = (a, k) => (a.sig === 'wait' ? 0 : VOTE_W[k] * a.conf * (a.sig === 'buy' ? 1 : -1));
+function globalVote(all) {
+  const v = Object.keys(VOTE_W).reduce((s, k) => s + voteOf(all[k], k), 0);
+  const m = Math.abs(v);
+  const level = m < VOTE_WEAK ? 'wait' : m < VOTE_STRONG ? 'weak' : 'strong';
+  const dir = level === 'wait' ? 'wait' : v > 0 ? 'buy' : 'sell';
+  const cur = all[state.tf];
+  const strong = level === 'strong' && cur && cur.sig === dir;   // thanh tín hiệu chỉ báo MẠNH khi khung đang xem cùng hướng
+  return { v, m, dir, level, strong };
 }
 
 // Đỉnh/đáy cục bộ và mốc cấu trúc BOS / CHOCH
@@ -378,7 +425,7 @@ chart.timeScale().subscribeVisibleLogicalRangeChange((r) => {
   syncing = false; drawOverlay();
 });
 
-const state = { tf: 'M5', showLine: false, showEma: true, an: {}, zones: null, priceLines: [], lastSig: {}, notis: [], unread: 0, win: 15 };
+const state = { preset: 'bal', newsLock: false, tf: 'M5',showLine: false, showEma: true, an: {}, zones: null, priceLines: [], lastSig: {}, notis: [], unread: 0, win: 15 };
 
 function setData(fit) {
   const a = analyze(TFMIN[state.tf]);
@@ -386,13 +433,13 @@ function setData(fit) {
   const bars = a.bars;
   candles.setData(bars.map((b) => ({ time: b.t + VN, open: b.o, high: b.h, low: b.l, close: b.c })));
   lineSeries.setData(bars.map((b) => ({ time: b.t + VN, value: b.c })));
-  emaFast.setData(bars.map((b, i) => ({ time: b.t + VN, value: a.e20[i] })));
-  emaSlow.setData(bars.map((b, i) => ({ time: b.t + VN, value: a.e50[i] })));
+  emaFast.setData(bars.map((b, i) => ({ time: b.t + VN, value: a.e8[i] })));
+  emaSlow.setData(bars.map((b, i) => ({ time: b.t + VN, value: a.e21[i] })));
   whale.setData(bars.map((b) => ({ time: b.t + VN, value: b.w, color: b.w >= 0 ? 'rgba(22,199,132,.75)' : 'rgba(239,79,95,.75)' })));
   let cum = 0; const rb = bars.map((b) => { cum += b.d; return { time: b.t + VN, value: cum }; });
   const m0 = rb.length > 120 ? rb[rb.length - 120].value : 0;
   retail.setData(rb.map((x) => ({ time: x.time, value: x.value - m0, color: x.value - m0 >= 0 ? 'rgba(22,199,132,.6)' : 'rgba(239,79,95,.6)' })));
-  const st = structure(bars);
+  const st = a.st;
   candles.setMarkers(st.marks);
   computeZones(a, st);
   if (fit) chart.timeScale().setVisibleLogicalRange({ from: bars.length - 70, to: bars.length + 6 });
@@ -454,7 +501,9 @@ function updateHeader() {
   $('#px-now').className = `price-now num ${chg >= 0 ? 'up' : 'down'}`;
   const p = $('#px-chg'); p.textContent = `${chg >= 0 ? '+' : ''}${f2(pct)}%`; p.className = `pill num ${chg >= 0 ? 'buy' : 'sell'}`;
   const a = state.an[state.tf] || analyze(TFMIN[state.tf]);
-  const sg = $('#sym-sig'); sg.textContent = SIGTXT[a.sig]; sg.className = `sig ${a.sig}`;
+  const g = state.global; const sg = $('#sym-sig');
+  if (g && g.strong) { sg.textContent = `${SIGTXT[g.dir]} MẠNH`; sg.className = `sig ${g.dir}`; }
+  else { sg.textContent = 'CHỜ'; sg.className = 'sig wait'; }
   const h = new Date((Date.now() / 1000 + VN) * 1000).getUTCHours();
   $('#session-name').textContent = h >= 6 && h < 14 ? 'CHÂU Á' : h >= 14 && h < 20 ? 'CHÂU ÂU' : 'CHÂU MỸ';
   const wl = a.bars[a.bars.length - 1].w;
@@ -497,16 +546,21 @@ function renderMulti() {
 
   // Phiếu đồng thuận M1..H4: mỗi chấm là dòng tiền 1 nến gần nhất
   const rows = ['M1', 'M5', 'M15', 'H1', 'H4'];
-  const sells = rows.filter((k) => all[k].sig === 'sell').length, buys = rows.filter((k) => all[k].sig === 'buy').length;
-  const lead = sells > buys ? 'sell' : buys > sells ? 'buy' : 'wait';
-  const flowCons = rows.filter((k) => Math.sign(all[k].flowSum) === (lead === 'buy' ? 1 : -1)).length;
-  $('#ballot').innerHTML = `<div class="ballot-head"><span class="up">● Vào</span><span class="${lead === 'buy' ? 'up' : 'down'}">Tiền ${lead === 'buy' ? 'vào' : 'rút'} đồng thuận ${flowCons}/5</span><span class="down">Ra ●</span></div>
-    ${rows.map((k) => { const a = all[k]; const last30 = a.bars.slice(-30);
-      return `<div class="brow"><span>${k}</span><div class="dots">${last30.map((b) => `<i style="background:${b.d >= 0 ? 'var(--up)' : 'var(--down)'};opacity:${Math.min(1, 0.25 + Math.abs(b.d) / 1500)}"></i>`).join('')}</div><b class="${a.score >= 0 ? 'up' : 'down'}">${a.score > 0 ? '+' : ''}${Math.round(a.score * 15 + a.rsi - 50)}</b></div>`; }).join('')}
-    <div class="ballot-box ${lead}"><div><small>PHIẾU</small><b>${SIGTXT[lead]}</b><small>M${buys} B${sells}</small><small>/5 khung</small></div></div>`;
+  const g = state.global = globalVote(all);
+  const lead = g.dir;
+  const buys = rows.filter((k) => all[k].sig === 'buy').length, sells = rows.filter((k) => all[k].sig === 'sell').length;
+  const flowCons = rows.filter((k) => Math.sign(all[k].flowSum) === (g.v >= 0 ? 1 : -1)).length;
+  const lvTxt = g.level === 'strong' ? (g.strong ? 'MẠNH' : 'mạnh, chờ khung') : g.level === 'weak' ? 'còn yếu' : 'chưa rõ';
+  $('#ballot').innerHTML = `<div class="ballot-head"><span class="up">● Vào</span><span class="${g.v >= 0 ? 'up' : 'down'}">Tiền ${g.v >= 0 ? 'vào' : 'rút'} đồng thuận ${flowCons}/5</span><span class="down">Ra ●</span></div>
+    ${rows.map((k) => { const a = all[k]; const last30 = a.bars.slice(-30); const pv = voteOf(a, k);
+      return `<div class="brow" title="${k}: ${SIGTXT[a.sig]} ${a.conf}% · ${a.why}"><span>${k}</span><div class="dots">${last30.map((b) => `<i style="background:${b.d >= 0 ? 'var(--up)' : 'var(--down)'};opacity:${Math.min(1, 0.25 + Math.abs(b.d) / 1500)}"></i>`).join('')}</div><b class="${pv > 0 ? 'up' : pv < 0 ? 'down' : 'faint'}">${pv > 0 ? '+' : ''}${f0(pv)}</b></div>`; }).join('')}
+    <div class="ballot-box ${lead}"><div><small>PHIẾU TỔNG</small><b>${SIGTXT[lead]} ${f0(g.m)}</b><small>${lvTxt}</small><small>M${buys} · B${sells} /5</small></div></div>`;
+  $('#ballot-note').innerHTML = `Phiếu khung = trọng số × tin cậy (H1, M15 25% · M5, H4 20% · M1 10%). |Tổng| &lt; ${VOTE_WEAK}: chờ · ${VOTE_WEAK}–${VOTE_STRONG}: yếu · ≥ ${VOTE_STRONG}: mạnh.`;
 
-  // Chip từng khung
-  $('#tf-chips').innerHTML = rows.map((k) => { const a = all[k]; return `<div class="${a.sig} ${k === state.tf ? 'cur' : ''}"><span>— ${k}</span>${SIGTXT[a.sig]} ${a.conf}%</div>`; }).join('');
+  // Chip từng khung: tín hiệu + lý do khi đang CHỜ
+  $('#tf-chips').innerHTML = rows.map((k) => { const a = all[k]; return `<div class="${a.sig} ${k === state.tf ? 'cur' : ''}" title="${a.why}"><span>— ${k}</span>${SIGTXT[a.sig]} ${a.conf}%</div>`; }).join('');
+  const cur = all[state.tf];
+  $('#tf-why').innerHTML = `<b>${state.tf}</b>: ${cur.why} · RSI ${f0(cur.rsi)} · cách EMA nhanh ${f2(cur.dist)} ATR`;
 
   // Dòng tiền: đường tích lũy dòng tiền từng khung trong cửa sổ đang chọn (phút)
   const W = 400, H = 110, pts = 40;
@@ -529,70 +583,141 @@ function renderMulti() {
 
   // Đồng thuận M5..D1
   const crow = ['M5', 'M15', 'H1', 'H4', 'D1'];
-  const cs = crow.filter((k) => all[k].score < 0).length, cb = crow.filter((k) => all[k].score > 0).length;
+  const cs = crow.filter((k) => all[k].sig === 'sell').length, cb = crow.filter((k) => all[k].sig === 'buy').length;
   $('#cons-sum').innerHTML = `<span class="up">MUA ${cb}/5</span> <span class="down">BÁN ${cs}/5</span>`;
   $('#cons-body').innerHTML = crow.map((k) => { const a = all[k]; const neg = a.parts.filter((x) => x < 0).length, pos = a.parts.filter((x) => x > 0).length;
-    const v = neg > pos ? `<span class="down">BÁN ${neg}/4</span>` : pos > neg ? `<span class="up">MUA ${pos}/4</span>` : '<span class="wait">CHỜ</span>';
-    return `<tr><td>${k}</td>${a.parts.map(AR).map((x) => `<td>${x}</td>`).join('')}<td>${v}</td></tr>`; }).join('');
+    const v = a.sig === 'buy' ? '<span class="up">MUA ✓</span>' : a.sig === 'sell' ? '<span class="down">BÁN ✓</span>'
+      : `<span class="wait">CHỜ</span> <span class="faint">${Math.max(neg, pos)}/4</span>`;
+    return `<tr title="${a.why}"><td>${k}</td>${a.parts.map(AR).map((x) => `<td>${x}</td>`).join('')}<td>${v}</td></tr>`; }).join('');
 
   renderTiming(all, lead);
   renderScores(all);
   checkAlerts(all);
 }
 
-function renderTiming(all, lead) {
-  const a = all[state.tf]; const d1 = all.D1;
-  const now = new Date((Date.now() / 1000 + VN) * 1000); const h = now.getUTCHours(), mi = now.getUTCMinutes();
-  const sess = h >= 6 && h < 14 ? 'Phiên Á' : h >= 14 && h < 20 ? 'Phiên Âu' : 'Phiên Mỹ';
-  const toEU = ((15 - h + 24) % 24) * 60 - mi;
-  const sessTxt = h < 15 && h >= 6 ? `Ngoài giờ chính • Phiên Âu mở 15:00 (sau ${Math.floor(toEU / 60)}h${String(toEU % 60).padStart(2, '0')})` : `${sess} đang mở`;
+// Lịch tin minh họa (giờ VN) — bản demo không lấy lịch tin thật
+const NEWS = [[19, 30, 'Đơn trợ cấp thất nghiệp Mỹ'], [21, 0, 'Niềm tin tiêu dùng Mỹ'], [1, 0, 'Biên bản họp Fed'], [9, 30, 'CPI Trung Quốc']];
+function vnNow() { const d = new Date((Date.now() / 1000 + VN) * 1000); return { h: d.getUTCHours(), m: d.getUTCMinutes() }; }
+function nextNews() {
+  const { h, m } = vnNow(); const now = h * 60 + m;
+  return NEWS.map(([hh, mm, name]) => { let d = hh * 60 + mm - now; if (d < 0) d += 1440; return { name, at: `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`, mins: d }; })
+    .sort((x, y) => x.mins - y.mins)[0];
+}
+function zoneGaps(a) {
+  const px = a.last.c, zs = state.zones || [];
+  const above = zs.filter((z) => z.kind === 'sell' && z.bot > px).map((z) => (z.bot - px) / a.atr).sort((x, y) => x - y)[0];
+  const below = zs.filter((z) => z.kind === 'buy' && z.top < px).map((z) => (px - z.top) / a.atr).sort((x, y) => x - y)[0];
+  const inBuy = zs.some((z) => z.kind === 'buy' && px <= z.top && px >= z.bot), inSell = zs.some((z) => z.kind === 'sell' && px <= z.top && px >= z.bot);
+  return { above, below, inBuy, inSell };
+}
+
+// THỜI ĐIỂM VÀO LỆNH: 5 dòng xanh/vàng/đỏ. Có đỏ → TRÁNH, từ 2 vàng → THẬN TRỌNG, còn lại → THUẬN.
+function renderTiming(all) {
+  const a = all[state.tf], d1 = all.D1, { h } = vnNow();
+  const rows = [];
+  // 1. Thanh khoản theo phiên
+  if (h >= 4 && h < 7) rows.push(['red', 'Phiên', 'Ngoài giờ chính, thanh khoản mỏng, spread dễ giãn']);
+  else if (h >= 7 && h < 14) rows.push(['yellow', 'Phiên', 'Phiên Á: biến động thấp đến vừa']);
+  else if (h >= 14 && h < 23) rows.push(['green', 'Phiên', h < 19 ? 'Phiên Âu: thanh khoản tốt' : 'Phiên Âu–Mỹ chồng nhau: thanh khoản cao nhất']);
+  else rows.push(['yellow', 'Phiên', 'Cuối phiên Mỹ: thanh khoản giảm dần']);
+  // 2. Tin mạnh
+  const nw = nextNews();
+  const nwTxt = `${nw.name} lúc ${nw.at} (còn ${nw.mins >= 60 ? `${Math.floor(nw.mins / 60)}h${String(nw.mins % 60).padStart(2, '0')}` : `${nw.mins} phút`}) · lịch minh họa`;
+  rows.push([nw.mins <= 30 ? 'red' : nw.mins <= 60 ? 'yellow' : 'green', 'Tin', nwTxt]);
+  // 3. Quãng đường trong ngày so với biên độ trung bình (ADR 14 ngày)
   const adr = d1.bars.slice(-15, -1).reduce((s, b) => s + (b.h - b.l), 0) / 14;
   const today = d1.bars[d1.bars.length - 1]; const used = ((today.h - today.l) / adr) * 100;
-  const stretch = a.last.c - a.e20[a.e20.length - 1];
-  const px = a.last.c; const zs = state.zones || [];
-  const nearBuy = zs.filter((z) => z.kind === 'buy').map((z) => px - z.top).filter((x) => x > 0).sort((x, y) => x - y)[0];
-  const nearSell = zs.filter((z) => z.kind === 'sell').map((z) => z.bot - px).filter((x) => x > 0).sort((x, y) => x - y)[0];
-  const score = Math.round(50 + Math.abs(a.score) * 6 + (used < 80 ? 5 : -5));
-  const ok = Math.abs(a.score) >= 3 && used < 85;
-  $('#timing-tag').textContent = ok ? 'THUẬN LỢI' : 'THẬN TRỌNG'; $('#timing-tag').className = `pill ${ok ? 'buy' : 'wait'}`;
-  $('#timing-kv').innerHTML = `
-    <span>Phiên</span><b>${sessTxt}</b>
-    <span>Tin</span><b>Không có tin mạnh trong 60 phút <span class="faint">(demo)</span></b>
-    <span>Biên độ ngày</span><b>Đã đi <span class="${used > 80 ? 'down' : ''}">${f0(used)}%</span> biên độ trung bình (${f2(adr)})</b>
-    <span>Độ giãn</span><b>${f2(Math.abs(stretch))} giá ${stretch < 0 ? 'dưới' : 'trên'} EMA nhanh • ${Math.abs(stretch) > a.atr ? 'giãn mạnh' : 'đà yếu'}</b>
-    <span>Cản gần nhất</span><b>${nearBuy != null ? `▲ Vùng mua ${f2(nearBuy)} giá` : ''}${nearBuy != null && nearSell != null ? ' • ' : ''}${nearSell != null ? `▼ Vùng bán ${f2(nearSell)} giá` : ''}</b>`;
-  $('#timing-verdict').textContent = ok ? SIGTXT[a.sig] : 'CHỜ';
-  $('#timing-verdict').className = `big ${ok ? (a.sig === 'buy' ? 'up' : 'down') : 'wait'}`;
-  $('#timing-note').textContent = ok ? `Điểm ${score}% đủ xác nhận trên ${state.tf}` : `CHỜ: điểm ${score}% chưa đủ xác nhận, không vào đuổi.`;
-  $('#timing-score').textContent = `${score}%`;
+  rows.push([used >= 90 ? 'red' : used >= 70 ? 'yellow' : 'green', 'Quãng đường', `Đã đi ${f0(used)}% biên độ ngày trung bình (${f2(adr)} giá)`]);
+  // 4. Độ giãn so với EMA nhanh
+  const ad = Math.abs(a.dist);
+  rows.push([ad >= RULE.distMax ? 'red' : ad >= 1.8 ? 'yellow' : 'green', 'Độ giãn', `${f2(ad)} ATR ${a.dist >= 0 ? 'trên' : 'dưới'} EMA nhanh${ad >= RULE.distMax ? ': vào lúc này là đuổi giá' : ''}`]);
+  // 5. Kẹt giữa hai mức cản
+  const zg = zoneGaps(a);
+  const tight = (x) => x != null && x < 1;
+  const both = tight(zg.above) && tight(zg.below);
+  const zTxt = [zg.above != null ? `▼ vùng bán trên ${f2(zg.above)} ATR` : 'không có vùng bán phía trên', zg.below != null ? `▲ vùng mua dưới ${f2(zg.below)} ATR` : 'không có vùng mua phía dưới'].join(' · ');
+  rows.push([both ? 'red' : tight(zg.above) || tight(zg.below) ? 'yellow' : 'green', 'Mức cản', zTxt]);
+
+  const reds = rows.filter((r) => r[0] === 'red').length, yellows = rows.filter((r) => r[0] === 'yellow').length;
+  const verdict = reds ? ['TRÁNH', 'sell', 'down', 'Có dòng đỏ: chờ dòng đỏ hết rồi xem lại.']
+    : yellows >= 2 ? ['THẬN TRỌNG', 'wait', 'wait', 'Từ 2 dòng vàng: vào khối lượng nhỏ, chốt sớm.']
+    : ['THUẬN', 'buy', 'up', 'Không có cảnh báo lớn: có thể vào theo kế hoạch.'];
+  const tag = $('#timing-tag'); tag.textContent = verdict[0]; tag.className = `pill ${verdict[1]}`;
+  const dot = { red: 'var(--down)', yellow: 'var(--wait)', green: 'var(--up)' };
+  $('#timing-rows').innerHTML = rows.map(([c, k, t]) => `<div class="trow"><i style="background:${dot[c]}"></i><span>${k}</span><b>${t}</b></div>`).join('');
+  $('#timing-verdict').textContent = verdict[0]; $('#timing-verdict').className = `big ${verdict[2]}`;
+  $('#timing-note').textContent = `${verdict[3]} Ô này chỉ để tham khảo, không đổi tín hiệu.`;
+  $('#timing-score').textContent = `${5 - reds - yellows}/5`;
+  state.newsLock = nw.mins <= 30;
+}
+
+// RADAR: 5 điểm thành phần → tỷ lệ MUA/CHỜ/BÁN, EDGE, điểm, rồi so với ngưỡng của chế độ đang chọn.
+const PRESETS = {
+  safe: { name: 'An toàn', min: 86, side: 52, confirm: 2 },
+  bal: { name: 'Cân bằng', min: 82, side: 58, confirm: 1 },
+  fast: { name: 'Nhanh', min: 74, side: 66, confirm: 1 },
+};
+const clamp = (x, lo = -1, hi = 1) => Math.max(lo, Math.min(hi, x));
+function radar(all) {
+  const a = all[state.tf]; const big = all[TFMIN[state.tf] >= 240 ? 'D1' : 'H1'];
+  const P = PRESETS[state.preset];
+  const trendDir = clamp(a.trend * 0.6 + big.trend * 0.4);
+  const flowDir = clamp(a.flowN * 0.7 + a.deltaN * 0.3);
+  const zg = zoneGaps(a);
+  let zoneDir = 0;
+  if (zg.inBuy) zoneDir = 1; else if (zg.inSell) zoneDir = -1;
+  else if (zg.above != null && zg.below != null) zoneDir = clamp((zg.above - zg.below) / (zg.above + zg.below));
+  const lm = a.st.marks[a.st.marks.length - 1];
+  const structDir = lm ? (lm.shape === 'arrowUp' ? 1 : -1) * (lm.text === 'CHOCH' ? 0.6 : 1) : 0;
+  const spread = Math.abs(a.e8[a.e8.length - 1] - a.e21[a.e21.length - 1]);
+  const sideway = Math.round(clamp(1 - spread / (a.atr * 1.2), 0, 1) * 70 + (1 - Math.abs(trendDir)) * 30);
+  const comps = [
+    ['TREND', 'Xu hướng', trendDir, 0.3, `Khung ${state.tf} + khung lớn ${TFMIN[state.tf] >= 240 ? 'D1' : 'H1'}`],
+    ['FLOW', 'Dòng tiền', flowDir, 0.25, 'Dòng tiền 10 nến + lực nến đang chạy'],
+    ['ZONE', 'Vùng', zoneDir, 0.2, 'Vị trí giá so với vùng mua/bán'],
+    ['STRUCTURE', 'Cấu trúc', structDir, 0.25, lm ? `Mốc gần nhất: ${lm.text} ${lm.shape === 'arrowUp' ? 'tăng' : 'giảm'}` : 'Chưa có BOS/CHOCH'],
+  ];
+  let buy = 0, sell = 0;
+  comps.forEach(([, , d, w]) => { if (d > 0) buy += d * w; else sell -= d * w; });
+  if (a.rsi > 70) buy *= 0.8; if (a.rsi < 30) sell *= 0.8;           // quá mua/quá bán giảm phía tương ứng
+  const waitW = (sideway / 100) * 0.6 + (1 - Math.abs(buy - sell)) * 0.25;
+  const tot = buy + sell + waitW || 1;
+  const B = Math.round((100 * buy) / tot), S = Math.round((100 * sell) / tot), W = 100 - B - S;
+  const edge = Math.abs(B - S);
+  const side = buy >= sell ? 'buy' : 'sell';
+  let score = Math.round(100 * Math.max(buy, sell));
+  if (state.newsLock) score -= 15;                                     // sát tin mạnh: trừ điểm
+  const lastTwo = a.bars.slice(-P.confirm);
+  const confirmed = lastTwo.every((b) => Math.sign(b.c - b.o) === (side === 'buy' ? 1 : -1));
+  const pass = score >= P.min && sideway <= P.side && W < 45 && confirmed && !state.newsLock;
+  const action = pass ? side : 'pass';
+  const quality = score >= P.min + 6 && pass ? 'RẤT TỐT' : pass ? 'KHÁ' : 'CHƯA ĐẠT';
+  const risk = sideway > P.side ? 'CAO' : pass && sideway < P.side - 15 ? 'THẤP' : 'TRUNG BÌNH';
+  const market = sideway > P.side ? 'ĐI NGANG' : trendDir > 0.3 ? 'TĂNG' : trendDir < -0.3 ? 'GIẢM' : 'ĐI NGANG';
+  const why = pass ? '' : state.newsLock ? 'sát giờ tin, khóa vào lệnh'
+    : score < P.min ? `điểm ${score} < ${P.min}` : sideway > P.side ? `nhiễu ${sideway} > ${P.side}` : W >= 45 ? 'tỷ lệ CHỜ còn cao' : `chưa đủ ${P.confirm} nến xác nhận`;
+  return { comps, B, S, W, edge, side, score, sideway, action, quality, risk, market, why, P };
 }
 
 function renderScores(all) {
-  const a = all[state.tf];
-  const total = ['M5', 'M15', 'H1', 'H4', 'D1'].reduce((s, k) => s + all[k].score, 0); // -20..20
-  const sell = Math.max(5, Math.round(33 - total * 1.6)), buy = Math.max(5, Math.round(33 + total * 1.6));
-  const wait = Math.max(5, 100 - sell - buy);
-  const norm = sell + buy + wait; const S = Math.round((sell / norm) * 100), B = Math.round((buy / norm) * 100), Wt = 100 - S - B;
-  const edge = Math.max(S, B);
-  const market = total < -3 ? 'GIẢM' : total > 3 ? 'TĂNG' : 'ĐI NGANG';
-  const risk = a.atr / a.last.c > 0.0012 ? 'CAO' : 'TRUNG BÌNH';
+  const r = radar(all);
+  const cls = (v) => (v === 'BÁN' || v === 'GIẢM' || v === 'CAO' ? 'down' : v === 'MUA' || v === 'TĂNG' || v === 'THẤP' || v === 'RẤT TỐT' ? 'up' : v === 'CHỜ' || v === 'BỎ QUA' || v === 'ĐI NGANG' || v === 'CHƯA ĐẠT' ? 'wait' : '');
+  const bias = r.edge < 8 ? 'CHỜ' : SIGTXT[r.side];
+  const act = r.action === 'pass' ? 'BỎ QUA' : SIGTXT[r.action];
   $('#score-grid').innerHTML = [
-    ['Ưu thế', edge], ['Khung', state.tf], ['Thiên hướng', SIGTXT[a.sig]],
-    ['Thị trường', market], ['Tin cậy', a.conf], ['Rủi ro', risk],
-  ].map(([k, v]) => `<div><span>${k}</span><b class="${v === 'BÁN' || v === 'GIẢM' ? 'down' : v === 'MUA' || v === 'TĂNG' ? 'up' : v === 'CHỜ' ? 'wait' : ''}">${v}</b></div>`).join('');
-  $('#mbars').innerHTML = [['MUA', B, 'var(--up)'], ['CHỜ', Wt, 'var(--wait)'], ['BÁN', S, 'var(--down)']]
+    ['Ưu thế (EDGE)', r.edge], ['Thiên hướng', bias], ['Hành động', act],
+    ['Thị trường', r.market], ['Chất lượng', r.quality], ['Rủi ro', r.risk],
+  ].map(([k, v]) => `<div><span>${k}</span><b class="${cls(v)}">${v}</b></div>`).join('');
+  $('#mbars').innerHTML = [['MUA', r.B, 'var(--up)'], ['CHỜ', r.W, 'var(--wait)'], ['BÁN', r.S, 'var(--down)']]
     .map(([k, v, c]) => `<div class="mbar"><span style="color:${c}">${k}</span><div class="meter"><i style="width:${v}%;background:${c}"></i></div><b class="num" style="text-align:right">${v}%</b></div>`).join('');
-  const dir = (v) => (v > 0 ? ['MUA', 'up'] : v < 0 ? ['BÁN', 'down'] : ['CHỜ', 'wait']);
-  const noise = Math.round(Math.min(100, (a.atr / Math.max(1e-9, Math.abs(a.e20[a.e20.length - 1] - a.e50[a.e50.length - 1]) + a.atr)) * 100));
-  const comps = [
-    ['Xu hướng', 50 + Math.abs(a.trend) * 10 + Math.abs(a.strength) * 5, a.trend, 'EMA/Xu hướng đa khung'],
-    ['Dòng tiền', 50 + Math.abs(a.flow) * 10, a.flow, `Dòng tiền ${f0(a.flowSum)} • Lực nến ${a.candle > 0 ? '+' : a.candle < 0 ? '−' : '0'}`],
-    ['Vùng', 55, 0, 'Cầu/Cung + vùng mua/bán gần nhất'],
-    ['Cấu trúc', 55, 0, 'BOS • CHOCH • đỉnh/đáy'],
-    ['Đi ngang', 100 - noise, noise < 60 ? 1 : 0, 'Đo độ nhiễu thị trường'],
-  ];
-  $('#comps').innerHTML = comps.map(([k, v, d, sub]) => { const [t, c] = k === 'Đi ngang' ? (d ? ['ĐẠT', 'up'] : ['NHIỄU', 'wait']) : dir(d);
-    return `<div class="comp"><b>${k}</b><b class="num">${Math.round(v)}</b><div class="meter"><i style="width:${Math.min(100, v)}%;background:var(--${c === 'up' ? 'up' : c === 'down' ? 'down' : 'wait'})"></i></div><span class="pill ${c === 'up' ? 'buy' : c === 'down' ? 'sell' : 'wait'}" style="text-align:center">${t}</span><small>${sub}</small></div>`; }).join('');
+  const rowsHtml = r.comps.map(([k, name, d, , sub]) => {
+    const v = Math.round(50 + 50 * Math.abs(d)); const [t, c] = d > 0.15 ? ['MUA', 'buy'] : d < -0.15 ? ['BÁN', 'sell'] : ['CHỜ', 'wait'];
+    return `<div class="comp"><b>${name}</b><b class="num">${v}</b><div class="meter"><i style="width:${v}%;background:var(--${c === 'buy' ? 'up' : c === 'sell' ? 'down' : 'wait'})"></i></div><span class="pill ${c}" style="text-align:center">${t}</span><small>${k} · ${sub}</small></div>`;
+  }).join('');
+  const sw = r.sideway > r.P.side;
+  $('#comps').innerHTML = rowsHtml + `<div class="comp"><b>Đi ngang</b><b class="num">${r.sideway}</b><div class="meter"><i style="width:${r.sideway}%;background:var(--${sw ? 'down' : 'up'})"></i></div><span class="pill ${sw ? 'sell' : 'buy'}" style="text-align:center">${sw ? 'NHIỄU' : 'ĐẠT'}</span><small>SIDEWAY · càng cao càng dễ bị chặn (tối đa ${r.P.side})</small></div>`;
+  $('#radar-note').innerHTML = `Chế độ <b>${r.P.name}</b>: điểm tối thiểu ${r.P.min}, đi ngang tối đa ${r.P.side}${r.P.confirm > 1 ? `, cần ${r.P.confirm} nến xác nhận` : ''}. Điểm hiện tại <b class="num">${r.score}</b>${r.why ? ` · bỏ qua vì ${r.why}` : ''}.`;
+  state.radar = r;
 }
 
 // ================================================================ THÔNG BÁO
@@ -603,6 +728,9 @@ function pushNoti(text, kind) {
   renderNoti();
 }
 function checkAlerts(all) {
+  const g = state.global; const gk = g ? (g.strong ? `${g.dir}-strong` : g.dir) : '';
+  if (state.lastGlobal != null && gk !== state.lastGlobal && g.strong) pushNoti(`Phiếu tổng ${SIGTXT[g.dir]} MẠNH ${f0(g.m)} và khung ${state.tf} cùng hướng`, g.dir);
+  state.lastGlobal = gk;
   ['M5', 'M15', 'H1'].forEach((k) => {
     const s = all[k].sig; const prev = state.lastSig[k];
     if (prev && prev !== s) pushNoti(`${k}: tín hiệu đổi từ ${SIGTXT[prev]} sang <b class="${s === 'buy' ? 'up' : s === 'sell' ? 'down' : 'wait'}">${SIGTXT[s]}</b> (${all[k].conf}%)`, s);
@@ -671,6 +799,7 @@ $('#type-btn').addEventListener('click', () => { state.showLine = !state.showLin
 $('#ema-btn').addEventListener('click', () => { state.showEma = !state.showEma; emaFast.applyOptions({ visible: state.showEma }); emaSlow.applyOptions({ visible: state.showEma }); $('#ema-btn').classList.toggle('on', state.showEma); });
 $('#ema-btn').classList.add('on');
 $('#refresh').addEventListener('click', renderMulti);
+$$('#preset-seg button').forEach((b) => b.addEventListener('click', () => { state.preset = b.dataset.p; $$('#preset-seg button').forEach((x) => x.classList.toggle('on', x === b)); renderMulti(); }));
 $$('#win-seg button').forEach((b) => b.addEventListener('click', () => { state.win = Number(b.dataset.w); $$('#win-seg button').forEach((x) => x.classList.toggle('on', x === b)); renderMulti(); }));
 $('#menu-btn').addEventListener('click', () => pushNoti('Danh mục sản phẩm chưa có trong bản demo (chỉ có XAUUSD).', 'wait'));
 new ResizeObserver(() => drawOverlay()).observe($('#chart'));
