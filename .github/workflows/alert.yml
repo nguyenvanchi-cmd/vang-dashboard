@@ -1,0 +1,41 @@
+name: Cảnh báo Telegram (Terminal DEMO)
+
+# Khoảng 10 phút một lần (GitHub có thể chạy trễ vài phút khi đông).
+# Cần secret TELEGRAM_BOT_TOKEN và TELEGRAM_CHAT_ID; chưa có thì chỉ chạy thử và in kết quả ra nhật ký.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vang-alert
+  cancel-in-progress: false
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tính phiếu tổng và kiểm tra tin sắp ra
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python3 scripts/telegram_alert.py
+
+      - name: Lưu trạng thái đã gửi
+        run: |
+          git config user.name "vang-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/alert_state.json
+          if git diff --cached --quiet; then
+            echo "Không đổi trạng thái"
+          else
+            git commit -m "Trạng thái cảnh báo $(TZ=Asia/Ho_Chi_Minh date '+%Y-%m-%d %H:%M')"
+            git pull --rebase --autostash origin main || true
+            git push || echo "Đẩy trạng thái thất bại, lần sau thử lại"
+          fi

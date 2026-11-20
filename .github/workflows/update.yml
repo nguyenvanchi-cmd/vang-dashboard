@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: "15 23 * * 0-5"   # 06:15 giờ Việt Nam, thứ Hai đến thứ Bảy (sau khi phiên Mỹ đóng cửa)
     - cron: "30 9 * * 1-6"    # 16:30 giờ Việt Nam, cập nhật giá trong nước buổi chiều
+    - cron: "5 * * * *"       # mỗi giờ: chỉ cập nhật lịch tin + DXY cho Terminal DEMO (bỏ qua bước nặng)
   workflow_dispatch:
   push:
     branches: [main]
@@ -33,15 +34,23 @@ jobs:
           python-version: "3.12"
 
       - name: Cài thư viện
+        if: github.event.schedule != '5 * * * *'
         run: pip install --quiet pandas numpy scikit-learn
 
       - name: Lấy dữ liệu giá, tỷ giá, giá trong nước
+        if: github.event.schedule != '5 * * * *'
         run: python scripts/fetch_data.py
         continue-on-error: true
         timeout-minutes: 20
 
       - name: Phân tích định lượng và học máy
+        if: github.event.schedule != '5 * * * *'
         run: python scripts/analyze.py
+
+      - name: Lịch tin kinh tế và DXY (Terminal DEMO)
+        run: python scripts/fetch_macro.py
+        continue-on-error: true
+        timeout-minutes: 5
 
       - name: Tải thư viện biểu đồ
         run: |
