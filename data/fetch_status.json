@@ -1,15 +1,15 @@
 {
- "run_at": "2026-11-25T03:18:54+07:00",
+ "run_at": "2026-11-25T10:07:32+07:00",
  "steps": [
   {
    "step": "Giá vàng (Yahoo GC=F)",
    "ok": true,
-   "msg": "6584 dòng, 2000-08-30 → 2026-11-23; nến cuối O 3570.5 H 3691.0 L 3552.300048828125 C 3651.39990234375; bỏ 1 nến của phiên chưa đóng cửa"
+   "msg": "6585 dòng, 2000-08-30 → 2026-11-24; nến cuối O 3636.39990234375 H 3676.699951171875 L 3545.39990234375 C 3561.89990234375; bỏ 1 nến của phiên chưa đóng cửa"
   },
   {
    "step": "Tỷ giá USD/VND (Vietcombank)",
    "ok": true,
-   "msg": "25990.0"
+   "msg": "25970.0"
   },
   {
    "step": "Giá trong nước (SJC)",
@@ -24,7 +24,7 @@
   {
    "step": "Giá trong nước (báo cáo Claude)",
    "ok": true,
-   "msg": "8 dòng ngày 2026-11-21"
+   "msg": "7 dòng ngày 2026-11-25"
   }
  ]
 }
