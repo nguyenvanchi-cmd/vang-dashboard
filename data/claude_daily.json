@@ -1,74 +1,74 @@
 {
-  "ngay": "2026-11-25",
-  "cap_nhat": "06:47 thứ Tư 25/11/2026",
+  "ngay": "2026-11-26",
+  "cap_nhat": "06:45 thứ Năm 26/11/2026",
   "xu_huong": "Đi ngang",
   "tin_cay": "Thấp",
-  "tom_tat": "Vàng đóng cửa thứ Ba 24/11 ở 3.556,4 (-2,16%), xóa trọn phiên hồi 23/11 sau khi niềm tin tiêu dùng Mỹ tăng vọt; từ đêm qua giá chỉ dao động 3.546,6–3.575, khung 15m đi ngang với phân kỳ dương nhưng khung D, 4h, 1h đều giảm. Người tích lũy tiếp tục dừng giải ngân, chờ số PCE 20h30 tối nay và theo dõi đáy 3.503; giá trong nước chưa giảm theo thế giới, nên chờ bảng giá mới sau 9h.",
-  "xau_usd": 3556.365,
-  "xau_doi_pct": -2.16,
-  "usd_vnd": 25990,
-  "sjc_mua": 130.0,
-  "sjc_ban": 135.0,
+  "tom_tat": "Vàng đóng cửa thứ Tư 25/11 ở 3.589,4 (+0,93%): sau số GDP và PCE nóng, giá thủng 3.503 xuống 3.426,8 rồi hồi 162,6 USD, thành nến búa ở vùng thấp nhất khoảng 14 tháng; sáng nay khung 15m đi ngang 3.565–3.590 trên EMA 200, chạm vùng cản Fibonacci 3.590–3.597 trong ngày Mỹ nghỉ lễ. Người tích lũy tiếp tục dừng giải ngân, chờ nến D đóng trên 3.637 mới có Mua xác nhận; giá trong nước đang dùng bảng chiều 25/11, nên chờ bảng giá mới sau 9h.",
+  "xau_usd": 3589.435,
+  "xau_doi_pct": 0.93,
+  "usd_vnd": 26020,
+  "sjc_mua": 129.1,
+  "sjc_ban": 134.1,
   "da_khung": [
     {
       "khung": "D",
       "thu_tu": 1,
-      "xu_huong": "Giảm",
+      "xu_huong": "Giảm (xuất hiện nến búa)",
       "gia_vs_ema": "Dưới xa",
-      "ema": 4201.87,
-      "macd": -140.68,
-      "macd_mo_ta": "Dưới 0 và dưới đường trung bình (-105,85); histogram nến 24/11 mở rộng nhẹ (-37,24 so với -36,85); số -140,68 tính cả nến đang chạy",
-      "ho_tro": "3.546,6; 3.503; 3.450; 3.400",
-      "khang_cu": "3.637; 3.655; 3.678–3.690",
-      "ghi_chu": "Nến 24/11 giảm 2,16%, nhấn chìm phiên tăng 23/11, đóng sát đáy; đáy 3.546,6 chưa phá đáy 3.503 (20/11); chưa có phân kỳ dương"
+      "ema": 4196.05,
+      "macd": -139.63,
+      "macd_mo_ta": "Dưới 0 và dưới đường trung bình (-112,15); histogram co lại từ -37,24 (24/11) xuống -32,54 (25/11), nến đang chạy -27,47",
+      "ho_tro": "3.500–3.503; 3.467; 3.426,8",
+      "khang_cu": "3.597; 3.637; 3.678–3.690",
+      "ghi_chu": "Nến búa 25/11: bóng dưới 132,8 USD, đóng cửa sát đỉnh phiên. Đáy mới 3.426,8 có MACD thấp hơn đáy 20/11 nên chưa có phân kỳ dương. Giá thấp hơn EMA 200 14,5%"
     },
     {
       "khung": "4h",
       "thu_tu": 2,
-      "xu_huong": "Giảm (nhịp hồi thất bại)",
+      "xu_huong": "Giảm, đang hồi",
       "gia_vs_ema": "Dưới xa",
-      "ema": 3949.69,
-      "macd": -42.64,
-      "macd_mo_ta": "Dưới 0, vẫn trên đường trung bình (-45,91) nhưng histogram co nhanh từ +16,98 xuống +3,27, sắp cắt xuống",
-      "ho_tro": "3.543; 3.520; 3.503",
-      "khang_cu": "3.574; 3.596; 3.618; 3.678–3.690",
-      "ghi_chu": "Đỉnh thấp hơn (3.678,5 dưới 3.689,9); giá về sâu 78,6% nhịp hồi 3.503,0–3.689,9; đáy 3.503 chưa thủng"
+      "ema": 3925.53,
+      "macd": -40.63,
+      "macd_mo_ta": "Dưới 0, đã cắt lên đường trung bình (-46,34) từ nến 1h sáng 26/11; histogram +5,71 và mở rộng",
+      "ho_tro": "3.558; 3.527; 3.500–3.503; 3.426,8",
+      "khang_cu": "3.589–3.597; 3.634; 3.678–3.690",
+      "ghi_chu": "Phân kỳ dương: đáy 3.426,8 (MACD -51,97) thấp hơn đáy 3.503,0 (MACD -87,89). Đỉnh vẫn thấp dần (3.689,9) nên chưa đổi xu hướng"
     },
     {
       "khung": "1h",
       "thu_tu": 3,
-      "xu_huong": "Giảm",
+      "xu_huong": "Hồi tăng",
       "gia_vs_ema": "Dưới xa",
-      "ema": 3734.25,
-      "macd": -20.25,
-      "macd_mo_ta": "Dưới 0 từ nến 21h 24/11, dưới đường trung bình (-13,50); histogram -6,75, co lại từ -9,48",
-      "ho_tro": "3.546,6; 3.543; 3.520",
-      "khang_cu": "3.569–3.575; 3.596; 3.613–3.622",
-      "ghi_chu": "Đỉnh thấp dần 3.689,9 → 3.678,5 → 3.646,8; đáy thấp dần 3.619,8 → 3.607,5 → 3.546,6; nến 22h (giờ công bố niềm tin tiêu dùng) giảm 53 USD"
+      "ema": 3691.65,
+      "macd": -1.37,
+      "macd_mo_ta": "Sắp vượt 0, trên đường trung bình (-15,19); histogram +13,82, còn mở rộng",
+      "ho_tro": "3.565–3.568; 3.546; 3.527",
+      "khang_cu": "3.590; 3.597; 3.607–3.622",
+      "ghi_chu": "Hình chữ V từ 3.426,8: 5 nến 1h liên tiếp tạo đỉnh cao dần lên 3.590. Không có phân kỳ"
     },
     {
       "khung": "15m",
       "thu_tu": 4,
-      "xu_huong": "Đi ngang (nghiêng giảm)",
-      "gia_vs_ema": "Dưới xa",
-      "ema": 3612.03,
-      "macd": -7.09,
-      "macd_mo_ta": "Dưới 0 nhưng đã cắt lên đường trung bình (-9,52) từ nến 2h30; histogram +2,43, vừa co lại sau đỉnh +3,27",
-      "ho_tro": "3.546,6; 3.543; 3.520",
-      "khang_cu": "3.569–3.575; 3.585–3.597; 3.608–3.612",
-      "ghi_chu": "Từ 23h dao động 3.546,6–3.575; phân kỳ dương (đáy 3.546,6 thấp hơn 3.552,9 nhưng MACD -12,81 cao hơn -16,02); nhịp hồi 6h lên 3.569,1 bị bán lại"
+      "xu_huong": "Đi ngang (nghiêng tăng)",
+      "gia_vs_ema": "Trên",
+      "ema": 3561.46,
+      "macd": 19.53,
+      "macd_mo_ta": "Trên 0 nhưng vừa cắt xuống đường trung bình (19,79); histogram -0,26, co dần từ +8,13 lúc 3h15",
+      "ho_tro": "3.565–3.568; 3.561; 3.546–3.558",
+      "khang_cu": "3.588–3.590; 3.597",
+      "ghi_chu": "Từ 3h15 đi ngang 3.565,6–3.590,0, đáy nâng dần; EMA 200 vừa quay lên. Chưa có phân kỳ âm nhưng đà tăng chững lại ở vùng Fibonacci 61,8%"
     },
     {
       "khung": "1m",
       "thu_tu": 5,
-      "xu_huong": "Giảm nhẹ",
-      "gia_vs_ema": "Dưới",
-      "ema": 3558.06,
-      "macd": -2.06,
-      "macd_mo_ta": "Dưới 0 và dưới đường trung bình (-1,22); histogram -0,84, đang co lại",
-      "ho_tro": "3.552,6; 3.546,6",
-      "khang_cu": "3.558; 3.563,8; 3.569,1",
-      "ghi_chu": "Sau đỉnh 3.569,1 lúc 6h28, giá rơi về 3.552,6 lúc 6h41, đang dao động sát đáy phiên sáng"
+      "xu_huong": "Tăng nhẹ",
+      "gia_vs_ema": "Trên",
+      "ema": 3565.59,
+      "macd": 1.61,
+      "macd_mo_ta": "Trên 0 và trên đường trung bình (0,91); histogram +0,70",
+      "ho_tro": "3.568,6–3.568,8",
+      "khang_cu": "3.584,6; 3.590",
+      "ghi_chu": "Hai đáy ngang nhau lúc 6h12 và 6h34 rồi vượt đỉnh 3.580,4, lên 3.584,6 lúc 6h44"
     }
   ],
   "ba_tang": [
@@ -77,21 +77,21 @@
       "tang": "Gốc",
       "huong": "Lên (đang điều chỉnh sâu)",
       "trang_thai": "Chín",
-      "ly_do": "Ngân hàng trung ương mua khoảng 320 tấn vàng quý 3/2026 (+42%), quỹ ETF vàng nắm giữ kỷ lục 4.275 tấn cuối tháng 10; nhưng giá đã thấp hơn EMA 200 khung D 15,4% và ở vùng thấp nhất khoảng 14 tháng, lực đỡ dài hạn đang bị thử thách."
+      "ly_do": "Ngân hàng trung ương mua khoảng 320 tấn vàng quý 3/2026, quỹ ETF vàng nắm giữ kỷ lục 4.275 tấn cuối tháng 10; nhưng giá thấp hơn EMA 200 khung D 14,5% và vừa chạm vùng thấp nhất khoảng 14 tháng (3.426,8), lực đỡ dài hạn đang bị thử thách."
     },
     {
       "ma": "than",
       "tang": "Thân",
       "huong": "Xuống",
       "trang_thai": "Chín",
-      "ly_do": "Thị trường định giá khoảng 95% khả năng Fed tăng 0,25 điểm ngày 9/12 và niềm tin tiêu dùng Mỹ lên 103,3, cao nhất gần 2 năm; lợi suất 10 năm khoảng 4,90%; khung D có đáy thấp dần, MACD khung D giảm tiếp xuống -134,39 ở nến 24/11."
+      "ly_do": "Thị trường định giá khoảng 92% khả năng Fed tăng 0,25 điểm ngày 9/12; GDP quý 3 sửa lên 4,3% và PCE lõi 3,3% cao hơn dự báo; khung D vẫn có đáy thấp dần, MACD khung D -137,82 ở nến 25/11."
     },
     {
       "ma": "ngon",
       "tang": "Ngọn",
-      "huong": "Xuống (nhịp hồi 23/11 thất bại)",
-      "trang_thai": "Chín",
-      "ly_do": "Nến D 24/11 giảm 2,16%, nhấn chìm phiên tăng 23/11 và khung 4h có đỉnh thấp hơn; khung 15m đang đi ngang 3.546,6–3.575 với phân kỳ dương, chờ số PCE tối 25/11 để chọn hướng."
+      "huong": "Lên (nhịp hồi sau nến búa)",
+      "trang_thai": "Mầm",
+      "ly_do": "Nến D 25/11 hồi 162,6 USD từ đáy 3.426,8, khung 4h có phân kỳ dương và MACD cắt lên; nhưng mới là một cây nến, khung 15m đang chững ở vùng cản 3.590–3.597 trong ngày Mỹ nghỉ lễ."
     }
   ],
   "gia_trong_nuoc": [
@@ -99,229 +99,210 @@
       "ma": "sjc_mieng",
       "thuong_hieu": "SJC",
       "loai": "Miếng SJC",
-      "mua": 130.0,
-      "ban": 135.0,
-      "thoi_diem": "Sáng 25/11 (5h00)"
+      "mua": 129.1,
+      "ban": 134.1,
+      "thoi_diem": "Chiều 25/11 (15h)"
     },
     {
       "ma": "doji_mieng",
       "thuong_hieu": "DOJI",
       "loai": "Miếng SJC",
-      "mua": 130.0,
-      "ban": 135.0,
-      "thoi_diem": "Sáng 25/11 (5h00)"
+      "mua": 129.1,
+      "ban": 134.1,
+      "thoi_diem": "Chiều 25/11 (15h)"
     },
     {
       "ma": "pnj_mieng",
       "thuong_hieu": "PNJ",
       "loai": "Miếng SJC",
-      "mua": 130.0,
-      "ban": 135.0,
-      "thoi_diem": "Sáng 25/11 (5h00)"
+      "mua": 129.1,
+      "ban": 134.1,
+      "thoi_diem": "Chiều 25/11 (15h)"
     },
     {
-      "ma": "btmh_mieng",
-      "thuong_hieu": "Bảo Tín Mạnh Hải",
+      "ma": "btmc_mieng",
+      "thuong_hieu": "Bảo Tín Minh Châu",
       "loai": "Miếng SJC",
-      "mua": 130.0,
-      "ban": 135.0,
-      "thoi_diem": "Sáng 25/11 (5h00)"
+      "mua": 128.5,
+      "ban": 134.1,
+      "thoi_diem": "Chiều 25/11 (15h)"
     },
     {
       "ma": "phuquy_mieng",
       "thuong_hieu": "Phú Quý",
       "loai": "Miếng SJC",
-      "mua": 129.7,
-      "ban": 135.0,
-      "thoi_diem": "Sáng 25/11 (5h00)"
+      "mua": 128.5,
+      "ban": 134.0,
+      "thoi_diem": "Chiều 25/11 (15h)"
     },
     {
       "ma": "sjc_nhan",
       "thuong_hieu": "SJC",
       "loai": "Nhẫn 9999",
-      "mua": 128.8,
-      "ban": 134.8,
-      "thoi_diem": "Sáng 25/11 (5h00)"
+      "mua": 127.9,
+      "ban": 133.9,
+      "thoi_diem": "Chiều 25/11 (15h)"
     },
     {
       "ma": "doji_nhan",
       "thuong_hieu": "DOJI",
       "loai": "Nhẫn 9999",
-      "mua": 130.0,
-      "ban": 135.0,
-      "thoi_diem": "Sáng 25/11 (5h00)"
+      "mua": 128.5,
+      "ban": 133.5,
+      "thoi_diem": "Chiều 25/11 (15h)"
     },
     {
-      "ma": "phuquy_nhan",
-      "thuong_hieu": "Phú Quý",
+      "ma": "btmc_nhan",
+      "thuong_hieu": "Bảo Tín Minh Châu",
       "loai": "Nhẫn 9999",
-      "mua": 129.7,
-      "ban": 133.7,
-      "thoi_diem": "Sáng 25/11 (5h00)"
+      "mua": 128.5,
+      "ban": 133.5,
+      "thoi_diem": "Chiều 25/11 (15h)"
     },
     {
       "ma": "pnj_nhan",
       "thuong_hieu": "PNJ",
       "loai": "Nhẫn 9999",
-      "mua": 127.0,
-      "ban": 132.5,
-      "thoi_diem": "Sáng 25/11 (5h00)"
+      "mua": 126.0,
+      "ban": 131.5,
+      "thoi_diem": "Chiều 25/11 (15h)"
+    },
+    {
+      "ma": "phuquy_nhan",
+      "thuong_hieu": "Phú Quý",
+      "loai": "Nhẫn 9999",
+      "mua": 128.0,
+      "ban": 132.0,
+      "thoi_diem": "Sáng 25/11 (CafeF 9h48)"
     }
   ],
   "lich_tin": [
     {
-      "ma": "pce_2511",
-      "ngay": "2026-11-25",
-      "thu": "Thứ Tư 25/11",
-      "gio_vn": "20:30",
-      "su_kien": "Chỉ số giá PCE tháng 10 và thu nhập, chi tiêu cá nhân",
-      "muc_do": 3,
-      "ghi_chu": "PCE kỳ trước +0,5% so với tháng trước, dự báo +0,3%; PCE lõi dự báo +0,3% và 3,2% (Finviz, đọc 21/11); quan trọng nhất tuần"
-    },
-    {
-      "ma": "gdp_2511",
-      "ngay": "2026-11-25",
-      "thu": "Thứ Tư 25/11",
-      "gio_vn": "20:30",
-      "su_kien": "GDP quý 3 ước tính lần 2",
-      "muc_do": 2,
-      "ghi_chu": "Dự báo 3,4% (Finviz, đọc 21/11, chưa kiểm lại); giờ theo FedRateCalc"
-    },
-    {
-      "ma": "beige_2611",
-      "ngay": "2026-11-26",
-      "thu": "Thứ Năm 26/11",
-      "gio_vn": "02:00",
-      "su_kien": "Fed công bố Sổ Beige",
-      "muc_do": 2,
-      "ghi_chu": "14:00 giờ New York ngày 25/11 (lịch dùng từ bản 24/11; FinanceCalendar có mục Sổ Beige tháng 11/2026)"
-    },
-    {
-      "ma": "ta_on_2611",
+      "ma": "le_ta_on",
       "ngay": "2026-11-26",
       "thu": "Thứ Năm 26/11",
       "gio_vn": "Cả ngày",
-      "su_kien": "Lễ Tạ ơn: thị trường Mỹ nghỉ",
+      "su_kien": "Mỹ nghỉ Lễ Tạ ơn: chứng khoán và trái phiếu đóng cửa",
       "muc_do": 2,
-      "ghi_chu": "Thanh khoản mỏng, giá dễ giật mạnh"
+      "ghi_chu": "Thanh khoản vàng mỏng; số lợi suất mới nhất là của phiên 25/11"
     },
     {
-      "ma": "trade_2711",
+      "ma": "dong_cua_som",
       "ngay": "2026-11-27",
       "thu": "Thứ Sáu 27/11",
-      "gio_vn": "20:30",
-      "su_kien": "Cán cân thương mại hàng hóa sơ bộ tháng 10; phiên sau Lễ Tạ ơn",
-      "muc_do": 1,
-      "ghi_chu": "Thị trường Mỹ đóng cửa sớm; lịch theo Finviz (đọc 21/11, chưa kiểm lại)"
-    },
-    {
-      "ma": "opec_2911",
-      "ngay": "2026-11-29",
-      "thu": "Chủ nhật 29/11",
       "gio_vn": "Cả ngày",
-      "su_kien": "OPEC+ họp quyết định sản lượng năm 2027",
+      "su_kien": "Thị trường Mỹ đóng cửa sớm sau lễ (chứng khoán 13h00 New York)",
       "muc_do": 1,
-      "ghi_chu": "Theo The Edge Malaysia dẫn Reuters"
+      "ghi_chu": "Chứng khoán Mỹ đóng cửa 13h00 New York, tức 01:00 sáng 28/11 giờ Việt Nam; giờ theo thông lệ, chưa có thông báo chính thức năm 2026"
     },
     {
-      "ma": "jolts_0112",
+      "ma": "jolts_t10",
       "ngay": "2026-12-01",
       "thu": "Thứ Ba 01/12",
       "gio_vn": "22:00",
-      "su_kien": "Số việc làm cần tuyển JOLTS tháng 10",
+      "su_kien": "JOLTS: số việc làm cần tuyển tháng 10",
       "muc_do": 2,
-      "ghi_chu": "10:00 giờ New York (FedRateCalc)"
+      "ghi_chu": "Theo FedRateCalc"
     },
     {
-      "ma": "fomc_1012",
+      "ma": "nfp_t11",
+      "ngay": "2026-12-04",
+      "thu": "Thứ Sáu 04/12",
+      "gio_vn": "20:30",
+      "su_kien": "Bảng lương phi nông nghiệp tháng 11",
+      "muc_do": 3,
+      "ghi_chu": "Theo FedRateCalc; số lớn cuối cùng trước kỳ họp Fed"
+    },
+    {
+      "ma": "fomc_t12",
       "ngay": "2026-12-10",
       "thu": "Thứ Năm 10/12",
       "gio_vn": "02:00",
       "su_kien": "Fed công bố quyết định lãi suất (kỳ họp 8–9/12)",
       "muc_do": 3,
-      "ghi_chu": "14:00 giờ New York ngày 9/12; thị trường định giá khoảng 95% khả năng tăng 0,25 điểm (Kitco, 24/11)"
+      "ghi_chu": "FedWatch khoảng 92% tăng 0,25 điểm (FinScans, 25/11)"
     }
   ],
   "tin_chon_loc": [
     {
-      "ma": "niem_tin_tieu_dung_2411",
+      "ma": "gdp_pce_25_11",
       "thu_tu": 1,
-      "tieu_de": "Niềm tin tiêu dùng Mỹ tháng 11 vọt lên 103,3 điểm, cao nhất gần 2 năm, vượt xa dự báo khoảng 92,5; vàng rơi 53 USD trong giờ công bố",
+      "tieu_de": "GDP quý 3 Mỹ sửa lên 4,3%, PCE lõi tháng 10 lên 3,3%, cao hơn dự báo; vàng giảm thêm sau số liệu",
       "tang": "Ngọn",
       "trang_thai": "Chín",
       "tac_dong": "Tiêu cực",
       "nguon": "Kitco",
-      "url": "https://www.kitco.com/news/article/2026-11-24/gold-silver-extend-losses-tech-stocks-slide-fed-inflation-test-looms-kitco"
+      "url": "https://www.kitco.com/news/article/2026-11-25/gold-prices-drop-another-1-us-q3-gdp-revised-43-contained-pce-inflation"
     },
     {
-      "ma": "vang_bac_giam_2411",
+      "ma": "vang_hoi_160",
       "thu_tu": 2,
-      "tieu_de": "Vàng giảm 2,25%, bạc giảm 5,2% (giá Kitco lúc 16h50 New York ngày 24/11) khi cổ phiếu công nghệ, AI giảm lại, áp lực bán để bù ký quỹ quay lại",
+      "tieu_de": "Vàng hồi 160 USD từ đáy khoảng 14 tháng nhờ lợi suất, USD hạ và chứng khoán hồi; giới phân tích chưa coi là đáy",
       "tang": "Ngọn",
-      "trang_thai": "Chín",
-      "tac_dong": "Tiêu cực",
-      "nguon": "Kitco",
-      "url": "https://www.kitco.com/news/article/2026-11-24/gold-silver-extend-losses-tech-stocks-slide-fed-inflation-test-looms-kitco"
+      "trang_thai": "Mầm",
+      "tac_dong": "Tích cực",
+      "nguon": "investingLive",
+      "url": "https://investinglive.com/commodities/gold-claws-back-160-from-a-14-month-low-but-one-candle-doesn-t-necessarily-make-a-bottom/"
     },
     {
-      "ma": "fed_tang_lai_0912",
+      "ma": "fedwatch_t12",
       "thu_tu": 3,
-      "tieu_de": "Thị trường định giá khoảng 95–98% khả năng Fed tăng 0,25 điểm ngày 9/12; ông Williams cho rằng lạm phát dai dẳng ủng hộ siết chính sách",
+      "tieu_de": "Thị trường định giá khoảng 92% khả năng Fed tăng 0,25 điểm ngày 9/12",
       "tang": "Thân",
       "trang_thai": "Chín",
       "tac_dong": "Tiêu cực",
-      "nguon": "Kitco (Reuters)",
-      "url": "https://www.kitco.com/news/off-the-wire/2026-11-24/gold-slips-spotlight-us-inflation-data"
+      "nguon": "FinScans",
+      "url": "https://finscans.com/news/2026/11/25/gold-slips-to-3426-as-core-pce-hits-33-and-gdp-growth-beats"
     },
     {
-      "ma": "pce_t10_toi_nay",
+      "ma": "loi_suat_10n_giam",
       "thu_tu": 4,
-      "tieu_de": "Số lạm phát PCE tháng 10 ra tối 25/11 giờ Việt Nam, là số quan trọng cuối cùng trước họp Fed; số nóng có thể đẩy vàng xuống dưới 3.500",
-      "tang": "Ngọn",
-      "trang_thai": "Mầm",
-      "tac_dong": "Tiêu cực",
-      "nguon": "Kitco (Reuters)",
-      "url": "https://www.kitco.com/news/off-the-wire/2026-11-24/gold-slips-spotlight-us-inflation-data"
-    },
-    {
-      "ma": "bessent_canh_bao",
-      "thu_tu": 5,
-      "tieu_de": "Bộ trưởng Tài chính Bessent cảnh báo siết chính sách quá mạnh có rủi ro cho kinh tế; kỳ vọng Fed tăng 0,5 điểm gần như biến mất",
-      "tang": "Ngọn",
-      "trang_thai": "Mầm",
-      "tac_dong": "Tích cực",
-      "nguon": "Trading Economics",
-      "url": "https://tradingeconomics.com/commodity/gold/news/601324"
-    },
-    {
-      "ma": "dau_vung_vinh_2411",
-      "thu_tu": 6,
-      "tieu_de": "Dầu tăng 2,3% (WTI 82,05, Brent 91,40 USD) do sự cố tàu chở dầu ở vùng Vịnh, vừa tăng lo lạm phát vừa tăng rủi ro địa chính trị",
-      "tang": "Ngọn",
-      "trang_thai": "Mầm",
-      "tac_dong": "Trung tính",
-      "nguon": "Kitco",
-      "url": "https://www.kitco.com/news/article/2026-11-24/gold-silver-extend-losses-tech-stocks-slide-fed-inflation-test-looms-kitco"
-    },
-    {
-      "ma": "sjc_dung_gia_2511",
-      "thu_tu": 7,
-      "tieu_de": "Vàng miếng SJC giữ 130/135 triệu đồng/lượng sáng 25/11 dù thế giới giảm hơn 2%, chênh với giá thế giới quy đổi nới lên khoảng 23,6 triệu",
+      "tieu_de": "Lợi suất Mỹ 10 năm giảm 8,4 điểm cơ bản về 4,846% trước kỳ nghỉ lễ",
       "tang": "Ngọn",
       "trang_thai": "Chín",
-      "tac_dong": "Trung tính",
-      "nguon": "Báo Đà Nẵng",
-      "url": "https://baodanang.vn/gia-vang-hom-nay-25-11-2026-vang-mieng-sjc-nhan-tron-9999-btmc-va-vang-the-gioi-3359422.html"
+      "tac_dong": "Tích cực",
+      "nguon": "Longbridge",
+      "url": "https://longbridge.com/en/news/306824440"
     },
     {
-      "ma": "lai_suat_giam_2011",
-      "thu_tu": 8,
-      "tieu_de": "Ngân hàng Nhà nước yêu cầu giảm lãi suất huy động; kỳ hạn 6–12 tháng đã hạ khoảng 0,4–0,5 điểm phần trăm, tiền gửi kém hấp dẫn hơn so với giữ vàng",
+      "ma": "bien_ban_fed_t10",
+      "thu_tu": 5,
+      "tieu_de": "Biên bản họp Fed tháng 10: gần như toàn bộ quan chức ủng hộ tăng lãi thêm, vài người nêu khả năng 0,5 điểm",
       "tang": "Thân",
       "trang_thai": "Chín",
+      "tac_dong": "Tiêu cực",
+      "nguon": "Axios",
+      "url": "https://axios.com/2026/11/19/interest-rates-ai-fed-october"
+    },
+    {
+      "ma": "dau_hormuz",
+      "thu_tu": 6,
+      "tieu_de": "Dầu Brent tăng 3,5% lên 94,61 USD vì Houthi tấn công Ả Rập Xê Út, căng thẳng Hormuz",
+      "tang": "Ngọn",
+      "trang_thai": "Mầm",
+      "tac_dong": "Trung tính",
+      "nguon": "Rigzone",
+      "url": "https://www.rigzone.com/news/oil_up_as_hormuz_attacks_counter_recovery_in_supply-25-nov-2026-185171-article"
+    },
+    {
+      "ma": "vpbank_lai_suat",
+      "thu_tu": 7,
+      "tieu_de": "VPBank giảm tiếp lãi suất tiết kiệm từ 26/11, kỳ hạn dài giảm tới 0,5 điểm phần trăm",
+      "tang": "Ngọn",
+      "trang_thai": "Chín",
       "tac_dong": "Tích cực",
-      "nguon": "Thời báo Tài chính Việt Nam",
-      "url": "https://thoibaotaichinhvietnam.vn/top-ngan-hang-tra-lai-suat-tiet-kiem-cao-nhat-thang-11-2026-207242.html"
+      "nguon": "CafeF",
+      "url": "https://cafef.vn/tu-hom-nay-26-11-ngan-hang-tu-nhan-lon-nhat-he-thong-dieu-chinh-lai-suat-tiet-kiem-188261125223209256.chn"
+    },
+    {
+      "ma": "ty_gia_trung_tam",
+      "thu_tu": 8,
+      "tieu_de": "Ngân hàng Nhà nước nâng tỷ giá trung tâm lên 25.679 đồng/USD; vàng trong nước mở phiên 25/11 giảm 1–1,5 triệu",
+      "tang": "Ngọn",
+      "trang_thai": "Chín",
+      "tac_dong": "Trung tính",
+      "nguon": "VietnamPlus",
+      "url": "https://www.vietnamplus.vn/gia-vang-trong-nuoc-giam-15-trieu-dong-sjc-ve-nguong-1335-trieu-dong-post1150430.vnp"
     }
   ]
 }
